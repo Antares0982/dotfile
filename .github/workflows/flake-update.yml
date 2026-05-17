@@ -1,0 +1,94 @@
+name: "Flake Automated Update & Build"
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 11 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6
+
+    - name: Install nix
+      uses: cachix/install-nix-action@v31
+      with:
+        github_access_token: '${{ secrets.GITHUB_TOKEN }}'
+
+    - name: Set nix daemon tmp path
+      run: |
+        sudo mkdir --parents /nix/tmp
+        sudo chmod 777 /nix/tmp
+
+        cat > override.conf <<EOF
+        [Service]
+        Environment="TMPDIR=/nix/tmp"
+        EOF
+        sudo mkdir /etc/systemd/system/nix-daemon.service.d/
+        sudo mv override.conf /etc/systemd/system/nix-daemon.service.d/override.conf
+        sudo systemctl daemon-reload
+        sudo systemctl restart nix-daemon
+
+    - name: Configure git
+      run: |
+        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --global user.name "github-actions[bot]"
+        git config --global pull.rebase false
+
+    - name: Setup cachix
+      uses: cachix/cachix-action@v17
+      with:
+        name: antares0982
+        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+    - name: Nix flake update
+      run: |
+        nix flake update --commit-lock-file
+
+    - name: Check nixpkgs version and decide whether to build
+      id: check
+      run: |
+        set -euo pipefail
+
+        rev=$(jq -r '
+          ( .nodes["nixpkgs"]?.locked.rev
+          // .nodes["nixpkgs"]?.locked.revision
+          // (.nodes[]?.locked.rev // .nodes[]?.locked.revision)
+          // .locks["nixpkgs"]?.locked.rev
+          // .locks["nixpkgs"]?.locked.revision
+          )' flake.lock 2>/dev/null | head -n1 || true)
+
+        if [ -z "$rev" ] || [ "$rev" = "null" ]; then
+          rev=$(date -u +"%Y%m%dT%H%M%SZ")
+        fi
+
+        short_rev=${rev:0:12}
+        branch="flake-update/nixpkgs-${short_rev}"
+
+        echo "nixpkgs_rev=$short_rev" >> "$GITHUB_OUTPUT"
+        echo "branch_name=$branch" >> "$GITHUB_OUTPUT"
+
+        if git ls-remote --heads origin "$branch" | grep -q .; then
+          echo "Branch $branch already exists on remote -> skip build"
+          echo "skip_build=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "Branch $branch not found on remote -> will build"
+          echo "skip_build=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Nix build
+      if: steps.check.outputs.skip_build == 'false'
+      run: |
+        nix build -L .#nixosConfigurations.nixos.config.system.build.toplevel --show-trace
+
+    - name: Push branch
+      if: steps.check.outputs.skip_build == 'false'
+      env:
+        BRANCH: ${{ steps.check.outputs.branch_name }}
+      run: |
+        git checkout -b "$BRANCH"
+        git push --set-upstream origin "$BRANCH"
