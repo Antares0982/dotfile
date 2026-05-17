@@ -1,0 +1,13 @@
+#!@bashInteractive@/bin/bash
+set -e
+
+KEY="$HOME/.ssh/github_sign"
+
+if [ "$1" = "-Y" ] && [ "$2" = "sign" ] && [ -r "$KEY" ] && [ -r "$KEY.pub" ]; then
+  read -r _ FP _ < <(@openssh@/bin/ssh-keygen -lf "$KEY.pub")
+  if ! @openssh@/bin/ssh-add -l 2>/dev/null | grep -qF "$FP"; then
+    SSH_ASKPASS_REQUIRE=never @openssh@/bin/ssh-add "$KEY" </dev/tty
+  fi
+fi
+
+exec @openssh@/bin/ssh-keygen "$@"

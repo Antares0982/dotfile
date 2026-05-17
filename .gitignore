@@ -1,0 +1,11 @@
+private.nix
+
+resource/gallary/
+
+secrets/secrets.nix
+
+.mypy_cache/
+
+/result
+
+/src/git_credential_refresher/target

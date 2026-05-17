@@ -1,0 +1,17 @@
+#!@bashInteractive@/bin/bash
+if [[ "$#" != 0 ]]; then
+  if [[ "$#" == 1 ]]; then
+    rcfile="$1"
+  else
+    if [[ "$1" != "--rcfile" ]]; then
+      echo "Something is wrong: invoked as:" >&2
+      echo "$0 $@" >&2
+      exit 1
+    fi
+    rcfile="$2"
+  fi
+
+  source "$rcfile"
+fi
+
+exec @zsh@/bin/zsh --emulate zsh

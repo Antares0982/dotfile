@@ -1,0 +1,40 @@
+{
+  config,
+  lib,
+  pkgs,
+  renewal,
+  ...
+}:
+let
+  find-nix-gc-roots = pkgs.callPackage ./_find-nix-gc-roots.nix { };
+in
+{
+  nixpkgs.config.allowUnfree = true;
+  environment.systemPackages = with pkgs; [
+    cachix
+    delta
+    eza
+    fd
+    find-nix-gc-roots
+    gcc
+    gdb
+    gh
+    git
+    gnumake
+    gnupg
+    jq
+    kitty.terminfo
+    nano
+    net-tools
+    nixfmt
+    nix-prefetch-scripts
+    oh-my-zsh
+    renewal
+    ripgrep
+    statix
+    tree
+    tree-sitter
+    zsh
+    zsh-powerlevel10k
+  ];
+}

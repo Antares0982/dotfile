@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -ne 1 ]]; then
+  echo "Usage: find-nix-gc-roots <store-path>" >&2
+  exit 1
+fi
+
+path="$1"
+
+# Resolve symlinks to canonical store path
+if [[ -L "$path" ]]; then
+  path="$(readlink -f "$path")"
+fi
+
+if [[ ! -e "$path" ]]; then
+  echo "Error: path does not exist: $path" >&2
+  exit 1
+fi
+
+roots=$(nix-store --query --roots "$path" 2>/dev/null || true)
+
+if [[ -z "$roots" ]]; then
+  echo "No GC roots reference '$path'."
+  exit 0
+fi
+
+echo "$roots"
