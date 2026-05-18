@@ -21,9 +21,9 @@ let
     mv $out/bin/hermes $orig
     python=$(sed -n "s/.*HERMES_PYTHON='\([^']*\)'.*/\1/p" $orig)
 
-    cat > $out/bin/hermes <<'HEADER'
-#!/bin/bash
-HEADER
+     cat > $out/bin/hermes <<HERMESWRAP
+#!''${pkgs.bash}/bin/bash
+HERMESWRAP
     sed -n 's/^export //p' $orig >> $out/bin/hermes
 
     cat >> $out/bin/hermes <<HERMESWRAP
