@@ -16,6 +16,7 @@ let
     cp -r ${hermes-agent-pkg} $out
     chmod -R +w $out
     ln -sf ${hermes-antares-bridge-pkg} $out/share/hermes-agent/plugins/platforms/antares
+    sed -i "s|${hermes-agent-pkg}|$out|g" $out/bin/hermes
   '';
 
   # ---- config.yaml ----
