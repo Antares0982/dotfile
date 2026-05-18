@@ -3,52 +3,64 @@
   pkgs,
   lib,
   hermes-agent-pkg,
-  hermes-agent-module,
   hermes-antares-bridge-pkg,
   ...
 }:
+let
+  shellenv = import ../common/shellEnv.nix;
+  hermesHome = "/home/hermes";
+  hermesConfigDir = "${hermesHome}/.hermes";
+
+  # ---- 核心: 将 bridge 叠加到 hermes-agent 内置插件目录 ----
+  # _scan_bundled_plugin_platforms() 在枚举定义时扫描 plugins/platforms/,
+  # 发现 antares/plugin.yaml 后缓存 "antares", Platform("antares") 直接命中。
+  # 不修改任何 hermes-agent 源码。
+  hermes-agent = hermes-agent-pkg.overrideAttrs (old: {
+    postPatch = (old.postPatch or "") + ''
+      ln -sf ${hermes-antares-bridge-pkg} plugins/platforms/antares
+    '';
+  });
+
+  # ---- config.yaml ----
+  configYaml = pkgs.writeText "hermes-config.yaml" ''
+    gateway:
+      platforms:
+        antares:
+          enabled: true
+          extra:
+            rabbitmq_host: "chr.fan"
+            rabbitmq_port: 5671
+            rabbitmq_user: "hermes"
+            rabbitmq_vhost: "remotecall"
+            rabbitmq_cafile: "/run/agenix/hermesRabbitCa"
+            rabbitmq_certfile: "/run/agenix/hermesRabbitCert"
+            rabbitmq_keyfile: "/run/agenix/hermesRabbitKey"
+
+    agent:
+      gateway_timeout: 1800
+      max_iterations: 90
+
+    terminal:
+      cwd: "/home/hermes"
+
+    display:
+      background_process_notifications: "result"
+  '';
+in
 {
-  imports = [ hermes-agent-module ];
+  systemd.services."hermes-gateway" = {
+    description = "Hermes Agent Gateway Service";
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
 
-  services.hermes-agent = {
-    enable = true;
-    package = hermes-agent-pkg;
-    createUser = false;
-    user = "hermes";
-    group = "users";
-    stateDir = "/home/hermes";
-    workingDirectory = "/home/hermes";
-
-    settings = {
-      gateway = {
-        platforms = {
-          antares = {
-            enabled = true;
-            extra = {
-              rabbitmq_host = "chr.fan";
-              rabbitmq_port = 5671;
-              rabbitmq_user = "hermes";
-              rabbitmq_vhost = "remotecall";
-              rabbitmq_cafile = "/run/agenix/hermesRabbitCa";
-              rabbitmq_certfile = "/run/agenix/hermesRabbitCert";
-              rabbitmq_keyfile = "/run/agenix/hermesRabbitKey";
-            };
-          };
-        };
-      };
-      agent = {
-        gateway_timeout = 1800;
-        max_iterations = 90;
-      };
-      terminal = {
-        cwd = "/home/hermes";
-      };
-      display = {
-        background_process_notifications = "result";
-      };
-    };
+    preStart = ''
+      mkdir -p ${hermesConfigDir}
+      install -o hermes -g users -m 0640 ${configYaml} ${hermesConfigDir}/config.yaml
+    '';
 
     environment = {
+      HERMES_HOME = hermesConfigDir;
       ANTARES_RABBITMQ_HOST = "chr.fan";
       ANTARES_RABBITMQ_PORT = "5671";
       ANTARES_RABBITMQ_USER = "hermes";
@@ -58,13 +70,26 @@
       ANTARES_RABBITMQ_KEYFILE = "/run/agenix/hermesRabbitKey";
     };
 
-    environmentFiles = [
-      config.age.secrets.hermesEnv.path
-    ];
+    serviceConfig = {
+      User = "hermes";
+      Group = "users";
+      WorkingDirectory = hermesHome;
+      Restart = "always";
+      RestartSec = "10";
+      TimeoutStopSec = "300";
+      LoadCredential = [
+        "hermes-env:/run/agenix/hermesEnv"
+      ];
+    };
 
-    extraPlugins = [ hermes-antares-bridge-pkg ];
-
-    restart = "always";
-    restartSec = 10;
+    script = ''
+      export PATH=$PATH:${shellenv.sysBin}
+      if [ -f "$CREDENTIALS_DIRECTORY/hermes-env" ]; then
+        set -a
+        source "$CREDENTIALS_DIRECTORY/hermes-env"
+        set +a
+      fi
+      ${hermes-agent}/bin/hermes gateway
+    '';
   };
 }

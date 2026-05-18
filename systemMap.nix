@@ -54,7 +54,6 @@ in
     pkgs-old = nixpkgsToPkgs nixpkgs-old;
     linyinfeng-nur-packages = linyinfeng-nur.packages.${system};
     hermes-agent-pkg = hermes-agent.packages.${system}.default;
-    hermes-agent-module = hermes-agent.nixosModules.default;
     hermes-antares-bridge-pkg = hermes-antares-bridge.packages.${system}.default;
   in
   curNixosSystem {
@@ -73,7 +72,6 @@ in
         pkgs-old
         linyinfeng-nur-packages
         hermes-agent-pkg
-        hermes-agent-module
         hermes-antares-bridge-pkg
         ;
     }
