@@ -219,11 +219,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1779119959,
-        "narHash": "sha256-1yVFosI1EVBvayZMqNXHC9Cv7Z8zD0uUDYgECcwzvfw=",
+        "lastModified": 1779123320,
+        "narHash": "sha256-NOOwd+zORThJJmEr7lWMu+lKauInjJ1hh/axFFbIqlQ=",
         "owner": "Antares0982",
         "repo": "hermes-antares-bridge",
-        "rev": "6b1f018b2cba3e8b2b448210a93e6066ade22c0c",
+        "rev": "d5204f8ffd4564291bbdaf423d7a49af81ecfe6d",
         "type": "github"
       },
       "original": {
