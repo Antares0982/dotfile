@@ -79,6 +79,13 @@
         nixos-stable.follows = "nixpkgs-old";
       };
     };
+    hermes-agent = {
+      url = "github:nousresearch/hermes-agent";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    hermes-antares-bridge = {
+      url = "github:Antares0982/hermes-antares-bridge";
+    };
   };
 
   outputs =
@@ -101,6 +108,8 @@
       renewal,
       nixos-raspberrypi,
       linyinfeng-nur,
+      hermes-agent,
+      hermes-antares-bridge,
       ...
     }:
     let
@@ -109,6 +118,7 @@
         input
         // {
           inherit lib;
+          inherit hermes-agent hermes-antares-bridge;
         }
       );
     in

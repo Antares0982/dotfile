@@ -16,6 +16,8 @@
   renewal,
   nixos-raspberrypi,
   linyinfeng-nur,
+  hermes-agent,
+  hermes-antares-bridge,
   ...
 }:
 let
@@ -51,6 +53,9 @@ in
     needVSCodeServer = currentDevice.rpi or false;
     pkgs-old = nixpkgsToPkgs nixpkgs-old;
     linyinfeng-nur-packages = linyinfeng-nur.packages.${system};
+    hermes-agent-pkg = hermes-agent.packages.${system}.default;
+    hermes-agent-module = hermes-agent.nixosModules.default;
+    hermes-antares-bridge-pkg = hermes-antares-bridge.packages.${system}.default;
   in
   curNixosSystem {
     inherit system;
@@ -67,6 +72,9 @@ in
         renewal
         pkgs-old
         linyinfeng-nur-packages
+        hermes-agent-pkg
+        hermes-agent-module
+        hermes-antares-bridge-pkg
         ;
     }
     // lib.attrsets.optionalAttrs currentDevice.pc {

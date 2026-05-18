@@ -66,6 +66,17 @@ in
         "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDOMS7+EqU5j6TmQrQyg/9TG4oPfnR1J13B6jvmnqdI0 antares@alyr.dev"
       ];
     };
+    users.hermes = {
+      isNormalUser = true;
+      home = "/home/hermes";
+      description = "Hermes Agent";
+      useDefaultShell = true;
+      hashedPasswordFile = userCommonSettings.serverHashedPasswordFile;
+      openssh.authorizedKeys.keys = [
+        userCommonSettings.commonUserAuthorizedKey
+      ];
+      linger = true;
+    };
   };
   users.defaultUserShell = pkgs.zsh;
   imports = [ ../common/sudo.nix ];
