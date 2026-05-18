@@ -11,12 +11,29 @@ let
   hermesHome = "/home/hermes";
   hermesConfigDir = "${hermesHome}/.hermes";
 
-  # ---- 核心: 将 bridge 叠加到 hermes-agent 内置插件目录 ----
+  # ---- 核心: 将 bridge 内置到 hermes-agent ----
   hermes-agent = pkgs.runCommand "hermes-agent-with-bridge" { } ''
     cp -r ${hermes-agent-pkg} $out
     chmod -R +w $out
     ln -sf ${hermes-antares-bridge-pkg} $out/share/hermes-agent/plugins/platforms/antares
-    sed -i "s|${hermes-agent-pkg}|$out|g" $out/bin/hermes
+
+    orig=$out/bin/hermes.orig
+    mv $out/bin/hermes $orig
+    python=$(sed -n "s/.*HERMES_PYTHON='\([^']*\)'.*/\1/p" $orig)
+
+    cat > $out/bin/hermes <<'HEADER'
+#!/bin/bash
+HEADER
+    sed -n 's/^export //p' $orig >> $out/bin/hermes
+
+    cat >> $out/bin/hermes <<HERMESWRAP
+export HERMES_BUNDLED_PLUGINS=$out/share/hermes-agent/plugins
+export HERMES_BUNDLED_SKILLS=$out/share/hermes-agent/skills
+export HERMES_WEB_DIST=$out/share/hermes-agent/web_dist
+export HERMES_TUI_DIR=$out/ui-tui
+exec $python -m hermes "\$@"
+HERMESWRAP
+    chmod +x $out/bin/hermes
   '';
 
   # ---- config.yaml ----
