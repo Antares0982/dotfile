@@ -12,14 +12,25 @@ let
   hermesConfigDir = "${hermesHome}/.hermes";
 
   # ---- 核心: 将 bridge 叠加到 hermes-agent 内置插件目录 ----
-  # _scan_bundled_plugin_platforms() 在枚举定义时扫描 plugins/platforms/,
-  # 发现 antares/plugin.yaml 后缓存 "antares", Platform("antares") 直接命中。
-  # 不修改任何 hermes-agent 源码。
-  hermes-agent = hermes-agent-pkg.overrideAttrs (old: {
-    postPatch = (old.postPatch or "") + ''
-      ln -sf ${hermes-antares-bridge-pkg} plugins/platforms/antares
+  hermes-agent = pkgs.symlinkJoin {
+    name = "hermes-agent-with-bridge";
+    paths = [ hermes-agent-pkg ];
+    postBuild = ''
+      rm -f $out/plugins
+      mkdir $out/plugins
+      for d in ${hermes-agent-pkg}/plugins/*; do
+        if [ "$(basename $d)" = "platforms" ]; then
+          mkdir $out/plugins/platforms
+          for p in ${hermes-agent-pkg}/plugins/platforms/*; do
+            ln -sfn $p $out/plugins/platforms/$(basename $p)
+          done
+          ln -sf ${hermes-antares-bridge-pkg} $out/plugins/platforms/antares
+        else
+          ln -sfn $d $out/plugins/$(basename $d)
+        fi
+      done
     '';
-  });
+  };
 
   # ---- config.yaml ----
   configYaml = pkgs.writeText "hermes-config.yaml" ''
