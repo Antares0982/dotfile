@@ -102,6 +102,6 @@ in
         file = ../secrets/mail-password-alyr.age;
       };
     };
-    identityPaths = [ "/home/antares/.ssh/agenix" ];
+    identityPaths = [ "/etc/ssh/agenix" ];
   };
 }
