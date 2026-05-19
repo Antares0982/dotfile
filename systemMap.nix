@@ -84,6 +84,7 @@ in
     modules = [
       ./configuration.nix
       agenix.nixosModules.default
+      hermes-agent.nixosModules.default
     ]
     ++ lib.optionals currentDevice.withHm [
       home-manager.nixosModules.home-manager
