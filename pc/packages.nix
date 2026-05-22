@@ -12,6 +12,7 @@
     [
       android-tools
       aria2
+      basedpyright
       cheat
       clang-tools
       claude-code
