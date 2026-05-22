@@ -30,7 +30,7 @@
 
   fileSystems = {
     "/boot/firmware" = {
-      device = "/dev/disk/by-uuid/1F44-9AB8";
+      device = "/dev/disk/by-uuid/FC5C-5A00";
       fsType = "vfat";
       options = [
         "noatime"
@@ -40,7 +40,7 @@
       ];
     };
     "/" = {
-      device = "/dev/disk/by-uuid/610b3383-ea0b-4f0a-9ee5-d1fadfee8779";
+      device = "/dev/disk/by-uuid/36641ff9-2665-4777-abc4-b580d62ed3f3";
       fsType = "ext4";
       options = [ "noatime" ];
     };

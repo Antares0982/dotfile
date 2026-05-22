@@ -70,6 +70,17 @@
       url = "github:Antares0982/renewal";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    hermes-agent = {
+      url = "github:Antares0982/hermes-agent/antares";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        flake-parts.follows = "flake-parts";
+        pyproject-nix.follows = "pyproject-nix";
+        uv2nix.follows = "uv2nix";
+        pyproject-build-systems.follows = "pyproject-build-systems";
+        npm-lockfile-fix.follows = "npm-lockfile-fix";
+      };
+    };
     linyinfeng-nur = {
       url = "github:linyinfeng/nur-packages";
       inputs = {
@@ -77,7 +88,35 @@
         flake-compat.follows = "flake-compat";
         flake-utils.follows = "flake-utils";
         nixos-stable.follows = "nixpkgs-old";
+        flake-parts.follows = "flake-parts";
       };
+    };
+    flake-parts = {
+      url = "github:hercules-ci/flake-parts";
+      inputs.nixpkgs-lib.follows = "nixpkgs";
+    };
+    pyproject-nix = {
+      url = "github:pyproject-nix/pyproject.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    uv2nix = {
+      url = "github:pyproject-nix/uv2nix";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        pyproject-nix.follows = "pyproject-nix";
+      };
+    };
+    pyproject-build-systems = {
+      url = "github:pyproject-nix/build-system-pkgs";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        pyproject-nix.follows = "pyproject-nix";
+        uv2nix.follows = "uv2nix";
+      };
+    };
+    npm-lockfile-fix = {
+      url = "github:jeslie0/npm-lockfile-fix";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
@@ -99,6 +138,7 @@
       visitor-badge,
       pull-all,
       renewal,
+      hermes-agent,
       nixos-raspberrypi,
       linyinfeng-nur,
       ...

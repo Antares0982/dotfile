@@ -8,7 +8,7 @@
   imports = [ ../common/packages.nix ];
   environment.systemPackages = with pkgs; [
     clang-tools
-    github-runner
+    # github-runner
     pinentry-curses
   ];
 }

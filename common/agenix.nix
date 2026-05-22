@@ -69,6 +69,30 @@ in
         group = "users";
         mode = "440";
       };
+      hermesEnv = {
+        file = ../secrets/hermes-env.age;
+        owner = "hermes";
+        group = "users";
+        mode = "400";
+      };
+      hermesRabbitCa = {
+        file = ../secrets/hermes-rabbit-ca.age;
+        owner = "hermes";
+        group = "users";
+        mode = "400";
+      };
+      hermesRabbitCert = {
+        file = ../secrets/hermes-rabbit-cert.age;
+        owner = "hermes";
+        group = "users";
+        mode = "400";
+      };
+      hermesRabbitKey = {
+        file = ../secrets/hermes-rabbit-key.age;
+        owner = "hermes";
+        group = "users";
+        mode = "400";
+      };
     }
     # ---- HK server only ----
     // lib.optionalAttrs isHkServer {
