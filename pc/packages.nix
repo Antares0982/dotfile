@@ -43,7 +43,6 @@
       tor-browser
       tumbler
       unrar
-      wemeet
       ydotool
 
       # niri ecosystem
