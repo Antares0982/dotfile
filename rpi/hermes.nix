@@ -25,6 +25,18 @@
       ANTARES_RABBITMQ_CERTFILE = config.age.secrets.hermesRabbitCert.path;
       ANTARES_RABBITMQ_KEYFILE = config.age.secrets.hermesRabbitKey.path;
     };
+    extraPackages = with pkgs; [
+      python3
+      uv
+      clang
+      cmake
+      ninja
+      pkg-config
+      valgrind
+      wget
+      fzf
+      bat
+    ];
 
     settings = { };
   };
