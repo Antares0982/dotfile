@@ -16,8 +16,6 @@ jobs:
 
     - name: Install nix
       uses: cachix/install-nix-action@v31
-      with:
-        github_access_token: '${{ secrets.GITHUB_TOKEN }}'
 
     - name: Set nix daemon tmp path
       run: |
