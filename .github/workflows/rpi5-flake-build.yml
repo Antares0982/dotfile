@@ -5,9 +5,6 @@ on:
   schedule:
     - cron: '0 21 * * *'  # 5:00 AM China Standard Time (UTC+8)
 
-permissions:
-  contents: write
-
 jobs:
   build:
     runs-on: [self-hosted, Linux, ARM64]
@@ -30,7 +27,7 @@ jobs:
 
     - name: Nix flake update
       run: |
-        nix flake update --commit-lock-file
+        nix flake update
 
     - name: Nix build (rpi5)
       run: |
