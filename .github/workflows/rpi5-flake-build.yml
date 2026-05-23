@@ -15,23 +15,6 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v6
 
-    - name: Install nix
-      uses: cachix/install-nix-action@v31
-
-    - name: Set nix daemon tmp path
-      run: |
-        sudo mkdir --parents /nix/tmp
-        sudo chmod 777 /nix/tmp
-
-        cat > override.conf <<EOF
-        [Service]
-        Environment="TMPDIR=/nix/tmp"
-        EOF
-        sudo mkdir /etc/systemd/system/nix-daemon.service.d/
-        sudo mv override.conf /etc/systemd/system/nix-daemon.service.d/override.conf
-        sudo systemctl daemon-reload
-        sudo systemctl restart nix-daemon
-
     - name: Configure git
       run: |
         git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
