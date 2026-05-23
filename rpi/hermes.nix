@@ -38,6 +38,8 @@
       bat
     ];
 
-    settings = { };
+    settings = {
+      security.redact_secrets = true;
+    };
   };
 }
