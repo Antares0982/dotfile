@@ -42,4 +42,7 @@
       security.redact_secrets = true;
     };
   };
+
+  # systemd drain_timeout=180s → TimeoutStopSec must be >= 180+30=210
+  systemd.services.hermes-agent.serviceConfig.TimeoutStopSec = lib.mkForce "210";
 }
