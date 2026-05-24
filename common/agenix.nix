@@ -48,6 +48,12 @@ in
         group = "users";
         mode = "440";
       };
+      deepseekAPIKey = {
+        file = ../secrets/deepseek-apikey.age;
+        owner = "antares";
+        group = "users";
+        mode = "440";
+      };
     }
     # ---- RPi only ----
     // lib.optionalAttrs isRpi {
