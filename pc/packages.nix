@@ -32,8 +32,8 @@
       openspec
       openssl
       perf
+      pyright
       qbittorrent
-      # qemu
       ruff
       shfmt
       steamcmd
