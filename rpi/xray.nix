@@ -71,6 +71,8 @@ in
             ;;
           switch:*)
             node="''${action#switch:}"
+            # Resolve relative paths to subsDir
+            [[ "$node" != /* ]] && node="${subsDir}/$node"
             # Only allow real paths under subsDir, no traversal or self-reference
             if [[ "$node" == *..* ]] || [[ "$node" != "${subsDir}/"* ]] || \
                [[ "$(basename "$node")" == "active.json" ]]; then
@@ -101,6 +103,12 @@ in
     serviceConfig = {
       ExecStartPre = toString (
         pkgs.writeShellScript "xray-ensure-config" ''
+          # Bootstrap active.json if missing
+          if [ ! -e "${subsDir}/active.json" ]; then
+            FIRST=$(ls -1 "${subsDir}"/*.json 2>/dev/null | grep -v active.json | head -1)
+            [ -n "$FIRST" ] && ln -sf "$FIRST" "${subsDir}/active.json"
+          fi
+          # Ensure config.json → active.json symlink
           if [ ! -e "${xrayDir}/config.json" ] && [ -e "${subsDir}/active.json" ]; then
             ln -sf "${subsDir}/active.json" "${xrayDir}/config.json"
           fi
