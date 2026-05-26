@@ -71,6 +71,11 @@ in
             ;;
           switch:*)
             node="''${action#switch:}"
+            # Only allow real paths under subsDir, no traversal or self-reference
+            if [[ "$node" == *..* ]] || [[ "$node" != "${subsDir}/"* ]] || \
+               [[ "$(basename "$node")" == "active.json" ]]; then
+              rm -f "$f"; continue
+            fi
             ln -sf "$node" "${subsDir}/active.json"
             ${pkgs.systemd}/bin/systemctl restart xray
             ;;
