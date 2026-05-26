@@ -23,35 +23,6 @@ in
     "d /home/hermes/.cache/xray-mgr/trigger 0700 hermes hermes - -"
   ];
 
-  # ── migrate old config.json to subscription-based symlink ──
-  system.activationScripts.xrayMigrate = {
-    text = ''
-      mkdir -p "${subsDir}"
-
-      # Migrate: if config.json is a regular file (old setup), move it in
-      if [ -f "${xrayDir}/config.json" ] && [ ! -L "${xrayDir}/config.json" ]; then
-        mv "${xrayDir}/config.json" "${subsDir}/_bootstrap.json"
-        chown root:xray "${subsDir}/_bootstrap.json"
-        chmod 440 "${subsDir}/_bootstrap.json"
-      fi
-
-      # Create active.json if missing (prefer non-bootstrap if available)
-      if [ ! -e "${subsDir}/active.json" ]; then
-        FIRST=$(ls -1 "${subsDir}"/*.json 2>/dev/null | grep -v _bootstrap | head -1)
-        [ -z "$FIRST" ] && FIRST=$(ls -1 "${subsDir}"/*.json 2>/dev/null | head -1)
-        if [ -n "$FIRST" ]; then
-          ln -sf "$FIRST" "${subsDir}/active.json"
-        fi
-      fi
-
-      # Ensure config.json is a symlink
-      if [ ! -L "${xrayDir}/config.json" ] && [ -e "${subsDir}/active.json" ]; then
-        ln -sf "${subsDir}/active.json" "${xrayDir}/config.json"
-      fi
-    '';
-    deps = [ ];
-  };
-
   # ── subscription updater (oneshot + daily timer) ──
   systemd.services.xray-sub = {
     description = "Xray Subscription Updater";
