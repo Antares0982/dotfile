@@ -65,12 +65,11 @@ in
     };
     script = ''
       set -euo pipefail
-      URL=$(cat "${config.age.secrets.xraySubUrl.path}")
-      echo "$URL" > "${xrayDir}/sub_url.txt"
-      chmod 640 "${xrayDir}/sub_url.txt"
+      ln -sf "${config.age.secrets.xraySubUrl.path}" "${xrayDir}/sub_url.txt"
+      trap 'rm -f "${xrayDir}/sub_url.txt"' EXIT
       export XRAY_CONF_DIR="${xrayDir}"
       export XRAY_TEMPLATE="${xrayDir}/template.json"
-      exec ${xray-sub}/bin/xray_sub --headless
+      ${xray-sub}/bin/xray_sub --headless
     '';
   };
 
