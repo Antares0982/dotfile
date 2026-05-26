@@ -93,6 +93,12 @@ in
         group = "users";
         mode = "400";
       };
+      xraySubUrl = {
+        file = ../secrets/xraysub.age;
+        owner = "antares";
+        group = "xray";
+        mode = "440";
+      };
     }
     # ---- HK server only ----
     // lib.optionalAttrs isHkServer {

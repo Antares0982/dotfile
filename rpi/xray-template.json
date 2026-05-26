@@ -1,0 +1,183 @@
+{
+  "dns": {
+    "hosts": {
+      "dns.alidns.com": "223.5.5.5",
+      "dns.google": "8.8.8.8",
+      "dns.pub": "119.29.29.29",
+      "geosite:category-ads-all": "127.0.0.1"
+    },
+    "servers": [
+      {
+        "address": "https://1.1.1.1/dns-query",
+        "domains": [
+          "geosite:geolocation-!cn"
+        ],
+        "expectIPs": [
+          "geoip:!cn"
+        ]
+      },
+      "8.8.8.8",
+      {
+        "address": "114.114.114.114",
+        "domains": [
+          "geosite:cn",
+          "geosite:category-games@cn"
+        ],
+        "expectIPs": [
+          "geoip:cn"
+        ],
+        "port": 53,
+        "skipFallback": true
+      },
+      {
+        "address": "localhost",
+        "skipFallback": true
+      }
+    ]
+  },
+  "inbounds": [
+    {
+      "listen": "0.0.0.0",
+      "port": 1080,
+      "protocol": "socks",
+      "settings": {
+        "auth": "noauth",
+        "ip": "127.0.0.1",
+        "udp": true
+      },
+      "sniffing": {
+        "destOverride": [
+          "http",
+          "tls"
+        ],
+        "enabled": true
+      },
+      "tag": "in-0"
+    },
+    {
+      "port": 1081,
+      "protocol": "http",
+      "settings": {},
+      "tag": "in-1"
+    },
+    {
+      "port": 1082,
+      "protocol": "http",
+      "settings": {},
+      "tag": "in-global"
+    },
+    {
+      "port": 1083,
+      "protocol": "http",
+      "settings": {},
+      "tag": "in-direct"
+    }
+  ],
+  "log": {
+    "loglevel": "info"
+  },
+  "outbounds": [
+    {},
+    {
+      "protocol": "freedom",
+      "settings": {},
+      "tag": "direct"
+    },
+    {
+      "protocol": "blackhole",
+      "settings": {},
+      "tag": "blocked"
+    }
+  ],
+  "routing": {
+    "rules": [
+      {
+        "inboundTag": "in-global",
+        "outboundTag": "proxy",
+        "type": "field"
+      },
+      {
+        "inboundTag": "in-direct",
+        "outboundTag": "direct",
+        "type": "field"
+      },
+      {
+        "domain": [
+          "claude"
+        ],
+        "outboundTag": "proxy",
+        "type": "field"
+      },
+      {
+        "domain": [
+          "geosite:category-ads-all",
+          "config.cmpassport.com",
+          "www.cmpassport.com",
+          "wap.cmpassport.com",
+          "onekey1.cmpassport.com",
+          "log1.cmpassport.com",
+          "smsks1.cmpassport.com",
+          "verify.cmpassport.com",
+          "opencloud.wostore.cn",
+          "auth.wosms.cn",
+          "id.mail.wo.cn",
+          "mdn.open.wo.cn",
+          "hmrz.wo.cn",
+          "nishub1.10010.com",
+          "nissc1.10010.com",
+          "enrichgw.10010.com",
+          "id6.me",
+          "open.e.189.cn",
+          "114dev.com",
+          "onepass.geetest.com"
+        ],
+        "outboundTag": "blocked",
+        "type": "field"
+      },
+      {
+        "domain": [
+          "geosite:cn",
+          "geosite:private",
+          "geosite:apple-cn",
+          "geosite:google-cn",
+          "geosite:tld-cn",
+          "geosite:category-games@cn",
+          "torrent",
+          "peer_id=",
+          "info_hash",
+          "get_peers",
+          "find_node",
+          "BitTorrent",
+          "announce_peer"
+        ],
+        "outboundTag": "direct",
+        "type": "field"
+      },
+      {
+        "ip": [
+          "192.168.0.0/16",
+          "127.0.0.0/16",
+          "geoip:cn"
+        ],
+        "outboundTag": "direct",
+        "type": "field"
+      },
+      {
+        "domain": [
+          "geosite:geolocation-!cn"
+        ],
+        "outboundTag": "proxy",
+        "type": "field"
+      },
+      {
+        "ip": [
+          "geoip:us",
+          "geoip:ca",
+          "geoip:telegram"
+        ],
+        "outboundTag": "proxy",
+        "type": "field"
+      }
+    ]
+  }
+}
