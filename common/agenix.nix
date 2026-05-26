@@ -99,6 +99,12 @@ in
         group = "xray";
         mode = "440";
       };
+      xrayTemplateJson = {
+        file = ../secrets/xray-template-json.age;
+        owner = "antares";
+        group = "xray";
+        mode = "440";
+      };
     }
     # ---- HK server only ----
     // lib.optionalAttrs isHkServer {

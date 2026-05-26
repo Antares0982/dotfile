@@ -9,7 +9,6 @@
 let
   xrayDir = "/var/lib/xray";
   subsDir = "${xrayDir}/subscriptions";
-  xrayTemplate = ./xray-template.json;
 in
 {
   # ── shared group for xray management ──
@@ -17,11 +16,10 @@ in
     members = [ "antares" "hermes" ];
   };
 
-  # ── directories, template symlink ──
+  # ── directories ──
   systemd.tmpfiles.rules = [
     "d ${xrayDir} 0775 root xray - -"
     "d ${subsDir} 0775 root xray - -"
-    "L+ ${xrayDir}/template.json - - - - ${xrayTemplate}"
   ];
 
   # ── migrate old config.json to subscription-based symlink ──
@@ -66,7 +64,8 @@ in
     script = ''
       set -euo pipefail
       ln -sf "${config.age.secrets.xraySubUrl.path}" "${xrayDir}/sub_url.txt"
-      trap 'rm -f "${xrayDir}/sub_url.txt"' EXIT
+      ln -sf "${config.age.secrets.xrayTemplateJson.path}" "${xrayDir}/template.json"
+      trap 'rm -f "${xrayDir}/sub_url.txt" "${xrayDir}/template.json"' EXIT
       export XRAY_CONF_DIR="${xrayDir}"
       export XRAY_TEMPLATE="${xrayDir}/template.json"
       ${xray-sub}/bin/xray_sub --headless
