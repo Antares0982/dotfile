@@ -1,5 +1,4 @@
 { config, pkgs, ... }:
 {
-  environment.etc."zsh/p10k.zsh".source = ../resource/p10k.zsh;
-  environment.variables.POWERLEVEL9K_CONFIG_FILE = "/etc/zsh/p10k.zsh";
+  environment.etc."zsh/rpi-p10k.zsh".source = ../resource/rpi-p10k.zsh;
 }
