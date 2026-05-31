@@ -29,5 +29,6 @@
     extraModprobeConfig = ''
       options hid_apple fnmode=2
     '';
+    supportedFilesystems = [ "ntfs" ];
   };
 }

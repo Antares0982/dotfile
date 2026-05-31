@@ -32,6 +32,7 @@
       };
     };
     gvfs.enable = true; # for kdeconnect
+    udisks2.enable = true;
   };
 
   environment = {
@@ -41,4 +42,6 @@
     ];
     sessionVariables.NIXOS_OZONE_WL = "1";
   };
+
+  security.polkit.enable = true;
 }
