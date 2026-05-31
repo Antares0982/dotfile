@@ -21,10 +21,9 @@ let
 in
 rec {
   inherit localFileDef;
-  username = localFileDef.username;
+  inherit (localFileDef) username userhome;
+  inherit (commonEnv) sysBin;
   usernameCap = "Antares";
-  userhome = localFileDef.userhome;
-  sysBin = commonEnv.sysBin;
   envs = rec {
     http_proxy = "http://127.0.0.1:1081";
     https_proxy = "http://127.0.0.1:1081";
