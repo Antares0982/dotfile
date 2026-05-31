@@ -30,7 +30,6 @@
     openspec
     openssl
     perf
-    polkit_gnome
     pyright
     qbittorrent
     ruff
@@ -50,6 +49,7 @@
     kdePackages.kio-fuse
     kdePackages.kio-extras
     kitty
+    lxqt.lxqt-policykit
     mako
     pavucontrol
     slurp
