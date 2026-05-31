@@ -20,6 +20,7 @@
   };
 
   services = {
+    accounts-daemon.enable = true;
     gnome.gcr-ssh-agent.enable = false;
     greetd = {
       enable = true;
