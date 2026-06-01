@@ -81,7 +81,7 @@ Always imports `./common/cachix.nix` regardless of device type.
 ### Directory Layout
 
 - `common/` — shared modules included by multiple device types (nix settings, zsh, agenix, gnupg, ssh, time, rabbitmq, packages)
-- `pc/` — desktop-specific config (KDE, NVIDIA, audio, bluetooth, fcitx5, docker, steam, etc.)
+- `pc/` — desktop-specific config (KDE, NVIDIA, audio, bluetooth, fcitx5, steam, etc.)
 - `server/` — server config; `server/hk/` and `server/gz/` for region-specific services
 - `wsl/` — WSL-specific network and user config
 - `rpi/` — Raspberry Pi 5 config (xray, monitor, runner services)

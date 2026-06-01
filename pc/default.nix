@@ -12,7 +12,6 @@
     ./chrome.nix
     ./configuration.nix
     ./display.nix
-    ./docker.nix
     ./fcitx5.nix
     ./fonts.nix
     ./haruna.nix

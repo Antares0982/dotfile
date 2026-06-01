@@ -16,9 +16,6 @@
     extraGroups = [
       "wheel"
       "ydotool"
-    ]
-    ++ pkgs.lib.optionals config.virtualisation.docker.enable [
-      "docker"
     ];
     uid = 1000;
     useDefaultShell = true;
