@@ -1,12 +1,12 @@
-{ config, pkgs, ... }:
+{
+  config,
+  pkgs,
+  nixos-mailserver,
+  ...
+}:
 {
   imports = [
-    (builtins.fetchTarball {
-      # repo: https://gitlab.com/simple-nixos-mailserver/nixos-mailserver
-      # Pick a release version you are interested in and set its hash, e.g.
-      url = "https://gitlab.com/simple-nixos-mailserver/nixos-mailserver/-/archive/e33fbde199eaad513ef5d0746db19d5878150232/nixos-mailserver-e33fbde199eaad513ef5d0746db19d5878150232.tar.gz";
-      sha256 = "sha256:0x73hf947cky34104cfqdaqpxykvcqhykvvg1jz6wrpfakvx4ghn";
-    })
+    nixos-mailserver.nixosModules.default
   ];
 
   mailserver = {

@@ -55,6 +55,21 @@
       url = "github:antares0982/visitor-badge";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    git-hooks = {
+      url = "github:cachix/git-hooks.nix";
+      inputs = {
+        flake-compat.follows = "flake-compat";
+        nixpkgs.follows = "nixpkgs";
+      };
+    };
+    nixos-mailserver = {
+      url = "gitlab:simple-nixos-mailserver/nixos-mailserver/main";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        flake-compat.follows = "flake-compat";
+        git-hooks.follows = "git-hooks";
+      };
+    };
     nixos-raspberrypi = {
       url = "github:nvmd/nixos-raspberrypi/main";
       inputs = {
@@ -139,6 +154,7 @@
       pull-all,
       renewal,
       hermes-agent,
+      nixos-mailserver,
       nixos-raspberrypi,
       linyinfeng-nur,
       ...

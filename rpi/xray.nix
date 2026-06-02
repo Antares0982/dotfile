@@ -13,7 +13,10 @@ in
 {
   # ── shared group for xray management ──
   users.groups.xray = {
-    members = [ "antares" "hermes" ];
+    members = [
+      "antares"
+      "hermes"
+    ];
   };
 
   # ── directories ──
