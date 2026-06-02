@@ -15,7 +15,6 @@
     ./nix.nix
     ./packages.nix
     ./runner.nix
-    ./shell.nix
     ./ssrjson-nixdev-runner.nix
     ./ssrjson-runner.nix
     ./user.nix
