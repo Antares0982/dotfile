@@ -15,6 +15,7 @@
   renewal,
   hermes-agent,
   nixos-raspberrypi,
+  nixos-mailserver,
   linyinfeng-nur,
   ...
 }:
@@ -68,6 +69,7 @@ curNixosSystem {
       pkgs-old
       linyinfeng-nur-packages
       hermes-agent
+      nixos-mailserver
       ;
   }
   // lib.attrsets.optionalAttrs currentDevice.pc {
