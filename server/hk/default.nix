@@ -5,6 +5,7 @@
   ]
   ++ [
     ./acme.nix
+    ./couchdb.nix
     ./mail.nix
     ./wordpress.nix
     ./visitorbadge.nix
