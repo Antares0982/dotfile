@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   couchdbStateDir = "/var/lib/couchdb";
@@ -30,36 +35,36 @@ in
     wantedBy = [ "multi-user.target" ];
 
     preStart = ''
-      ADMIN_PASS=$(head -n1 "${config.age.secrets.couchdbAdminPassword.path}")
-      umask 027
-      cat > ${couchdbStateDir}/etc/local.ini <<CEOF
-    ; Managed by NixOS — do not edit manually
+        ADMIN_PASS=$(head -n1 "${config.age.secrets.couchdbAdminPassword.path}")
+        umask 027
+        cat > ${couchdbStateDir}/etc/local.ini <<CEOF
+      ; Managed by NixOS — do not edit manually
 
-    [admins]
-    admin = $ADMIN_PASS
+      [admins]
+      admin = $ADMIN_PASS
 
-    [chttpd]
-    bind_address = 127.0.0.1
-    port = 5984
-    require_valid_user = true
-    enable_cors = true
-    max_http_request_size = 4294967296
+      [chttpd]
+      bind_address = 127.0.0.1
+      port = 5984
+      require_valid_user = true
+      enable_cors = true
+      max_http_request_size = 4294967296
 
-    [couch_httpd_auth]
-    require_valid_user = true
+      [couch_httpd_auth]
+      require_valid_user = true
 
-    [httpd]
-    WWW-Authenticate = Basic realm="couchdb"
-    enable_cors = true
+      [httpd]
+      WWW-Authenticate = Basic realm="couchdb"
+      enable_cors = true
 
-    [couchdb]
-    max_document_size = 50000000
+      [couchdb]
+      max_document_size = 50000000
 
-    [cors]
-    credentials = true
-    origins = app://obsidian.md,capacitor://localhost,http://localhost
-    CEOF
-      chown couchdb:couchdb ${couchdbStateDir}/etc/local.ini
+      [cors]
+      credentials = true
+      origins = app://obsidian.md,capacitor://localhost,http://localhost
+      CEOF
+        chown couchdb:couchdb ${couchdbStateDir}/etc/local.ini
     '';
 
     serviceConfig = {
@@ -84,7 +89,7 @@ in
       ProtectKernelTunables = true;
       ProtectControlGroups = true;
       RestrictRealtime = true;
-      MemoryDenyWriteExecute = false;  # Erlang needs JIT
+      MemoryDenyWriteExecute = false; # Erlang needs JIT
     };
   };
 
@@ -93,11 +98,11 @@ in
     addSSL = true;
     enableACME = true;
 
-    extraConfig = ''
-      limit_req_zone $binary_remote_addr zone=${couchRateLimitZone}:10m rate=20r/s;
-      limit_req zone=${couchRateLimitZone} burst=30 nodelay;
-      client_max_body_size 50m;
-    '';
+    # extraConfig = ''
+    #   limit_req_zone $binary_remote_addr zone=${couchRateLimitZone}:10m rate=20r/s;
+    #   limit_req zone=${couchRateLimitZone} burst=30 nodelay;
+    #   client_max_body_size 50m;
+    # '';
 
     locations = {
       "/".extraConfig = ''
