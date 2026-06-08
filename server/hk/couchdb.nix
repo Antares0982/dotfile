@@ -93,16 +93,20 @@ in
     };
   };
 
+  # ── Nginx rate-limiting zone (must be at http level) ──────────
+  services.nginx.commonHttpConfig = ''
+    limit_req_zone $binary_remote_addr zone=${couchRateLimitZone}:10m rate=20r/s;
+  '';
+
   # ── Nginx reverse proxy ───────────────────────────────────────
   services.nginx.virtualHosts."couch.chr.fan" = {
     addSSL = true;
     enableACME = true;
 
-    # extraConfig = ''
-    #   limit_req_zone $binary_remote_addr zone=${couchRateLimitZone}:10m rate=20r/s;
-    #   limit_req zone=${couchRateLimitZone} burst=30 nodelay;
-    #   client_max_body_size 50m;
-    # '';
+    extraConfig = ''
+      limit_req zone=${couchRateLimitZone} burst=30 nodelay;
+      client_max_body_size 50m;
+    '';
 
     locations = {
       "/".extraConfig = ''
