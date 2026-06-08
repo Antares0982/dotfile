@@ -41,6 +41,7 @@
     tor-browser
     tumbler
     unrar
+    xarchiver
     ydotool
 
     # niri ecosystem
@@ -56,6 +57,7 @@
     swaylock
     swaybg
     thunar
+    thunar-archive-plugin
     waybar
     wl-clipboard
   ];
