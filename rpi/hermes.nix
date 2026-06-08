@@ -39,6 +39,7 @@
     ];
 
     settings = {
+      display.busy_input_mode = "steer";
       security.redact_secrets = true;
     };
   };
