@@ -143,6 +143,12 @@ in
       mailPasswordAlyr = {
         file = ../secrets/mail-password-alyr.age;
       };
+      couchdbAdminPassword = {
+        file = ../secrets/couchdb-password.age;
+        owner = "couchdb";
+        group = "couchdb";
+        mode = "400";
+      };
     };
     identityPaths = [ "/etc/ssh/agenix" ];
   };
