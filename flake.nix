@@ -72,10 +72,7 @@
     };
     nixos-raspberrypi = {
       url = "github:nvmd/nixos-raspberrypi/main";
-      inputs = {
-        flake-compat.follows = "flake-compat";
-        nixpkgs.follows = "nixpkgs";
-      };
+      inputs.flake-compat.follows = "flake-compat";
     };
     pull-all = {
       url = "github:Antares0982/pull-all";
