@@ -26,6 +26,7 @@
     libreoffice
     neovim
     nixos-shell
+    obsidian
     opencode
     openspec
     openssl

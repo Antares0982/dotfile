@@ -14,7 +14,6 @@
     home = (import ../../common/localFileDef.nix { username = "antares"; }).userhome;
     description = "Antares0982";
     extraGroups = [
-      "disk"
       "wheel"
       "ydotool"
     ];
