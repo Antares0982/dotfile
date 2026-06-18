@@ -21,6 +21,7 @@
   networking = {
     hostName = "rpi5";
     firewall.enable = true;
+    firewall.allowedTCPPorts = [ 8080 8443 ];
   };
   time.timeZone = "Asia/Shanghai";
 
