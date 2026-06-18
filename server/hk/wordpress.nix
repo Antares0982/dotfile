@@ -16,6 +16,7 @@ let
     "6.8.3" = "sha256-+k8e7oo0h7HxZka+10pJ8o02uOV9q7cEH2fbG0l9Lg4=";
     "6.9.1" = "sha256-3BHPfy225yYvMtsOFn7z0twDCbnVD2Nwh0f4fXUXtOo=";
     "6.9.4" = "sha256-AWnSRrj/fx68CzIItK9KwhDzt6GSGWF/3Wtgd5sz6Bw=";
+    "7.0" = "sha256-RYjwoR/t3xsN7M4epSo3udgQi/BgHa+xs3014IdOo44=";
   };
   wordpress-language-cn = pkgs.stdenv.mkDerivation {
     name = "wordpress-${pkgs.wordpress.version}-language-cn";
