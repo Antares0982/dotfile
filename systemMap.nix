@@ -14,6 +14,7 @@
   pull-all,
   renewal,
   hermes-agent,
+  hermes-agent-pwa,
   nixos-raspberrypi,
   nixos-mailserver,
   linyinfeng-nur,
@@ -69,6 +70,7 @@ curNixosSystem {
       pkgs-old
       linyinfeng-nur-packages
       hermes-agent
+      hermes-agent-pwa
       nixos-mailserver
       ;
   }
