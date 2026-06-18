@@ -11,6 +11,8 @@
   services.hermes-agent = {
     enable = true;
     createUser = false;
+    user = "pwa";
+    group = "pwa";
     stateDir = "/home/pwa";
     workingDirectory = "/home/pwa/workspace";
 
@@ -36,10 +38,6 @@
   };
 
   systemd.services.hermes-agent.serviceConfig.TimeoutStopSec = lib.mkForce "210";
-
-  # PWA user is not the hardcoded "hermes" — force override
-  systemd.services.hermes-agent.serviceConfig.User = lib.mkForce "pwa";
-  systemd.services.hermes-agent.serviceConfig.Group = lib.mkForce "pwa";
 
   # systemd PATH includes /run/current-system/sw
   systemd.services.hermes-agent.path = lib.mkBefore [ "/run/current-system/sw" ];
