@@ -21,7 +21,7 @@
     enable = true;
     createUser = false;
     user = "pwa";
-    group = "pwa";
+    group = "users";
     stateDir = "/home/pwa";
     workingDirectory = "/home/pwa/workspace";
 
