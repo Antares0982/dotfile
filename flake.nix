@@ -93,6 +93,17 @@
         npm-lockfile-fix.follows = "npm-lockfile-fix";
       };
     };
+    hermes-agent-pwa = {
+      url = "github:Antares0982/hermes-agent/pwa";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        flake-parts.follows = "flake-parts";
+        pyproject-nix.follows = "pyproject-nix";
+        uv2nix.follows = "uv2nix";
+        pyproject-build-systems.follows = "pyproject-build-systems";
+        npm-lockfile-fix.follows = "npm-lockfile-fix";
+      };
+    };
     linyinfeng-nur = {
       url = "github:linyinfeng/nur-packages";
       inputs = {
@@ -151,6 +162,7 @@
       pull-all,
       renewal,
       hermes-agent,
+      hermes-agent-pwa,
       nixos-mailserver,
       nixos-raspberrypi,
       linyinfeng-nur,
