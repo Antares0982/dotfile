@@ -12,7 +12,6 @@
   };
   imports = [
     ./alice.nix
-    ./luggpt.nix
     ./monitor.nix
   ]
   ++ [
