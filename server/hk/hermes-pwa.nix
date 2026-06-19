@@ -43,6 +43,14 @@
       model.context_length = 1000000;
       auxiliary.compression.context_length = 1000000;
       display.busy_input_mode = "steer";
+      agent.disabled_toolsets = [
+        "terminal" "file" "code_execution" "skills"
+        "image_gen" "video_gen" "video" "tts"
+        "homeassistant" "kanban" "computer_use"
+        "discord" "discord_admin" "yuanbao"
+        "feishu_doc" "feishu_drive" "spotify"
+        "moa" "x_search"
+      ];
     };
   };
 
