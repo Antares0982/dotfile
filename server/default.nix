@@ -10,6 +10,7 @@ in
     ./firewall.nix
     ./mysql.nix
     ./packages.nix
+    ./sysstat.nix
     ./user.nix
     ./xrayService.nix
   ]
