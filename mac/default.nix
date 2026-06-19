@@ -13,6 +13,7 @@
     ./proxy.nix
     ./stdenv.nix
     ./xray.nix
+    ./zsh.nix
   ]
   ++ [
     ../common/nix.nix
