@@ -296,11 +296,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1781868515,
-        "narHash": "sha256-NLSmLczNflVU6SqVGtYl3naJ5l9c4/+ovhNYGphRDwM=",
+        "lastModified": 1781868838,
+        "narHash": "sha256-4MglFPJ8BHLyHZV5TFkIYnpYGoScusDUvLbU/ICHYvE=",
         "owner": "Antares0982",
         "repo": "hermes-agent",
-        "rev": "e494dfeceef966810324e36f9da400fa038f2c9c",
+        "rev": "13664daa447224f4799d8350590c322540dcb15c",
         "type": "github"
       },
       "original": {
