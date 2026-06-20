@@ -6,90 +6,53 @@
 }:
 
 let
-  couchdbStateDir = "/var/lib/couchdb";
-  couchdbPkg = pkgs.couchdb3;
   couchRateLimitZone = "couch_zone";
 in
 {
-  # ── CouchDB user ──────────────────────────────────────────────
-  users.users.couchdb = {
-    isSystemUser = true;
-    group = "couchdb";
-    home = couchdbStateDir;
-    createHome = true;
-  };
-  users.groups.couchdb = { };
+  services.couchdb = {
+    enable = true;
 
-  # ── State directories ─────────────────────────────────────────
-  systemd.tmpfiles.rules = [
-    "d ${couchdbStateDir} 0750 couchdb couchdb - -"
-    "d ${couchdbStateDir}/data 0750 couchdb couchdb - -"
-    "d ${couchdbStateDir}/etc 0750 couchdb couchdb - -"
-    "d ${couchdbStateDir}/view_index 0750 couchdb couchdb - -"
-  ];
+    # [chttpd] bind_address / port
+    bindAddress = "127.0.0.1";
+    port = 5984;
 
-  # ── CouchDB systemd service ───────────────────────────────────
-  systemd.services.couchdb = {
-    description = "CouchDB for Obsidian LiveSync";
-    after = [ "network.target" ];
-    wantedBy = [ "multi-user.target" ];
+    # [admins]
+    #
+    # Do NOT use `adminPass` here: the module renders it into the
+    # world-readable nix store. Instead point `extraConfigFiles` at the
+    # agenix secret, which must contain a full ini section:
+    #
+    #   [admins]
+    #   admin = <password-or-hash>
+    #
+    # (re-encrypt with `agenix -e secrets/couchdb-password.age`)
+    extraConfigFiles = [ config.age.secrets.couchdbAdminPassword.path ];
 
-    preStart = ''
-        ADMIN_PASS=$(head -n1 "${config.age.secrets.couchdbAdminPassword.path}")
-        umask 027
-        cat > ${couchdbStateDir}/etc/local.ini <<CEOF
-      ; Managed by NixOS — do not edit manually
+    # Remaining sections from the old local.ini.
+    extraConfig = {
+      chttpd = {
+        require_valid_user = true;
+        enable_cors = true;
+        max_http_request_size = 4294967296;
+      };
 
-      [admins]
-      admin = $ADMIN_PASS
+      couch_httpd_auth = {
+        require_valid_user = true;
+      };
 
-      [chttpd]
-      bind_address = 127.0.0.1
-      port = 5984
-      require_valid_user = true
-      enable_cors = true
-      max_http_request_size = 4294967296
+      httpd = {
+        "WWW-Authenticate" = ''Basic realm="couchdb"'';
+        enable_cors = true;
+      };
 
-      [couch_httpd_auth]
-      require_valid_user = true
+      couchdb = {
+        max_document_size = 50000000;
+      };
 
-      [httpd]
-      WWW-Authenticate = Basic realm="couchdb"
-      enable_cors = true
-
-      [couchdb]
-      max_document_size = 50000000
-
-      [cors]
-      credentials = true
-      origins = app://obsidian.md,capacitor://localhost,http://localhost
-      CEOF
-        chown couchdb:couchdb ${couchdbStateDir}/etc/local.ini
-    '';
-
-    serviceConfig = {
-      User = "couchdb";
-      Group = "couchdb";
-      ExecStart = "${couchdbPkg}/bin/couchdb";
-      Environment = [
-        "COUCHDB_DATA_DIR=${couchdbStateDir}/data"
-        "COUCHDB_CONFIG_DIR=${couchdbStateDir}/etc"
-        "COUCHDB_VIEW_INDEX_DIR=${couchdbStateDir}/view_index"
-        "HOME=${couchdbStateDir}"
-      ];
-      Restart = "always";
-      RestartSec = 5;
-
-      # Security hardening
-      NoNewPrivileges = true;
-      PrivateTmp = true;
-      ProtectSystem = "strict";
-      ProtectHome = true;
-      ReadWritePaths = couchdbStateDir;
-      ProtectKernelTunables = true;
-      ProtectControlGroups = true;
-      RestrictRealtime = true;
-      MemoryDenyWriteExecute = false; # Erlang needs JIT
+      cors = {
+        credentials = true;
+        origins = "app://obsidian.md,capacitor://localhost,http://localhost";
+      };
     };
   };
 
