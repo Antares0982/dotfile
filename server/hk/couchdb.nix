@@ -47,6 +47,8 @@ in
 
       couchdb = {
         max_document_size = 50000000;
+        # Single-node deploy: auto-create _users/_replicator system dbs.
+        single_node = true;
       };
 
       cors = {
