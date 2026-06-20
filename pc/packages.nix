@@ -19,11 +19,11 @@
     # discord
     ffmpeg
     imagemagick
-    kdePackages.dolphin
+    # kdePackages.dolphin
     kdePackages.gwenview
-    kdePackages.konsole
+    # kdePackages.konsole
     libnotify
-    libreoffice
+    # libreoffice
     neovim
     nixos-shell
     obsidian
@@ -41,7 +41,7 @@
     thunderbird
     tor-browser
     tumbler
-    unrar
+    unar
     xarchiver
     ydotool
 
