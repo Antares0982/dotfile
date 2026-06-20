@@ -83,15 +83,9 @@ in
         proxy_buffering off;
         proxy_request_buffering off;
 
-        # CORS headers (belt-and-suspenders with CouchDB's own CORS)
-        add_header Access-Control-Allow-Origin $http_origin always;
-        add_header Access-Control-Allow-Credentials true always;
-        add_header Access-Control-Allow-Methods "GET,PUT,POST,HEAD,DELETE" always;
-        add_header Access-Control-Allow-Headers "accept,authorization,content-type,origin,referer" always;
-        add_header Access-Control-Max-Age 3600 always;
-        if ($request_method = OPTIONS) {
-          return 204;
-        }
+        # CORS is handled entirely by CouchDB (enable_cors + [cors]).
+        # Do NOT add CORS headers here, or the browser sees duplicate
+        # Access-Control-Allow-Origin headers and native fetch fails.
       '';
 
       # Block CouchDB admin / introspection endpoints
