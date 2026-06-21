@@ -124,6 +124,14 @@ rec {
     }
 
     zc() { _zz c "$@"; }
+
+    nd() {
+      if [ "$#" -eq 0 ]; then
+        nix develop -c zsh
+      else
+        nix develop $@
+      fi
+    }
   ''
   + lib.concatStrings (lib.mapAttrsToList genNixFunc nixFuncAliases);
 }
