@@ -125,7 +125,7 @@ rec {
 
     zc() { _zz c "$@"; }
 
-    ns() {
+    op() {
       if [ "$#" -ne 1 ]; then
         echo "Usage: ns <file>"
         return 1
