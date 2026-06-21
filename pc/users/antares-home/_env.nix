@@ -125,6 +125,24 @@ rec {
 
     zc() { _zz c "$@"; }
 
+    ns() {
+      if [ "$#" -ne 1 ]; then
+        echo "Usage: ns <file>"
+        return 1
+      fi
+      local file
+      file=$(realpath -- "$1" 2>/dev/null)
+      if [ -z "$file" ]; then
+        echo "ns: cannot resolve path: $1"
+        return 1
+      fi
+      if [ ! -e "$file" ]; then
+        echo "ns: file not found: $file"
+        return 1
+      fi
+      niri msg action spawn -- xdg-open "$file"
+    }
+
     nd() {
       if [ "$#" -eq 0 ]; then
         nix develop -c zsh
