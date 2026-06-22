@@ -17,6 +17,7 @@
     cmake
     direnv
     # discord
+    element-desktop
     ffmpeg
     imagemagick
     # kdePackages.dolphin
