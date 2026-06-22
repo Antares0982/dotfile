@@ -17,6 +17,7 @@ in
     ./jetbrains.nix
     ./monitor.nix
     ./wait-online.nix
+    ./xdg-mime.nix
     ./xray.nix
   ];
   programs.home-manager.enable = true;

@@ -7,6 +7,7 @@ let
     "en.chr.fan" = "cloudflare";
     "couch.chr.fan" = "cloudflare";
     "pwa.chr.fan" = "cloudflare";
+    "tri-lug.chr.fan" = "cloudflare";
   };
 in
 {
@@ -18,6 +19,7 @@ in
     "en.chr.fan"
     "couch.chr.fan"
     "pwa.chr.fan"
+    "tri-lug.chr.fan"
   ];
   domainDNSProvider = name: domainDNSMatch.${name};
 }
