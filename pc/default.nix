@@ -14,7 +14,6 @@
     ./display.nix
     ./fcitx5.nix
     ./fonts.nix
-    ./haruna.nix
 
     ./network.nix
     ./nix.nix
@@ -25,7 +24,6 @@
     ./samba.nix
     ./ssh.nix
     ./steam.nix
-    ./typora.nix
     ./user.nix
     ./vscode.nix
     ./ydotool.nix

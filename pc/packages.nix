@@ -19,6 +19,7 @@
     # discord
     element-desktop
     ffmpeg
+    haruna
     imagemagick
     # kdePackages.dolphin
     kdePackages.gwenview
@@ -42,6 +43,7 @@
     thunderbird
     tor-browser
     tumbler
+    typora
     unar
     xarchiver
     ydotool
