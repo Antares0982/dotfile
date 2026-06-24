@@ -185,6 +185,12 @@ in
         group = "rabbitmq";
         mode = "400";
       };
+      pwaEnv = {
+        file = ../secrets/pwa-env.age;
+        owner = "pwa";
+        group = "users";
+        mode = "400";
+      };
     };
     identityPaths = [ "/etc/ssh/agenix" ];
   };

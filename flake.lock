@@ -274,6 +274,42 @@
         "type": "github"
       }
     },
+    "hermes-agent-pwa": {
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "npm-lockfile-fix": [
+          "npm-lockfile-fix"
+        ],
+        "pyproject-build-systems": [
+          "pyproject-build-systems"
+        ],
+        "pyproject-nix": [
+          "pyproject-nix"
+        ],
+        "uv2nix": [
+          "uv2nix"
+        ]
+      },
+      "locked": {
+        "lastModified": 1781890164,
+        "narHash": "sha256-GbDXoan25DdeYbX3gaZdXgLQQ0iHVSJDdigcqNkK5sE=",
+        "owner": "Antares0982",
+        "repo": "hermes-agent",
+        "rev": "1b077ba6d41f264da8f4abbf7af6073ecf893565",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Antares0982",
+        "ref": "pwa",
+        "repo": "hermes-agent",
+        "type": "github"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -665,6 +701,7 @@
         "flake-utils": "flake-utils",
         "git-hooks": "git-hooks",
         "hermes-agent": "hermes-agent",
+        "hermes-agent-pwa": "hermes-agent-pwa",
         "home-manager": "home-manager",
         "linyinfeng-nur": "linyinfeng-nur",
         "myXray": "myXray",
