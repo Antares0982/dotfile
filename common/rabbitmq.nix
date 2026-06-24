@@ -17,6 +17,7 @@ in
     }
     (lib.mkIf hkServer {
       configItems = {
+        "load_definitions" = config.age.secrets.rabbitmqDefinitions.path;
         "listeners.ssl.default" = "5671";
         "ssl_options.cacertfile" = "/var/rabbitmq_crt/ca.crt";
         "ssl_options.certfile" = "/var/rabbitmq_crt/server.crt";
