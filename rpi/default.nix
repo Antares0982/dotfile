@@ -20,6 +20,8 @@
     ./ssrjson-runner.nix
     ./user.nix
     ./xray.nix
+    ./napcat.nix
+    ./qq-relay.nix
   ]
   ++ [
     ../common/agenix.nix

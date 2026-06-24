@@ -99,6 +99,36 @@ in
         group = "users";
         mode = "400";
       };
+      napcatEnv = {
+        file = ../secrets/napcat-env.age;
+        owner = "napcat";
+        group = "users";
+        mode = "400";
+      };
+      qqRelayEnv = {
+        file = ../secrets/qq-relay-env.age;
+        owner = "napcat";
+        group = "users";
+        mode = "400";
+      };
+      qqRelayRabbitCa = {
+        file = ../secrets/hermes-rabbit-ca.age;
+        owner = "napcat";
+        group = "users";
+        mode = "400";
+      };
+      qqRelayRabbitCert = {
+        file = ../secrets/hermes-rabbit-cert.age;
+        owner = "napcat";
+        group = "users";
+        mode = "400";
+      };
+      qqRelayRabbitKey = {
+        file = ../secrets/hermes-rabbit-key.age;
+        owner = "napcat";
+        group = "users";
+        mode = "400";
+      };
       xraySubUrl = {
         file = ../secrets/xraysub.age;
         owner = "antares";

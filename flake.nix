@@ -78,6 +78,13 @@
       url = "github:Antares0982/pull-all";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    napcat-nix = {
+      url = "github:Antares0982/napcat.nix";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        flake-utils.follows = "flake-utils";
+      };
+    };
     renewal = {
       url = "github:Antares0982/renewal";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -150,6 +157,7 @@
       visitor-badge,
       pull-all,
       renewal,
+      napcat-nix,
       hermes-agent,
       nixos-mailserver,
       nixos-raspberrypi,

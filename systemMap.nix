@@ -13,6 +13,7 @@
   visitor-badge,
   pull-all,
   renewal,
+  napcat-nix,
   hermes-agent,
   nixos-raspberrypi,
   nixos-mailserver,
@@ -48,6 +49,7 @@ let
   antares-rpc-client = _antares-rpc-client.packages.${system}.default;
   visitor-badge = _visitor-badge.packages.${system}.default;
   pull-all = _pull-all.packages.${system}.default;
+  napcat = napcat-nix.packages.${system}.default;
   renewal = _renewal.packages.${system}.default;
   needVSCodeServer = currentDevice.rpi or false;
   pkgs-old = nixpkgsToPkgs nixpkgs-old;
@@ -76,7 +78,7 @@ curNixosSystem {
     rust-overlay = rust-overlay.overlays.default;
   }
   // lib.attrsets.optionalAttrs currentDevice.rpi {
-    inherit nixos-raspberrypi;
+    inherit nixos-raspberrypi napcat;
   };
   modules = [
     ./configuration.nix
