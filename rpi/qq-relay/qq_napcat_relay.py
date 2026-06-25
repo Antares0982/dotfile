@@ -68,8 +68,16 @@ HTTP_TIMEOUT = 30
 RK_EVENT = "qq.event"
 RK_ACTION = "qq.action"
 RK_ACTION_RESP = "qq.action_resp"
+# Avatar fetch RPC: alice asks the relay for an avatar's raw bytes so it never
+# has to reach the QQ avatar CDN itself.
+RK_AVATAR_REQ = "qq.avatar_req"
+RK_AVATAR_RESP = "qq.avatar_resp"
 
 ACTION_QUEUE = "tri_lug.relay.action"
+AVATAR_QUEUE = "tri_lug.relay.avatar"
+
+# QQ avatars are publicly fetchable by uin; s=640 is the large square avatar.
+QQ_AVATAR_URL = "https://q1.qlogo.cn/g?b=qq&nk={uin}&s=640"
 
 # Echo prefix for the relay's OWN actions (image fetches), so their responses
 # are resolved internally instead of being forwarded to alice as qq.action_resp.
@@ -119,6 +127,9 @@ class Relay:
         action_q = await channel.declare_queue(ACTION_QUEUE, durable=True)
         await action_q.bind(self._exchange, RK_ACTION)
         await action_q.consume(self._on_action)
+        avatar_q = await channel.declare_queue(AVATAR_QUEUE, durable=True)
+        await avatar_q.bind(self._exchange, RK_AVATAR_REQ)
+        await avatar_q.consume(self._on_avatar)
         self._http = aiohttp.ClientSession()
         _LOG.info("RabbitMQ ready (exchange=%s, cache=%s)", EXCHANGE, CACHE_DIR)
 
@@ -332,6 +343,22 @@ class Relay:
                 await self._ws.send(message.body.decode())
             except Exception as e:
                 _LOG.error("failed to forward action to NapCat: %s", e)
+
+    async def _on_avatar(self, message: aio_pika.abc.AbstractIncomingMessage) -> None:
+        async with message.process():
+            try:
+                req = json.loads(message.body)
+            except (ValueError, TypeError):
+                return
+            echo = req.get("echo")
+            uin = str(req.get("id", ""))
+            resp: dict = {"echo": echo}
+            # kind is "qq" for now; other platforms fetch their own avatars.
+            if uin:
+                raw = await self._http_get(QQ_AVATAR_URL.format(uin=uin))
+                if raw:
+                    resp["base64"] = base64.b64encode(raw).decode("ascii")
+            await self._publish(RK_AVATAR_RESP, json.dumps(resp))
 
     async def _publish(self, routing_key: str, body) -> None:
         assert self._exchange is not None

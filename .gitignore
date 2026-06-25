@@ -9,3 +9,5 @@ secrets/secrets.nix
 /result
 
 /src/git_credential_refresher/target
+
+__pycache__/
