@@ -8,15 +8,39 @@ import subprocess
 
 os.makedirs("breeze", exist_ok=True)
 for file in os.listdir(files):
-
     if file.endswith(".png"):
         pixels = file[:-4]
-        w, h = pixels.split('x')
+        w, h = pixels.split("x")
         if int(h) > int(w):
             print(file)
             move = int(w) * 200 // 360
-            subprocess.call(["convert", "arona.png", "-resize", f"{pixels}^", "-gravity",
-                            "center", "-crop", f"{pixels}-{move}+0", "+repage", f"breeze/{file}"])
+            subprocess.call(
+                [
+                    "convert",
+                    "arona.png",
+                    "-resize",
+                    f"{pixels}^",
+                    "-gravity",
+                    "center",
+                    "-crop",
+                    f"{pixels}-{move}+0",
+                    "+repage",
+                    f"breeze/{file}",
+                ]
+            )
         else:
             print(file)
-            subprocess.call(["convert", "arona.png", "-resize", f"{pixels}^", "-gravity", "center", "-crop", f"{pixels}+0+0", "+repage", f"breeze/{file}"])
+            subprocess.call(
+                [
+                    "convert",
+                    "arona.png",
+                    "-resize",
+                    f"{pixels}^",
+                    "-gravity",
+                    "center",
+                    "-crop",
+                    f"{pixels}+0+0",
+                    "+repage",
+                    f"breeze/{file}",
+                ]
+            )
