@@ -13,6 +13,7 @@
   imports = [
     ./alice.nix
     ./monitor.nix
+    ./trilug.nix
   ]
   ++ [
     (import ../multiuser-rpc-client.nix {
