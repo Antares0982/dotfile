@@ -3,6 +3,7 @@
   pkgs,
   lib,
   pkgs-old,
+  pkgs-new,
   ...
 }:
 let
@@ -24,7 +25,7 @@ in
           export HOME=/home/${runnerUser}/runner-${i}
           mkdir -p $HOME
           cd $HOME
-          bash ${pkgs.github-runner}/bin/run.sh
+          bash ${pkgs-new.github-runner}/bin/run.sh
         '';
         serviceConfig.User = runnerUser;
         wantedBy = [ "multi-user.target" ];

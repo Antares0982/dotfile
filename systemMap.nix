@@ -34,7 +34,7 @@ in
 
 currentDevice:
 let
-  system = currentDevice.system;
+  inherit (currentDevice) system;
   curNixosSystem = if currentDevice.rpi then rpi-system else nixosSystem;
   nixpkgsToPkgs =
     _nixpkgs:
@@ -54,6 +54,7 @@ let
   renewal = _renewal.packages.${system}.default;
   needVSCodeServer = currentDevice.rpi or false;
   pkgs-old = nixpkgsToPkgs nixpkgs-old;
+  pkgs-new = nixpkgsToPkgs nixpkgs;
   linyinfeng-nur-packages = linyinfeng-nur.packages.${system};
 in
 curNixosSystem {
@@ -70,6 +71,7 @@ curNixosSystem {
       pull-all
       renewal
       pkgs-old
+      pkgs-new
       linyinfeng-nur-packages
       hermes-agent
       hermes-agent-pwa

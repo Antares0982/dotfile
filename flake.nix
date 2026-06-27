@@ -177,7 +177,7 @@
       ...
     }:
     let
-      lib = nixpkgs.lib;
+      inherit (nixpkgs) lib;
       systemMap = import ./systemMap.nix (
         input
         // {
