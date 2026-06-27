@@ -71,8 +71,21 @@ jobs:
         echo "branch_name=$branch" >> "$GITHUB_OUTPUT"
 
         if git ls-remote --heads origin "$branch" | grep -q .; then
-          echo "Branch $branch already exists on remote -> skip build"
-          echo "skip_build=true" >> "$GITHUB_OUTPUT"
+          # Branch exists. Only skip if it already contains the current
+          # origin/master (i.e. it is a forward branch of master). If master
+          # has advanced beyond it, the new master changes are missing and we
+          # must rebuild.
+          git fetch --quiet origin \
+            "master:refs/remotes/origin/master" \
+            "$branch:refs/remotes/origin/${branch}"
+
+          if git merge-base --is-ancestor origin/master "origin/${branch}"; then
+            echo "Branch $branch already contains origin/master -> skip build"
+            echo "skip_build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Branch $branch is behind origin/master -> will rebuild and force push"
+            echo "skip_build=false" >> "$GITHUB_OUTPUT"
+          fi
         else
           echo "Branch $branch not found on remote -> will build"
           echo "skip_build=false" >> "$GITHUB_OUTPUT"
@@ -88,5 +101,5 @@ jobs:
       env:
         BRANCH: ${{ steps.check.outputs.branch_name }}
       run: |
-        git checkout -b "$BRANCH"
-        git push --set-upstream origin "$BRANCH"
+        git checkout -B "$BRANCH"
+        git push --force-with-lease --set-upstream origin "$BRANCH"
