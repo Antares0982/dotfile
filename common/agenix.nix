@@ -191,6 +191,12 @@ in
         group = "users";
         mode = "400";
       };
+      l4d2Rcon = {
+        file = ../secrets/l4d2Rcon.age;
+        owner = "l4d2";
+        group = "l4d2";
+        mode = "400";
+      };
     };
     identityPaths = [ "/etc/ssh/agenix" ];
   };

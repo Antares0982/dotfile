@@ -11,5 +11,6 @@
     ./wordpress.nix
     ./visitorbadge.nix
     ./matrix-appservice.nix
+    ../../common/l4d2
   ];
 }
