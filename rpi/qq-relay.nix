@@ -48,4 +48,21 @@ in
       CACHE_DIR = "/var/cache/qq-napcat-relay";
     };
   };
+
+  systemd.services.qq-napcat-relay-restart = {
+    description = "Restart QQ-NapCat RabbitMQ Relay";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.systemd}/bin/systemctl restart qq-napcat-relay.service";
+    };
+  };
+
+  systemd.timers.qq-napcat-relay-restart = {
+    description = "Daily 05:00 restart of QQ-NapCat RabbitMQ Relay";
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "*-*-* 05:00:00";
+      Persistent = true;
+    };
+  };
 }
