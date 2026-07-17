@@ -4,11 +4,11 @@
   lib,
   ...
 }:
-let
-  vscode = pkgs.vscode.override (previous: {
-    commandLineArgs = "--enable-wayland-ime=";
-  });
-in
+# let
+#   vscode = pkgs.vscode.override (previous: {
+#     commandLineArgs = "--enable-wayland-ime=";
+#   });
+# in
 rec {
-  environment.systemPackages = [ vscode.fhs ];
+  environment.systemPackages = [ pkgs.vscode.fhs ];
 }
