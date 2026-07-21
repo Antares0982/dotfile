@@ -1,27 +1,32 @@
-{
-  nixpkgs,
-  nixpkgs-old,
-  agenix,
-  lib,
-  home-manager,
-  myXray,
-  wsl,
-  vscode-server,
-  rust-overlay,
-  antares-monitor,
-  antares-rpc-client,
-  visitor-badge,
-  pull-all,
-  renewal,
-  napcat-nix,
-  hermes-agent,
-  hermes-agent-pwa,
-  nixos-raspberrypi,
-  nixos-mailserver,
-  linyinfeng-nur,
-  ...
-}:
+inputs:
 let
+  # Access every flake input lazily through `inputs` so a per-host flake only
+  # needs to declare the inputs that its device actually forces. `inherit`
+  # bindings are thunks: an input omitted by a host errors only if a module
+  # for that host reads it, which by construction it never does.
+  inherit (inputs)
+    nixpkgs
+    nixpkgs-old
+    agenix
+    home-manager
+    myXray
+    wsl
+    vscode-server
+    rust-overlay
+    antares-monitor
+    antares-rpc-client
+    visitor-badge
+    pull-all
+    renewal
+    napcat-nix
+    hermes-agent
+    hermes-agent-pwa
+    nixos-raspberrypi
+    nixos-mailserver
+    linyinfeng-nur
+    ;
+  # Root flake still passes `lib` explicitly; per-host flakes let us derive it.
+  lib = inputs.lib or nixpkgs.lib;
   xray = myXray;
   _antares-monitor = antares-monitor;
   _antares-rpc-client = antares-rpc-client;

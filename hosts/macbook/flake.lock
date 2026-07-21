@@ -1,0 +1,108 @@
+{
+  "nodes": {
+    "myXray": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs-old"
+        ]
+      },
+      "locked": {
+        "lastModified": 1784634683,
+        "narHash": "sha256-bPOGvyPm6TWiIzKgZvo1L6uifNZdKwWCCmKVEOZBNF8=",
+        "owner": "Antares0982",
+        "repo": "rules-dat-xray-flake",
+        "rev": "d447ca7238ec00b22c1aad9a730da124c23b4f15",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Antares0982",
+        "repo": "rules-dat-xray-flake",
+        "type": "github"
+      }
+    },
+    "nix-darwin": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1784500460,
+        "narHash": "sha256-UvORnAxTRHax7RG74W8Z2t4GvIkX6AjJ5kk0QlwZomo=",
+        "owner": "nix-darwin",
+        "repo": "nix-darwin",
+        "rev": "57a3171f94705599a2499248ca5758d5eb47c0e0",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-darwin",
+        "ref": "master",
+        "repo": "nix-darwin",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1784497964,
+        "narHash": "sha256-vlHUuqAcbcH2RKmHbPiuQzbv1pnzzavXnI62RD0bqCU=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "241313f4e8e508cb9b13278c2b0fa25b9ca27163",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs-old": {
+      "locked": {
+        "lastModified": 1784432872,
+        "narHash": "sha256-n3gKTBIV4ZA5VQpUakffBe3KGu4+mhPoA34rrqS0GkA=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "fd1462031fdee08f65fd0b4c6b64e22239a77870",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-26.05",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "renewal": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1781281937,
+        "narHash": "sha256-hIuTBn/qAtp2Tn+6hRgXxnten3Qw3UNW9iVAGqSbXQI=",
+        "owner": "Antares0982",
+        "repo": "renewal",
+        "rev": "2b7c1c088773b716dbb15829f973c53235c21f9c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Antares0982",
+        "repo": "renewal",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "myXray": "myXray",
+        "nix-darwin": "nix-darwin",
+        "nixpkgs": "nixpkgs",
+        "nixpkgs-old": "nixpkgs-old",
+        "renewal": "renewal"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}

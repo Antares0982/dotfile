@@ -45,7 +45,7 @@ jobs:
 
     - name: Nix flake update
       run: |
-        nix flake update --commit-lock-file
+        nix flake update --flake ./hosts/nixos --commit-lock-file
 
     - name: Check nixpkgs version and decide whether to build
       id: check
@@ -58,7 +58,7 @@ jobs:
           // (.nodes[]?.locked.rev // .nodes[]?.locked.revision)
           // .locks["nixpkgs"]?.locked.rev
           // .locks["nixpkgs"]?.locked.revision
-          )' flake.lock 2>/dev/null | head -n1 || true)
+          )' hosts/nixos/flake.lock 2>/dev/null | head -n1 || true)
 
         if [ -z "$rev" ] || [ "$rev" = "null" ]; then
           rev=$(date -u +"%Y%m%dT%H%M%SZ")
@@ -94,7 +94,7 @@ jobs:
     - name: Nix build
       if: steps.check.outputs.skip_build == 'false'
       run: |
-        nix build -L .#nixosConfigurations.nixos.config.system.build.toplevel --show-trace
+        nix build -L ./hosts/nixos#nixosConfigurations.nixos.config.system.build.toplevel --show-trace
 
     - name: Push branch
       if: steps.check.outputs.skip_build == 'false'

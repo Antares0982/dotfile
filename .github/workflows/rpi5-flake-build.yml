@@ -27,8 +27,8 @@ jobs:
 
     - name: Nix flake update
       run: |
-        nix flake update
+        nix flake update --flake ./hosts/rpi5
 
     - name: Nix build (rpi5)
       run: |
-        nix build -L .#nixosConfigurations.rpi5.config.system.build.toplevel --show-trace
+        nix build -L ./hosts/rpi5#nixosConfigurations.rpi5.config.system.build.toplevel --show-trace

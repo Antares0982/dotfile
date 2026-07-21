@@ -19,29 +19,34 @@ Multi-machine Nix configuration flake managing:
 
 ## Build & Switch Commands
 
+Each machine is its own flake under `hosts/<name>/`, with an independent
+`flake.lock` (so one machine's nixpkgs pin never affects another). Shared Nix
+code stays at the repo root and is pulled in via `import ../../<file>`. There is
+no root `flake.nix`.
+
 **NixOS systems** (from this repo directory):
 ```bash
 # Build without switching (dry-run check)
-nixos-rebuild build --flake .#nixos
-nixos-rebuild build --flake .#hk
-nixos-rebuild build --flake .#wsl
-nixos-rebuild build --flake .#rpi5
+nixos-rebuild build --flake ./hosts/nixos#nixos
+nixos-rebuild build --flake ./hosts/hk#hk
+nixos-rebuild build --flake ./hosts/wsl#wsl
+nixos-rebuild build --flake ./hosts/rpi5#rpi5
 
 # Apply configuration
-sudo nixos-rebuild switch --flake .#nixos
-sudo nixos-rebuild switch --flake .#wsl
+sudo nixos-rebuild switch --flake ./hosts/nixos#nixos
+sudo nixos-rebuild switch --flake ./hosts/wsl#wsl
 ```
 
 **macOS** (nix-darwin):
 ```bash
-darwin-rebuild build --flake .#macbook
-darwin-rebuild switch --flake .#macbook
+darwin-rebuild build --flake ./hosts/macbook#macbook
+darwin-rebuild switch --flake ./hosts/macbook#macbook
 ```
 
-**Flake inputs:**
+**Flake inputs** (per machine — updates only that machine's lock):
 ```bash
-nix flake update               # update all inputs
-nix flake update <input-name>  # update a specific input
+nix flake update --flake ./hosts/nixos                 # update all inputs
+nix flake update nixpkgs --flake ./hosts/nixos         # update a specific input
 ```
 
 **Secrets** (requires `~/.ssh/agenix` key):
@@ -61,12 +66,18 @@ agenix -e secrets/<name>.age
 
 ### System Construction
 
-`systemMap.nix` is the NixOS system builder. It receives a device descriptor and:
-1. Selects `nixpkgs.lib.nixosSystem` or `nixos-raspberrypi.lib.nixosSystem` for RPi
-2. Builds `specialArgs` with all flake packages (myXray, antares-monitor, etc.)
-3. Conditionally adds modules: home-manager, WSL, vscode-server, RPi hardware, openclaw
+`systemMap.nix` is the NixOS system builder. Each `hosts/<name>/flake.nix` calls
+it as `import ../../systemMap.nix inputs (import ../../<device>.nix)`, where
+`inputs` is that host flake's own inputs. It:
+1. Accesses every flake input lazily through `inputs` (e.g. `inputs.wsl`), so a
+   host flake only declares the inputs its device actually forces. An omitted
+   input errors only if a module for that device reads it (which never happens).
+2. Selects `nixpkgs.lib.nixosSystem` or `nixos-raspberrypi.lib.nixosSystem` for RPi
+3. Builds `specialArgs` with all flake packages (myXray, antares-monitor, etc.)
+4. Conditionally adds modules: home-manager, WSL, vscode-server, RPi hardware, openclaw
 
-The mac configuration bypasses `systemMap.nix` entirely — it's built directly in `flake.nix` using `nix-darwin.lib.darwinSystem`.
+The mac configuration bypasses `systemMap.nix` entirely — `hosts/macbook/flake.nix`
+builds it directly with `nix-darwin.lib.darwinSystem`.
 
 ### Module Dispatch
 
@@ -80,6 +91,7 @@ Always imports `./common/cachix.nix` regardless of device type.
 
 ### Directory Layout
 
+- `hosts/<name>/` — per-machine flake (`flake.nix` + independent `flake.lock`); the flake entry point for each device
 - `common/` — shared modules included by multiple device types (nix settings, zsh, agenix, gnupg, ssh, time, rabbitmq, packages)
 - `pc/` — desktop-specific config (KDE, NVIDIA, audio, bluetooth, fcitx5, steam, etc.)
 - `server/` — server config; `server/hk/` and `server/gz/` for region-specific services
