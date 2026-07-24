@@ -34,9 +34,35 @@
       url = "github:Antares0982/rules-dat-xray-flake";
       inputs.nixpkgs.follows = "nixpkgs-old";
     };
+    # antares-monitor's uv2nix python stack (follows kept to pin against this
+    # host's nixpkgs so the venv build dedups with the rest of the system).
+    pyproject-nix = {
+      url = "github:pyproject-nix/pyproject.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    uv2nix = {
+      url = "github:pyproject-nix/uv2nix";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        pyproject-nix.follows = "pyproject-nix";
+      };
+    };
+    pyproject-build-systems = {
+      url = "github:pyproject-nix/build-system-pkgs";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        pyproject-nix.follows = "pyproject-nix";
+        uv2nix.follows = "uv2nix";
+      };
+    };
     antares-monitor = {
       url = "github:antares0982/telegram-output-monitor-bot";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        pyproject-nix.follows = "pyproject-nix";
+        uv2nix.follows = "uv2nix";
+        pyproject-build-systems.follows = "pyproject-build-systems";
+      };
     };
     antares-rpc-client = {
       url = "github:antares0982/antares-rpc-client";
@@ -66,7 +92,6 @@
   # as one source path, so `import ../../<file>` reaches it directly — no
   # `shared` path input needed.
   outputs = inputs: {
-    nixosConfigurations.nixos =
-      import ../../systemMap.nix inputs (import ../../pc.nix);
+    nixosConfigurations.nixos = import ../../systemMap.nix inputs (import ../../pc.nix);
   };
 }

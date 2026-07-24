@@ -22,7 +22,12 @@
   # The mac config is built directly with nix-darwin (it bypasses systemMap.nix),
   # so this output mirrors the darwinConfigurations block of the old root flake.
   outputs =
-    inputs@{ nix-darwin, myXray, renewal, ... }:
+    inputs@{
+      nix-darwin,
+      myXray,
+      renewal,
+      ...
+    }:
     let
       currentDevice = import ../../mac.nix;
       mac-system = currentDevice.system;

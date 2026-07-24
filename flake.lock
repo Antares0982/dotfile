@@ -29,14 +29,23 @@
       "inputs": {
         "nixpkgs": [
           "nixpkgs"
+        ],
+        "pyproject-build-systems": [
+          "pyproject-build-systems"
+        ],
+        "pyproject-nix": [
+          "pyproject-nix"
+        ],
+        "uv2nix": [
+          "uv2nix"
         ]
       },
       "locked": {
-        "lastModified": 1781799546,
-        "narHash": "sha256-fOIjRUAXU2eXMQJiIib20eLSgWs6Er1LZdf7aZWt50U=",
+        "lastModified": 1784910619,
+        "narHash": "sha256-ds8w2mYrVtoL1YW1+xZ7PVxK+POAGkG8TKOiLFAv4SU=",
         "owner": "antares0982",
         "repo": "telegram-output-monitor-bot",
-        "rev": "81b97aac4f4f20a89378be06ed5ee738e1862dbc",
+        "rev": "9a35d20c20535aa216128f49d6b3c129ac8a6406",
         "type": "github"
       },
       "original": {

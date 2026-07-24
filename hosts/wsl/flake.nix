@@ -24,7 +24,6 @@
   };
 
   outputs = inputs: {
-    nixosConfigurations.wsl =
-      import ../../systemMap.nix inputs (import ../../wsl.nix);
+    nixosConfigurations.wsl = import ../../systemMap.nix inputs (import ../../wsl.nix);
   };
 }

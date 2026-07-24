@@ -17,7 +17,7 @@ in
     };
 
     Service = {
-      ExecStart = "${antares-monitor}/bin/monitor.py";
+      ExecStart = "${pkgs.nix}/bin/nix run ${antares-monitor}";
       EnvironmentFile = "/run/agenix/monitorCfgAntaresPc";
       Environment = [
         "http_proxy=${envs.envs.http_proxy}"

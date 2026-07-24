@@ -51,7 +51,10 @@ let
     }).pkgs;
   myXray = xray.packages.${system}.default;
   xray-sub = xray.packages.${system}.xray_sub;
-  antares-monitor = _antares-monitor.packages.${system}.default;
+  # Pass the flake source (not the prebuilt package): the monitor services now
+  # `nix run` this pinned source, so the venv is built lazily at service start
+  # instead of being baked into every system generation.
+  antares-monitor = _antares-monitor;
   antares-rpc-client = _antares-rpc-client.packages.${system}.default;
   visitor-badge = _visitor-badge.packages.${system}.default;
   pull-all = _pull-all.packages.${system}.default;

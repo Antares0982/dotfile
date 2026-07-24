@@ -18,9 +18,7 @@ in
     };
 
     Service = {
-      ExecStart = ''
-        ${antares-monitor}/bin/monitor.py
-      '';
+      ExecStart = "${pkgs.nix}/bin/nix run ${antares-monitor}";
       EnvironmentFile = userenvs.monitorCfgPath;
       Restart = "on-failure";
       RestartSec = 5;

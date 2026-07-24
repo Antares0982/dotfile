@@ -40,7 +40,12 @@
     };
     antares-monitor = {
       url = "github:antares0982/telegram-output-monitor-bot";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        pyproject-nix.follows = "pyproject-nix";
+        uv2nix.follows = "uv2nix";
+        pyproject-build-systems.follows = "pyproject-build-systems";
+      };
     };
     antares-rpc-client = {
       url = "github:antares0982/antares-rpc-client";
@@ -89,7 +94,6 @@
   };
 
   outputs = inputs: {
-    nixosConfigurations.rpi5 =
-      import ../../systemMap.nix inputs (import ../../rpi5.nix);
+    nixosConfigurations.rpi5 = import ../../systemMap.nix inputs (import ../../rpi5.nix);
   };
 }

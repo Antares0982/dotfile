@@ -16,7 +16,7 @@ in
     wantedBy = [ "multi-user.target" ];
     script = ''
       export PATH=$PATH:${shellenv.sysBin}
-      ${antares-monitor}/bin/monitor.py
+      ${pkgs.nix}/bin/nix run ${antares-monitor}
     '';
     environment = {
       http_proxy = "http://127.0.0.1:1081";
