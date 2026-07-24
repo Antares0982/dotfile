@@ -12,7 +12,6 @@
   };
   imports = [
     ./alice.nix
-    ./monitor.nix
     ./trilug.nix
   ]
   ++ [

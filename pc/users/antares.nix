@@ -2,7 +2,6 @@
   config,
   pkgs,
   myXray,
-  antares-monitor,
   antares-rpc-client,
   pull-all,
   xray-sub,
@@ -26,7 +25,6 @@
     extraSpecialArgs = {
       inherit
         myXray
-        antares-monitor
         antares-rpc-client
         pull-all
         xray-sub

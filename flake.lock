@@ -41,11 +41,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1784910619,
-        "narHash": "sha256-ds8w2mYrVtoL1YW1+xZ7PVxK+POAGkG8TKOiLFAv4SU=",
+        "lastModified": 1784912278,
+        "narHash": "sha256-75av5+NFcQd42YaIbnfUNv0k0xTuJAVNoykattlWw2I=",
         "owner": "antares0982",
         "repo": "telegram-output-monitor-bot",
-        "rev": "9a35d20c20535aa216128f49d6b3c129ac8a6406",
+        "rev": "a3c424668d2a7e059382d2c7948fc08ba4d8011d",
         "type": "github"
       },
       "original": {

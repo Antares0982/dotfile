@@ -2,7 +2,6 @@
   config,
   pkgs,
   myXray,
-  antares-monitor,
   antares-rpc-client,
   ...
 }:
@@ -54,6 +53,6 @@ in
   };
   home-manager.backupFileExtension = "backup";
   home-manager.extraSpecialArgs = {
-    inherit myXray antares-monitor antares-rpc-client;
+    inherit myXray antares-rpc-client;
   };
 }

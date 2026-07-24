@@ -15,7 +15,6 @@ in
     ./env.nix
     # ./git_credential_refresher.nix
     ./jetbrains.nix
-    ./monitor.nix
     ./wait-online.nix
     ./xdg-mime.nix
     ./xray.nix

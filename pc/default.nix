@@ -15,6 +15,7 @@
     ./fcitx5.nix
     ./fonts.nix
     ./mcp-nixos.nix
+    ./monitor.nix
 
     ./network.nix
     ./nix.nix

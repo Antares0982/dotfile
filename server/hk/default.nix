@@ -6,6 +6,7 @@
   ++ [
     ./acme.nix
     ./couchdb.nix
+    ./monitor.nix
     ./hermes-pwa.nix
     ./mail.nix
     ./wordpress.nix
