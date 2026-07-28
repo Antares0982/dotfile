@@ -5,15 +5,23 @@ BridgeMessage translation (that lives in alice's modules/tri_lug_utils/onebot.py
 but it DOES enrich events on the way out:
 
   * NapCat WS  -> RabbitMQ : events -> ``qq.event`` (after fetching image/mface
-                            bytes and inlining them as base64, and stamping a
-                            receipt ``ts``); ``meta_event`` heartbeats dropped.
-                            action responses (have ``echo``) -> ``qq.action_resp``
+                            /record bytes and inlining them as base64, and
+                            stamping a receipt ``ts``); ``meta_event`` heartbeats
+                            dropped. action responses (have ``echo``) ->
+                            ``qq.action_resp``
   * RabbitMQ   -> NapCat WS: ``qq.action`` -> forwarded to NapCat verbatim
 
 Image bytes: try an HTTP GET of the segment ``url`` first, then fall back to
 NapCat ``get_image``/``get_file`` (read the locally-cached file the bot already
 downloaded). Fetched bytes are cached on disk keyed by file id, swept hourly of
 anything older than 3h.
+
+Voice bytes (``record``): the segment's url is the raw SILK original, which no
+other platform can play, so there is no HTTP path — ``get_record`` is called with
+``out_format`` and NapCat (via ffmpeg) hands back the transcoded file inline as
+base64. The chosen mime is stamped onto the segment so alice needn't guess. If
+NapCat has no ffmpeg the action errors, no bytes are inlined, and alice reports
+the message on its log-only path.
 
 Ordering & no deadlock: the WS read loop only classifies frames — events go onto
 an in-order internal queue, action responses resolve a pending future or are
@@ -64,6 +72,13 @@ CACHE_DIR = os.environ.get("CACHE_DIR", "/var/cache/qq-napcat-relay")
 ACTION_TIMEOUT = float(os.environ.get("ACTION_TIMEOUT", "30"))
 CACHE_TTL = 3 * 3600  # drop cached images older than this
 HTTP_TIMEOUT = 30
+
+# Voice notes are transcoded out of SILK by NapCat's get_record (ffmpeg). mp3 is
+# the safest of the formats it offers: alice forwards it with Telegram
+# `send_audio` / Matrix `m.audio`, both of which play it everywhere. Changing
+# this needs no change on alice's side — the mime rides along on the segment.
+RECORD_FORMAT = "mp3"
+RECORD_MIME = "audio/mpeg"
 
 RK_EVENT = "qq.event"
 RK_ACTION = "qq.action"
@@ -192,25 +207,36 @@ class Relay:
 
     async def _process_event(self, data: dict) -> None:
         if data.get("post_type") == "message":
-            await self._inline_images(data)
+            await self._inline_media(data)
         data["ts"] = time.time()  # receipt stamp (before RabbitMQ)
         await self._publish(RK_EVENT, json.dumps(data))
 
-    async def _inline_images(self, data: dict) -> None:
+    async def _inline_media(self, data: dict) -> None:
+        """Inline the bytes of every media segment alice can bridge, so it never
+        has to reach a Tencent CDN itself. A segment we fail to fetch is left
+        untouched — alice then treats it as unbridgeable and logs it."""
         message = data.get("message")
         if not isinstance(message, list):
             return
         for seg in message:
-            if not isinstance(seg, dict) or seg.get("type") not in ("image", "mface"):
+            if not isinstance(seg, dict):
                 continue
+            stype = seg.get("type")
             sd = seg.get("data")
             if not isinstance(sd, dict):
                 continue
-            raw_bytes = await self._fetch_image_bytes(sd)
+            if stype in ("image", "mface"):
+                raw_bytes = await self._fetch_image_bytes(sd)
+            elif stype == "record":
+                raw_bytes = await self._fetch_record_bytes(sd)
+                if raw_bytes is not None:
+                    sd["mime"] = RECORD_MIME
+            else:
+                continue
             if raw_bytes is not None:
                 sd["base64"] = base64.b64encode(raw_bytes).decode("ascii")
 
-    # ----------------------------------------------------------- image fetching
+    # ----------------------------------------------------------- media fetching
     async def _fetch_image_bytes(self, data: dict) -> bytes | None:
         file_id = str(data.get("file") or "")
         cached = self._cache_get(file_id) if file_id else None
@@ -230,6 +256,33 @@ class Relay:
             self._cache_put(file_id, raw)
         return raw
 
+    async def _fetch_record_bytes(self, data: dict) -> bytes | None:
+        """Transcoded bytes of a voice note. No url path: the segment's url is
+        the SILK original, so `get_record` (which runs it through ffmpeg) is the
+        only useful source. Cached under its own key namespace so the converted
+        audio can't collide with an image sharing the same file id."""
+        file_id = str(data.get("file") or data.get("file_id") or "")
+        if not file_id:
+            _LOG.warning("record segment without a file id: %s", data)
+            return None
+        cache_key = f"record-{RECORD_FORMAT}-{file_id}"
+        cached = self._cache_get(cache_key)
+        if cached is not None:
+            return cached
+
+        # NapCat's get_record takes file *or* file_id and requires out_format; on
+        # success it reads the converted file back as base64 for us. It raises
+        # (=> no data) when ffmpeg is missing or the format is rejected.
+        resp = await self._call_action(
+            "get_record", {"file": file_id, "out_format": RECORD_FORMAT}
+        )
+        raw = await self._bytes_from_file_resp(resp)
+        if raw is None:
+            _LOG.warning("could not fetch record bytes (file=%s)", file_id)
+            return None
+        self._cache_put(cache_key, raw)
+        return raw
+
     async def _http_get(self, url: str) -> bytes | None:
         if self._http is None:
             return None
@@ -244,11 +297,17 @@ class Relay:
             return None
 
     async def _get_image_via_napcat(self, file_id: str) -> bytes | None:
-        """Ask NapCat for the image it already cached locally. Prefer an inline
-        base64 if returned, else read the local file, else its url."""
+        """Ask NapCat for the image it already cached locally."""
         resp = await self._call_action("get_image", {"file": file_id})
         if not resp:
             resp = await self._call_action("get_file", {"file": file_id})
+        return await self._bytes_from_file_resp(resp)
+
+    async def _bytes_from_file_resp(self, resp: dict | None) -> bytes | None:
+        """Read the payload out of a NapCat file-action response (get_image /
+        get_file / get_record): prefer an inline base64, else read the local file
+        it points at, else GET its url. `url` is only worth a request when it is
+        actually remote — get_record, for one, sets it to the local output path."""
         if not resp:
             return None
         b64 = resp.get("base64")
@@ -263,9 +322,9 @@ class Relay:
                 with open(path, "rb") as f:
                     return f.read()
             except OSError:
-                _LOG.warning("could not read local image file %s", path)
+                _LOG.warning("could not read local file %s", path)
         url = resp.get("url")
-        if url:
+        if url and str(url).startswith("http"):
             return await self._http_get(url)
         return None
 
