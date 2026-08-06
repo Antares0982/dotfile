@@ -7,6 +7,7 @@
 {
   nixpkgs.config.allowUnfree = true;
   imports = [
+    ./antares-agent.nix
     ./configuration.nix
     ./gitsync.nix
     ./hermes.nix

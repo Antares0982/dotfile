@@ -81,6 +81,12 @@ in
         group = "users";
         mode = "400";
       };
+      # Stays root-owned. systemd reads EnvironmentFile= before dropping
+      # privileges, so the agent uid never gets read access to the file.
+      antaresAgentEnv = {
+        file = ../secrets/antares-agent-env.age;
+        mode = "400";
+      };
       hermesRabbitCa = {
         file = ../secrets/hermes-rabbit-ca.age;
         owner = "hermes";
