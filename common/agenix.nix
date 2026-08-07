@@ -87,6 +87,28 @@ in
         file = ../secrets/antares-agent-env.age;
         mode = "400";
       };
+      # The relay's broker credentials, owned by the relay's uid rather than
+      # the agent's. F19: the sandbox blocks writes outside cwd but not reads,
+      # so anything the agent uid can read, the model can read. Same
+      # certificate the (now retired) hermes bridge used.
+      agentRelayRabbitCa = {
+        file = ../secrets/hermes-rabbit-ca.age;
+        owner = "agent-relay";
+        group = "users";
+        mode = "400";
+      };
+      agentRelayRabbitCert = {
+        file = ../secrets/hermes-rabbit-cert.age;
+        owner = "agent-relay";
+        group = "users";
+        mode = "400";
+      };
+      agentRelayRabbitKey = {
+        file = ../secrets/hermes-rabbit-key.age;
+        owner = "agent-relay";
+        group = "users";
+        mode = "400";
+      };
       hermesRabbitCa = {
         file = ../secrets/hermes-rabbit-ca.age;
         owner = "hermes";

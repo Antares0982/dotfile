@@ -15,6 +15,15 @@ let
   group = "agent";
   home = "/home/${user}";
 
+  # The relay is a third uid on purpose (D12 in docs/design/04-telegram.md).
+  # It holds the broker's client certificate, and by the same F19 argument that
+  # gave the agent its own user, that certificate must not be readable by the
+  # uid the model runs under. It joins group `agent` only to reach the socket.
+  relayUser = "agent-relay";
+
+  runtimeDir = "antares-agent";
+  socketPath = "/run/${runtimeDir}/api.sock";
+
   # Constant cwd for every session (D2). The CLI derives its session directory
   # from cwd -- ~/.claude/projects/-home-agent-agent-work -- so moving this
   # orphans every resumable thread.
@@ -81,6 +90,14 @@ let
       exec ${appDir}/.venv/bin/python -m antares_agent
     '';
   };
+
+  relayLauncher = pkgs.writeShellApplication {
+    name = "antares-agent-relay-launch";
+    runtimeInputs = [ ];
+    text = ''
+      exec ${appDir}/.venv/bin/python -m antares_agent.relay
+    '';
+  };
 in
 {
   # The bundled `claude` is a generic-linux aarch64 ELF asking for
@@ -100,6 +117,16 @@ in
     inherit home group;
     description = "antares-agent runtime";
     useDefaultShell = true;
+  };
+
+  users.users.${relayUser} = {
+    isSystemUser = true;
+    group = "users";
+    # Only so it can traverse /run/antares-agent, which is 0750 agent:agent.
+    # The socket itself ends up 0666 -- uvicorn chmods it -- so the directory
+    # is what actually keeps every other uid on this box out of the API.
+    extraGroups = [ group ];
+    description = "antares-agent bus relay";
   };
 
   # BindPaths= below needs each source to exist on the host, so these are
@@ -125,8 +152,13 @@ in
     environment = {
       HOME = home;
       ANTARES_WORKSPACE = workspace;
-      ANTARES_HOST = "127.0.0.1";
-      ANTARES_PORT = "60001";
+      # A socket rather than a loopback port, and it replaces the port rather
+      # than joining it. The API has no authentication of its own, so on a host
+      # where actionrunner and ssrjsonrunner can also open sockets, a TCP
+      # listener means either of them can drive the agent. Here authorisation
+      # is the mode on /run/antares-agent. (F21 is about ANTHROPIC_BASE_URL not
+      # parsing socket URLs; it does not apply to our own listener.)
+      ANTARES_SOCKET = socketPath;
       # Kept out of the workspace: everything under cwd is writable by the
       # agent, and its own event log and thread store should not be.
       ANTARES_DB_PATH = "${stateDir}/antares.db";
@@ -148,6 +180,11 @@ in
 
       StateDirectory = "antares-agent";
       StateDirectoryMode = "0750";
+
+      RuntimeDirectory = runtimeDir;
+      # 0750, not 0755: only group `agent` -- which is the relay and nothing
+      # else -- can traverse far enough to reach the socket.
+      RuntimeDirectoryMode = "0750";
 
       # V1: a process that dies with an approval pending leaves a consistent
       # session -- the CLI synthesises the pending tool into a tool failure and
@@ -197,6 +234,78 @@ in
         workspace
         "${home}/.claude"
       ];
+      BindReadOnlyPaths = [ appDir ];
+    };
+  };
+
+  # The Pi is behind NAT and the bot host is not, so neither can dial the
+  # other; both dial the broker on hk. This is the Pi-side end of that pipe.
+  # It carries the agent's own events rather than Telegram API calls, so it has
+  # no knowledge of either side's semantics -- see docs/design/04-telegram.md.
+  systemd.services.antares-agent-relay = {
+    description = "antares-agent: SSE/AMQP relay";
+    after = [
+      "network-online.target"
+      "antares-agent.service"
+    ];
+    wants = [ "network-online.target" ];
+    # Bound rather than merely ordered: without the agent there is no socket to
+    # call, and a relay that stays up would keep acknowledging commands it
+    # cannot serve.
+    bindsTo = [ "antares-agent.service" ];
+    wantedBy = [ "multi-user.target" ];
+
+    environment = {
+      ANTARES_API_SOCKET = socketPath;
+      # Same broker, port and certificate the qq relay already uses from this
+      # machine. Authentication is the client certificate (the listener is
+      # verify_peer + fail_if_no_peer_cert), so there is no user or password.
+      RMQ_HOST = "chr.fan";
+      RMQ_PORT = "5671";
+      RMQ_VHOST = "/";
+      RMQ_CAFILE = config.age.secrets.agentRelayRabbitCa.path;
+      RMQ_CERTFILE = config.age.secrets.agentRelayRabbitCert.path;
+      RMQ_KEYFILE = config.age.secrets.agentRelayRabbitKey.path;
+      # No proxy here on purpose: AMQP over TLS is not HTTP, so the xray proxy
+      # the CLI uses would not apply, and the broker is reachable directly.
+    };
+
+    serviceConfig = {
+      Type = "exec";
+      User = relayUser;
+      Group = "users";
+      SupplementaryGroups = [ group ];
+      ExecStart = "${relayLauncher}/bin/antares-agent-relay-launch";
+      Restart = "always";
+      RestartSec = "10s";
+
+      # No bwrap here, so none of F12's exemptions are needed -- this is a
+      # plain python process that talks to one socket and one broker.
+      NoNewPrivileges = true;
+      PrivateTmp = true;
+      PrivateDevices = true;
+      ProtectSystem = "strict";
+      ProtectHome = "tmpfs";
+      ProtectKernelTunables = true;
+      ProtectKernelModules = true;
+      ProtectControlGroups = true;
+      RestrictSUIDSGID = true;
+      RestrictRealtime = true;
+      RestrictNamespaces = true;
+      LockPersonality = true;
+      SystemCallFilter = "@system-service";
+      SystemCallArchitectures = "native";
+      RestrictAddressFamilies = [
+        "AF_UNIX"
+        "AF_INET"
+        "AF_INET6"
+        # glibc's getaddrinfo opens a netlink socket to enumerate local
+        # addresses for source selection. Without this, resolving the broker's
+        # hostname fails in a way that looks like a network problem.
+        "AF_NETLINK"
+      ];
+      MemoryMax = "256M";
+
       BindReadOnlyPaths = [ appDir ];
     };
   };
