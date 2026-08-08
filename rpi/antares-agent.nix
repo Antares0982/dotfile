@@ -91,6 +91,48 @@ let
     '';
   };
 
+  # Extra bind mounts, editable without a rebuild. `ProtectHome=tmpfs` means
+  # everything the agent needs from its home has to be named somewhere, and
+  # naming it in this file costs a rebuild and a deploy per line.
+  #
+  # A generator rather than the application: nothing the service itself runs
+  # can create these mounts. It has no CAP_SYS_ADMIN, and by the time it is
+  # running the tmpfs already shadows the real /home/agent, so it cannot even
+  # see what it would bind from. systemd is the only thing standing in the
+  # right place at the right time -- so the file becomes a drop-in, and
+  # systemd does the mounting exactly as it does for the lines below.
+  #
+  # /etc, not the agent's home: the home belongs to the agent uid, so a `rw:`
+  # line pointing at the directory holding this file would let the model
+  # append its own mounts and pick up anything on the box at the next restart.
+  mountsFile = "/etc/antares-agent/mounts";
+
+  mountGenerator = pkgs.writeShellScript "antares-agent-mounts-generator" ''
+    set -eu
+    [ -n "''${1:-}" ] || exit 0
+    [ -r ${mountsFile} ] || exit 0
+
+    dir="$1/antares-agent.service.d"
+    mkdir -p "$dir"
+    {
+      echo "[Service]"
+      # `read` with one variable trims surrounding whitespace for us.
+      while read -r line; do
+        case "$line" in "" | "#"*) continue ;; esac
+        key=BindReadOnlyPaths
+        case "$line" in
+          rw:*) key=BindPaths; line="''${line#rw:}" ;;
+          ro:*) line="''${line#ro:}" ;;
+        esac
+        case "$line" in /*) ;; *) line="${home}/$line" ;; esac
+        # `-` so a path that has not been created yet cannot stop the service
+        # from starting. This file is edited by hand; a typo should cost the
+        # one mount, not the agent.
+        echo "$key=-$line"
+      done < ${mountsFile}
+    } > "$dir/mounts.conf"
+  '';
+
   relayLauncher = pkgs.writeShellApplication {
     name = "antares-agent-relay-launch";
     runtimeInputs = [ ];
@@ -141,6 +183,8 @@ in
     description = "antares-agent bus relay";
   };
 
+  systemd.generators.antares-agent-mounts = mountGenerator;
+
   # BindPaths= below needs each source to exist on the host, so these are
   # created before the unit runs rather than by the service itself.
   systemd.tmpfiles.rules = [
@@ -148,6 +192,10 @@ in
     "d ${workspace}/.agent 0750 ${user} ${group} - -"
     "d ${home}/.claude 0700 ${user} ${group} - -"
     "d ${appDir} 0755 ${user} ${group} - -"
+    # `f` seeds it once and leaves it alone afterwards, so the header
+    # survives as documentation and edits survive a rebuild.
+    "d /etc/antares-agent 0755 root root - -"
+    "f ${mountsFile} 0644 root root - # 一行一个路径，相对 ${home}；前缀 rw: 表示可写。改完 systemctl daemon-reload && systemctl restart antares-agent\\n"
   ];
 
   systemd.services.antares-agent = {
