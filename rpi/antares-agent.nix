@@ -257,15 +257,15 @@ in
 
     environment = {
       ANTARES_API_SOCKET = socketPath;
-      # Same broker, port and certificate the qq relay already uses from this
-      # machine. The certificate is not the login: verify_peer gates the TLS
-      # layer, but AMQP still authenticates with PLAIN on top of it, and the
-      # plugin that would map a certificate to a user is not enabled. So
-      # RMQ_USER/RMQ_PASS come from the EnvironmentFile below, exactly as they
-      # do for the qq relay.
-      RMQ_HOST = "chr.fan";
-      RMQ_PORT = "5671";
-      RMQ_VHOST = "/";
+      # Host, port, vhost and credentials all come from the EnvironmentFile
+      # below -- they are the retired hermes bridge's, reused wholesale, and
+      # guessing any one of them here would only mean a value that looks
+      # authoritative while being wrong.
+      #
+      # The certificate is not the login: verify_peer gates the TLS layer, but
+      # AMQP still authenticates with PLAIN on top of it, and the plugin that
+      # would map a certificate to a user is not enabled. Only these three
+      # paths stay here, because only Nix knows them.
       RMQ_CAFILE = config.age.secrets.agentRelayRabbitCa.path;
       RMQ_CERTFILE = config.age.secrets.agentRelayRabbitCert.path;
       RMQ_KEYFILE = config.age.secrets.agentRelayRabbitKey.path;
