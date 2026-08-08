@@ -254,6 +254,10 @@ in
         # ANTARES_SECRET_PATHS), so signing works while `cat`ing the keyring
         # does not.
         "-${home}/.gnupg"
+        # Same bargain for gh: it needs to write its own config on a version
+        # migration, and `~/.config/gh` is on the same deny list, so `gh pr
+        # create` works while reading hosts.yml does not.
+        "-${home}/.config/gh"
       ];
       BindReadOnlyPaths = [
         appDir
