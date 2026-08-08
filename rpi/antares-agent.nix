@@ -111,6 +111,18 @@ in
   # cache hit for it (~15 min build).
   programs.nix-ld.enable = true;
 
+  # Also system-wide, not only in the unit's `path` below. The CLI runs every
+  # Bash call through the login shell, and /etc/zshenv replaces PATH with the
+  # system PATH before running anything -- so the unit's PATH reaches the
+  # server process and nothing it spawns. Measured: `zsh:1: command not found:
+  # bwrap` on every sandboxed command, while `shutil.which` in the server
+  # found it fine. It fails closed, but the model reads the 127 as a broken
+  # sandbox and starts asking for `dangerouslyDisableSandbox` instead.
+  environment.systemPackages = with pkgs; [
+    bubblewrap
+    socat
+  ];
+
   users.groups.${group} = { };
   users.users.${user} = {
     isNormalUser = true;
@@ -227,14 +239,26 @@ in
       SystemCallFilter = "@system-service @mount";
 
       # tmpfs rather than read-only: read-only would still leave every other
-      # home on this box readable, which is exactly the F19 exposure. The three
-      # paths the service actually needs come back explicitly.
+      # home on this box readable, which is exactly the F19 exposure. The
+      # paths the service actually needs come back explicitly -- and nothing
+      # else does, so a file dropped into /home/agent by hand is invisible to
+      # the service until it is named here. `-` means "skip if absent"; these
+      # are set up out of band and the unit should not refuse to start over
+      # one that has not been created yet.
       ProtectHome = "tmpfs";
       BindPaths = [
         workspace
         "${home}/.claude"
+        # Writable: gpg updates random_seed and keeps its agent socket here.
+        # Reading it is denied at the CLI layer anyway (`~/.gnupg` is in
+        # ANTARES_SECRET_PATHS), so signing works while `cat`ing the keyring
+        # does not.
+        "-${home}/.gnupg"
       ];
-      BindReadOnlyPaths = [ appDir ];
+      BindReadOnlyPaths = [
+        appDir
+        "-${home}/.gitconfig"
+      ];
     };
   };
 
