@@ -139,9 +139,10 @@ in
         group = "users";
         mode = "400";
       };
-      # The same file the qq relay reads, under a second owner -- the broker
-      # credentials in it are the ones this machine already authenticates with.
-      # Same arrangement as the three certificates below.
+      # Host, port, vhost and credentials for the relay's broker connection --
+      # the retired hermes bridge's values, reused wholesale. Its own file
+      # rather than a second owner on hermes-env.age, which carries a good deal
+      # more than these five lines.
       agentRelayEnv = {
         file = ../secrets/agent-relay-env.age;
         owner = "agent-relay";
