@@ -139,6 +139,15 @@ in
         group = "users";
         mode = "400";
       };
+      # The same file the qq relay reads, under a second owner -- the broker
+      # credentials in it are the ones this machine already authenticates with.
+      # Same arrangement as the three certificates below.
+      agentRelayEnv = {
+        file = ../secrets/qq-relay-env.age;
+        owner = "agent-relay";
+        group = "users";
+        mode = "400";
+      };
       qqRelayRabbitCa = {
         file = ../secrets/hermes-rabbit-ca.age;
         owner = "napcat";

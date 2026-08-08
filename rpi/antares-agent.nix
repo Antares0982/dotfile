@@ -258,8 +258,11 @@ in
     environment = {
       ANTARES_API_SOCKET = socketPath;
       # Same broker, port and certificate the qq relay already uses from this
-      # machine. Authentication is the client certificate (the listener is
-      # verify_peer + fail_if_no_peer_cert), so there is no user or password.
+      # machine. The certificate is not the login: verify_peer gates the TLS
+      # layer, but AMQP still authenticates with PLAIN on top of it, and the
+      # plugin that would map a certificate to a user is not enabled. So
+      # RMQ_USER/RMQ_PASS come from the EnvironmentFile below, exactly as they
+      # do for the qq relay.
       RMQ_HOST = "chr.fan";
       RMQ_PORT = "5671";
       RMQ_VHOST = "/";
@@ -278,6 +281,7 @@ in
       ExecStart = "${relayLauncher}/bin/antares-agent-relay-launch";
       Restart = "always";
       RestartSec = "10s";
+      EnvironmentFile = config.age.secrets.agentRelayEnv.path;
 
       # No bwrap here, so none of F12's exemptions are needed -- this is a
       # plain python process that talks to one socket and one broker.
