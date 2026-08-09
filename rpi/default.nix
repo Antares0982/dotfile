@@ -10,7 +10,6 @@
     ./antares-agent.nix
     ./configuration.nix
     ./gitsync.nix
-    ./hermes.nix
     ./monitor.nix
     ./multiuser-rpc-client.nix
     ./nix.nix

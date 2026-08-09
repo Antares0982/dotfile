@@ -9,13 +9,18 @@
 let
   xrayDir = "/var/lib/xray";
   subsDir = "${xrayDir}/subscriptions";
+
+  # Inside the agent's workspace, not its home: ProtectHome=tmpfs shadows
+  # /home/agent for the unit, and the bubblewrap sandbox only permits writes
+  # under cwd -- which is the workspace. Anywhere else and the model cannot
+  # drop a trigger file. Must match `workspace` in ./antares-agent.nix.
+  triggerDir = "/home/agent/agent_work/.agent/xray-trigger";
 in
 {
   # ── shared group for xray management ──
   users.groups.xray = {
     members = [
       "antares"
-      "hermes"
     ];
   };
 
@@ -23,7 +28,7 @@ in
   systemd.tmpfiles.rules = [
     "d ${xrayDir} 0775 root xray - -"
     "d ${subsDir} 0775 root xray - -"
-    "d /home/hermes/.cache/xray-mgr/trigger 0700 hermes hermes - -"
+    "d ${triggerDir} 0700 agent agent - -"
   ];
 
   # ── subscription updater (oneshot + daily timer) ──
@@ -56,14 +61,13 @@ in
     };
   };
 
-  # ── hermes-triggered xray actions (bypasses sandbox sudo restriction) ──
+  # ── agent-triggered xray actions (bypasses sandbox sudo restriction) ──
   systemd.services.xray-helper = {
-    description = "Xray Action Helper (triggered by hermes)";
+    description = "Xray Action Helper (triggered by antares-agent)";
     serviceConfig.Type = "oneshot";
     script = ''
-      TRIGGER=/home/hermes/.cache/xray-mgr/trigger
       shopt -s nullglob
-      for f in "$TRIGGER"/*; do
+      for f in "${triggerDir}"/*; do
         action=$(basename "$f")
         case "$action" in
           restart)
@@ -94,7 +98,7 @@ in
     description = "Watch for xray trigger files";
     wantedBy = [ "paths.target" ];
     pathConfig = {
-      DirectoryNotEmpty = "/home/hermes/.cache/xray-mgr/trigger";
+      DirectoryNotEmpty = triggerDir;
     };
   };
 

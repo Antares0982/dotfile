@@ -75,12 +75,6 @@ in
         group = "users";
         mode = "440";
       };
-      hermesEnv = {
-        file = ../secrets/hermes-env.age;
-        owner = "hermes";
-        group = "users";
-        mode = "400";
-      };
       # Stays root-owned. systemd reads EnvironmentFile= before dropping
       # privileges, so the agent uid never gets read access to the file.
       antaresAgentEnv = {
@@ -106,24 +100,6 @@ in
       agentRelayRabbitKey = {
         file = ../secrets/hermes-rabbit-key.age;
         owner = "agent-relay";
-        group = "users";
-        mode = "400";
-      };
-      hermesRabbitCa = {
-        file = ../secrets/hermes-rabbit-ca.age;
-        owner = "hermes";
-        group = "users";
-        mode = "400";
-      };
-      hermesRabbitCert = {
-        file = ../secrets/hermes-rabbit-cert.age;
-        owner = "hermes";
-        group = "users";
-        mode = "400";
-      };
-      hermesRabbitKey = {
-        file = ../secrets/hermes-rabbit-key.age;
-        owner = "hermes";
         group = "users";
         mode = "400";
       };
