@@ -70,6 +70,34 @@ let
     which
   ];
 
+  # Deploy on start. Runs as root *outside* the unit's mount namespace -- see
+  # the `+` on ExecStartPre -- because inside it ${appDir} is a read-only bind,
+  # and that is not negotiable: the running agent must not be able to edit the
+  # code that decides what the agent may do. Service start is the one moment
+  # nothing is running yet, so it is the only place this can happen.
+  #
+  # `--extra relay` because the relay shares this venv under a different uid.
+  # Leaving it out is what produced `No module named antares_agent.relay` on a
+  # 100+ restart loop while the agent itself looked healthy.
+  updater = pkgs.writeShellApplication {
+    name = "antares-agent-update";
+    runtimeInputs = with pkgs; [
+      util-linux
+      git
+      uv
+    ];
+    text = ''
+      # Not fatal. A Pi that boots without network should still come up on the
+      # code it already has; ExecStartPre carries `-` for the same reason.
+      runuser -u ${user} -- git -C ${appDir} pull --ff-only ||
+        echo "git pull failed -- starting on the checked-out tree" >&2
+
+      # Runs even if the pull did not: a half-synced venv is the state this
+      # exists to repair, and it is reached by a failed sync, not a failed pull.
+      runuser -u ${user} -- env HOME=${home} uv sync --project ${appDir} --extra relay
+    '';
+  };
+
   launcher = pkgs.writeShellApplication {
     name = "antares-agent-launch";
     runtimeInputs = [ pkgs.coreutils ];
@@ -262,7 +290,14 @@ in
       User = user;
       Group = group;
       WorkingDirectory = workspace;
+      # `+`: full privileges and no namespacing, which is the only way to write
+      # to ${appDir} -- ExecStart below sees it read-only. `-`: a failed deploy
+      # must not keep the agent down.
+      ExecStartPre = "+-${updater}/bin/antares-agent-update";
       ExecStart = "${launcher}/bin/antares-agent-launch";
+      # `uv sync` on this Pi can take minutes on a cold cache, and ExecStartPre
+      # spends the start timeout.
+      TimeoutStartSec = "15min";
       EnvironmentFile = config.age.secrets.antaresAgentEnv.path;
 
       StateDirectory = "antares-agent";
