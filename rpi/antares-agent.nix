@@ -133,6 +133,30 @@ let
     } > "$dir/mounts.conf"
   '';
 
+  # The CLI tells the model to sign its commits `Co-Authored-By: Claude ...`
+  # and to end PR bodies with a "Generated with Claude Code" line. That
+  # instruction lives in the Bash tool's *description* -- part of the tool
+  # schema the CLI builds, which no ClaudeAgentOptions field reaches. A line in
+  # the workspace CLAUDE.md asks the model not to; this makes it so.
+  #
+  # In /etc rather than the agent's home because ProtectHome=tmpfs leaves /etc
+  # alone: no bind mount to arrange, and no path the agent uid can rewrite.
+  # Pointed at by core.hooksPath in ~/.gitconfig, which is set out of band with
+  # the rest of that file.
+  commitMsgHook = pkgs.writeShellScript "antares-agent-commit-msg" ''
+    set -eu
+
+    msg="$1"
+    sed -E \
+      -e '/^co-authored-by:.*(claude|anthropic\.com)/Id' \
+      -e '/^🤖 Generated with \[Claude Code\]/d' \
+      "$msg" |
+      # git cleans the message up *before* the hook runs, so the blank lines
+      # the deletions leave behind are ours to remove.
+      ${pkgs.git}/bin/git stripspace > "$msg.declaude"
+    mv "$msg.declaude" "$msg"
+  '';
+
   relayLauncher = pkgs.writeShellApplication {
     name = "antares-agent-relay-launch";
     runtimeInputs = [ ];
@@ -184,6 +208,9 @@ in
   };
 
   systemd.generators.antares-agent-mounts = mountGenerator;
+
+  # A symlink into the store, so it is read-only for everyone including root.
+  environment.etc."antares-agent/hooks/commit-msg".source = commitMsgHook;
 
   # BindPaths= below needs each source to exist on the host, so these are
   # created before the unit runs rather than by the service itself.
