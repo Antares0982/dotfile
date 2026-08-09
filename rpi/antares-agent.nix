@@ -296,7 +296,19 @@ in
       NoNewPrivileges = true;
       PrivateTmp = true;
       ProtectSystem = "strict";
-      ProtectKernelTunables = true;
+      # ProtectKernelTunables is deliberately absent, and it is the one setting
+      # here that cannot be turned back on. It bind-mounts /proc/sys and
+      # friends read-only, which makes /proc no longer "fully visible" -- and
+      # the kernel then refuses to let an *unprivileged* user namespace mount a
+      # fresh procfs at all. bwrap dies with "Can't mount proc on
+      # /newroot/proc: Operation not permitted" on every single Bash call.
+      #
+      # F30: that is what actually happened here. The model read the failure as
+      # a broken sandbox, asked for `dangerouslyDisableSandbox`, and 32 of 35
+      # Bash calls in that session ran unconfined with the user approving each
+      # one. Trading tier 2 for this setting is a bad trade twice over: the
+      # service uid is unprivileged with NoNewPrivileges, so it cannot write
+      # kernel tunables regardless (measured -- EPERM without the option).
       ProtectKernelModules = true;
       ProtectControlGroups = true;
       RestrictSUIDSGID = true;
