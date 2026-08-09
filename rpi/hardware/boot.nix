@@ -7,7 +7,7 @@
 }:
 {
   boot.loader.raspberry-pi = {
-    configurationLimit = 1;
+    configurationLimit = 5;
     bootloader = "kernel";
   };
 
