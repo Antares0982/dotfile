@@ -70,11 +70,13 @@ let
     which
   ];
 
-  # Deploy on start. Runs as root *outside* the unit's mount namespace -- see
-  # the `+` on ExecStartPre -- because inside it ${appDir} is a read-only bind,
-  # and that is not negotiable: the running agent must not be able to edit the
-  # code that decides what the agent may do. Service start is the one moment
-  # nothing is running yet, so it is the only place this can happen.
+  # Deploy step, run by its own unit below rather than as an ExecStartPre of
+  # the agent. ExecStartPre was tried and cannot work: `+` lifts the privilege
+  # restrictions but *not* the mount namespace, so `BindReadOnlyPaths=${appDir}`
+  # still applies and git fails on `.git/FETCH_HEAD: Read-only file system`.
+  # That bind is not negotiable -- the running agent must not be able to edit
+  # the code that decides what the agent may do -- so the update belongs in a
+  # unit that simply does not have it.
   #
   # `--extra relay` because the relay shares this venv under a different uid.
   # Leaving it out is what produced `No module named antares_agent.relay` on a
@@ -82,19 +84,18 @@ let
   updater = pkgs.writeShellApplication {
     name = "antares-agent-update";
     runtimeInputs = with pkgs; [
-      util-linux
       git
       uv
     ];
     text = ''
       # Not fatal. A Pi that boots without network should still come up on the
-      # code it already has; ExecStartPre carries `-` for the same reason.
-      runuser -u ${user} -- git -C ${appDir} pull --ff-only ||
+      # code it already has.
+      git -C ${appDir} pull --ff-only ||
         echo "git pull failed -- starting on the checked-out tree" >&2
 
       # Runs even if the pull did not: a half-synced venv is the state this
       # exists to repair, and it is reached by a failed sync, not a failed pull.
-      runuser -u ${user} -- env HOME=${home} uv sync --project ${appDir} --extra relay
+      uv sync --project ${appDir} --extra relay
     '';
   };
 
@@ -253,6 +254,36 @@ in
     "f ${mountsFile} 0644 root root - # 一行一个路径，相对 ${home}；前缀 rw: 表示可写。改完 systemctl daemon-reload && systemctl restart antares-agent\\n"
   ];
 
+  # `git pull` + `uv sync` before the agent starts. A unit of its own because
+  # the agent's has `BindReadOnlyPaths=${appDir}`, and a mount namespace is not
+  # something an ExecStartPre can step outside of -- see `updater` above.
+  #
+  # `wantedBy`, not `requiredBy`: a deploy that cannot reach the network must
+  # not keep the agent down. `before` still makes the agent wait for it, since
+  # a oneshot counts as activated only once it has exited.
+  systemd.services.antares-agent-update = {
+    description = "antares-agent: pull and sync the app before starting";
+    before = [ "antares-agent.service" ];
+    wantedBy = [ "antares-agent.service" ];
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
+
+    environment = {
+      HOME = home;
+      http_proxy = "http://127.0.0.1:1081";
+      https_proxy = "http://127.0.0.1:1081";
+    };
+
+    serviceConfig = {
+      Type = "oneshot";
+      User = user;
+      Group = group;
+      ExecStart = "${updater}/bin/antares-agent-update";
+      # `uv sync` on this Pi takes minutes on a cold cache.
+      TimeoutStartSec = "15min";
+    };
+  };
+
   systemd.services.antares-agent = {
     description = "antares-agent: persistent multi-repo coding agent";
     after = [
@@ -290,14 +321,7 @@ in
       User = user;
       Group = group;
       WorkingDirectory = workspace;
-      # `+`: full privileges and no namespacing, which is the only way to write
-      # to ${appDir} -- ExecStart below sees it read-only. `-`: a failed deploy
-      # must not keep the agent down.
-      ExecStartPre = "+-${updater}/bin/antares-agent-update";
       ExecStart = "${launcher}/bin/antares-agent-launch";
-      # `uv sync` on this Pi can take minutes on a cold cache, and ExecStartPre
-      # spends the start timeout.
-      TimeoutStartSec = "15min";
       EnvironmentFile = config.age.secrets.antaresAgentEnv.path;
 
       StateDirectory = "antares-agent";
