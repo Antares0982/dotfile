@@ -32,9 +32,9 @@ let
     src = pkgs.fetchFromGitHub {
       owner = "Antares0982";
       repo = "Sakurairo";
-      rev = "fae8b45df440d8c35cbc97406838d8f4b26a9b7f";
+      rev = "365dabc1024513948f1b3705f3ae8aa2abc97a3b";
       # nix build .\#nixosConfigurations.hk.config.services.wordpress.sites.\"chr.fan\".themes.Sakura
-      hash = "sha256-stt+Zs1J6jsLse2/l8+1uH8+K8FwZai1aPvXQ/TvBps=";
+      hash = "sha256-5hL8Wlfrp/B2krFsyE0b97Zxydz61WVeJYne3mpPDpU=";
     };
     installPhase = ''
       runHook preInstall
