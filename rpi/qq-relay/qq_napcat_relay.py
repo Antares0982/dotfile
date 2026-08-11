@@ -23,14 +23,23 @@ base64. The chosen mime is stamped onto the segment so alice needn't guess. If
 NapCat has no ffmpeg the action errors, no bytes are inlined, and alice reports
 the message on its log-only path.
 
+Video bytes: fetched like images, but anything over ``VIDEO_WIRE_MAX_BYTES`` is
+re-encoded down (long side 640, x264 crf 30) before it is inlined — QQ allows
+100 MB and the broker is not on this LAN, so the original would cross this
+machine's uplink base64-encoded. A video that can't be fetched or shrunk below
+the ceiling is left byte-less and alice reports it on its log-only path.
+
 Ordering & no deadlock: the WS read loop only classifies frames — events go onto
 an in-order internal queue, action responses resolve a pending future or are
 forwarded. A single processor task drains the queue in order and does the
 (blocking) image fetch; because the read loop keeps running, the relay's own
-``get_image`` responses are still read and correlated.
+``get_image`` responses are still read and correlated. Videos are the exception:
+a transcode takes tens of seconds, so it runs detached (one at a time) and that
+event publishes out of order rather than stalling every message behind it.
 
-Standalone: depends only on ``websockets``, ``aio_pika`` and ``aiohttp`` — it
-does not import the alice bot. Configure via environment variables (see below).
+Standalone: depends only on ``websockets``, ``aio_pika`` and ``aiohttp``, plus
+``ffmpeg`` on PATH for video — it does not import the alice bot. Configure via
+environment variables (see below).
 Designed to run under systemd with ``Restart=always``; both transports
 self-reconnect.
 
@@ -40,6 +49,10 @@ Env:
   TRI_LUG_EXCHANGE     default tri_lug
   CACHE_DIR            image cache dir (default /var/cache/qq-napcat-relay)
   ACTION_TIMEOUT       seconds to await a NapCat action response (default 30)
+  VIDEO_WIRE_MAX_BYTES ship a video as-is at or under this; also the ceiling a
+                       transcode must hit to be usable (default 8 MiB)
+  VIDEO_FETCH_MAX_BYTES  refuse to even download past this (default 100 MiB)
+  VIDEO_CONVERT_TIMEOUT  seconds one ffmpeg run may take (default 180)
   RMQ_HOST RMQ_PORT RMQ_USER RMQ_PASS RMQ_VHOST
   RMQ_CAFILE RMQ_CERTFILE RMQ_KEYFILE   (mTLS; if all set, connect over TLS)
 """
@@ -53,6 +66,7 @@ import json
 import logging
 import os
 import ssl
+import tempfile
 import time
 
 import aio_pika
@@ -80,6 +94,23 @@ HTTP_TIMEOUT = 30
 RECORD_FORMAT = "mp3"
 RECORD_MIME = "audio/mpeg"
 
+# Video. QQ allows up to 100 MB, and these bytes ride base64 inside the event
+# payload across a broker that is NOT on this LAN — every one of them goes up
+# this machine's home uplink. So anything over the wire ceiling is downscaled
+# here first; alice never sees the original.
+#
+# Measured on this Pi 5 (load average 5-7, i.e. under NapCat's normal load):
+# 1080p H.264 transcodes at ~4.3x realtime, ~100 encoded frames/sec, so
+#   wall_seconds ~= duration_seconds * source_fps / 100.
+# A 94 MB / 320 s / 1080p24 source took ~73 s and came out 6.7 MB (~13x smaller).
+# Worst realistic 100 MB case is therefore ~80 s, typical 15-30 s.
+VIDEO_WIRE_MAX_BYTES = int(os.environ.get("VIDEO_WIRE_MAX_BYTES", 8 * 1024 * 1024))
+VIDEO_FETCH_MAX_BYTES = int(os.environ.get("VIDEO_FETCH_MAX_BYTES", 100 * 1024 * 1024))
+VIDEO_CONVERT_TIMEOUT = float(os.environ.get("VIDEO_CONVERT_TIMEOUT", "180"))
+VIDEO_MIME = "video/mp4"
+# Long side of the downscaled output. 640 is what the measurements above used.
+VIDEO_SIZE = 640
+
 RK_EVENT = "qq.event"
 RK_ACTION = "qq.action"
 RK_ACTION_RESP = "qq.action_resp"
@@ -97,6 +128,13 @@ QQ_AVATAR_URL = "https://q1.qlogo.cn/g?b=qq&nk={uin}&s=640"
 # Echo prefix for the relay's OWN actions (image fetches), so their responses
 # are resolved internally instead of being forwarded to alice as qq.action_resp.
 _INTERNAL_ECHO_PREFIX = "relayint-"
+
+
+def _has_video_segment(data: dict) -> bool:
+    message = data.get("message")
+    if not isinstance(message, list):
+        return False
+    return any(isinstance(seg, dict) and seg.get("type") == "video" for seg in message)
 
 
 def _rmq_kwargs() -> dict:
@@ -131,6 +169,11 @@ class Relay:
         self._events: asyncio.Queue[dict] = asyncio.Queue()
         self._pending: dict[str, asyncio.Future] = {}
         self._echo_seq = 0
+        # Detached video work (see _process_event). Strong refs so the tasks
+        # aren't garbage-collected mid-flight; the semaphore keeps a video flood
+        # from forking one ffmpeg per message.
+        self._bg: set[asyncio.Task] = set()
+        self._video_slots = asyncio.Semaphore(1)
         os.makedirs(CACHE_DIR, exist_ok=True)
 
     async def run(self) -> None:
@@ -207,8 +250,36 @@ class Relay:
 
     async def _process_event(self, data: dict) -> None:
         if data.get("post_type") == "message":
+            if _has_video_segment(data):
+                # Transcoding a big video takes tens of seconds and this is the
+                # single serial event task, so doing it inline would delay every
+                # message behind it by that much. Detach it: the video publishes
+                # when it's ready and everything else flows past.
+                #
+                # The cost is that this video may publish AFTER messages that
+                # arrived behind it. That trade is already made elsewhere in this
+                # bridge — see alice's media.py docstring, where a slow sticker
+                # can likewise be overtaken by a later text message.
+                task = asyncio.create_task(self._process_video_event(data))
+                self._bg.add(task)
+                task.add_done_callback(self._bg.discard)
+                return
             await self._inline_media(data)
-        data["ts"] = time.time()  # receipt stamp (before RabbitMQ)
+        await self._publish_event(data)
+
+    async def _process_video_event(self, data: dict) -> None:
+        async with self._video_slots:
+            try:
+                await self._inline_media(data)
+            except Exception:
+                _LOG.exception("video processing failed")
+        await self._publish_event(data)
+
+    async def _publish_event(self, data: dict) -> None:
+        # Stamped at publish, not at receipt: a video that spent 80s in ffmpeg is
+        # only now being delivered, and this is what alice's Router measures its
+        # 60s staleness cutoff against.
+        data["ts"] = time.time()
         await self._publish(RK_EVENT, json.dumps(data))
 
     async def _inline_media(self, data: dict) -> None:
@@ -231,6 +302,10 @@ class Relay:
                 raw_bytes = await self._fetch_record_bytes(sd)
                 if raw_bytes is not None:
                     sd["mime"] = RECORD_MIME
+            elif stype == "video":
+                raw_bytes = await self._fetch_video_bytes(sd)
+                if raw_bytes is not None:
+                    sd["mime"] = VIDEO_MIME
             else:
                 continue
             if raw_bytes is not None:
@@ -282,6 +357,150 @@ class Relay:
             return None
         self._cache_put(cache_key, raw)
         return raw
+
+    async def _fetch_video_bytes(self, data: dict) -> bytes | None:
+        """Bytes of a group video, downscaled if it is too big to put on the
+        wire. Returning None leaves the segment byte-less, which is alice's
+        signal to take its log-only path.
+
+        Not cached on disk, unlike images: the same video file id does not recur
+        the way a reused sticker or emoji does, and these are multi-MB items on
+        an SD card."""
+        file_id = str(data.get("file") or data.get("file_id") or "")
+        try:
+            declared = int(data.get("file_size") or 0)
+        except (TypeError, ValueError):
+            declared = 0
+        if declared > VIDEO_FETCH_MAX_BYTES:
+            _LOG.warning(
+                "video too large to fetch (%d bytes > %d, file=%s)",
+                declared,
+                VIDEO_FETCH_MAX_BYTES,
+                file_id,
+            )
+            return None
+
+        raw = None
+        url = data.get("url")
+        if url:
+            raw = await self._http_get(url)
+        if raw is None and file_id:
+            resp = await self._call_action("get_file", {"file": file_id})
+            raw = await self._bytes_from_file_resp(resp)
+        if raw is None:
+            _LOG.warning("could not fetch video bytes (file=%s url=%s)", file_id, url)
+            return None
+
+        if len(raw) <= VIDEO_WIRE_MAX_BYTES:
+            return raw
+
+        _LOG.info("downscaling video (%d bytes, file=%s)", len(raw), file_id)
+        small = await self._transcode_video(raw)
+        if small is None:
+            _LOG.warning(
+                "video transcode failed (%d bytes, file=%s)", len(raw), file_id
+            )
+            return None
+        # An already-efficient source can come out bigger; either way, anything
+        # still over the ceiling has to be dropped rather than put on the wire.
+        if len(small) >= len(raw) or len(small) > VIDEO_WIRE_MAX_BYTES:
+            _LOG.warning(
+                "video still too large after transcode (%d -> %d bytes, file=%s)",
+                len(raw),
+                len(small),
+                file_id,
+            )
+            return None
+        _LOG.info(
+            "video downscaled %d -> %d bytes (file=%s)", len(raw), len(small), file_id
+        )
+        return small
+
+    async def _transcode_video(self, raw: bytes) -> bytes | None:
+        """Re-encode a video small enough to cross the broker: long side capped
+        at VIDEO_SIZE, x264 crf 30, mono 64k audio.
+
+        Both ends are temp files, not pipes: an MP4's moov atom can sit at the
+        end of the input (so the demuxer seeks), and `+faststart` rewrites the
+        output header at the end (so the muxer seeks too).
+
+        Never raises — the caller's contract is to fall back to the log-only
+        path, so a missing or broken ffmpeg must not take the relay down."""
+        with tempfile.TemporaryDirectory(prefix="qq-relay-video-") as tmp:
+            src = os.path.join(tmp, "in.mp4")
+            dst = os.path.join(tmp, "out.mp4")
+            with open(src, "wb") as fh:
+                fh.write(raw)
+            argv = [
+                "ffmpeg",
+                "-nostdin",
+                "-v",
+                "error",
+                "-i",
+                src,
+                "-vf",
+                f"scale=w={VIDEO_SIZE}:h={VIDEO_SIZE}"
+                ":force_original_aspect_ratio=decrease,"
+                "scale=trunc(iw/2)*2:trunc(ih/2)*2",
+                "-c:v",
+                "libx264",
+                "-preset",
+                "veryfast",
+                "-crf",
+                "30",
+                "-pix_fmt",
+                "yuv420p",
+                "-c:a",
+                "aac",
+                "-b:a",
+                "64k",
+                "-ac",
+                "1",
+                "-map_metadata",
+                "-1",
+                "-movflags",
+                "+faststart",
+                "-y",
+                dst,
+            ]
+            proc = None
+            try:
+                proc = await asyncio.create_subprocess_exec(
+                    *argv,
+                    stdin=asyncio.subprocess.DEVNULL,
+                    stdout=asyncio.subprocess.DEVNULL,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                _, err = await asyncio.wait_for(
+                    proc.communicate(), timeout=VIDEO_CONVERT_TIMEOUT
+                )
+            except asyncio.TimeoutError:
+                _LOG.warning("ffmpeg timed out after %.0fs", VIDEO_CONVERT_TIMEOUT)
+                return None
+            except Exception:
+                _LOG.warning("ffmpeg failed to run", exc_info=True)
+                return None
+            finally:
+                # wait_for cancels communicate(); it does NOT reap the child.
+                # Without this a run of timeouts leaks processes and pipe fds.
+                if proc is not None and proc.returncode is None:
+                    proc.kill()
+                    await proc.wait()
+            assert proc is not None  # any failure to spawn returned above
+            if proc.returncode != 0:
+                _LOG.warning(
+                    "ffmpeg exited %s: %s",
+                    proc.returncode,
+                    err.decode("utf-8", "replace").strip()[:400],
+                )
+                return None
+            try:
+                with open(dst, "rb") as fh:
+                    out = fh.read()
+            except OSError:
+                _LOG.warning("ffmpeg produced no readable output")
+                return None
+            return out or None
 
     async def _http_get(self, url: str) -> bytes | None:
         if self._http is None:

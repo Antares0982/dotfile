@@ -14,7 +14,14 @@ let
   );
   qqRelay = pkgs.writeShellApplication {
     name = "qq-napcat-relay";
-    runtimeInputs = [ pyenv ];
+    # ffmpeg: downscaling group videos before they cross the uplink. The Pi 5
+    # has no hardware H.264 encoder, so this is software x264 — measured at
+    # ~4.3x realtime for 1080p, which is why the relay only reaches for it on
+    # videos above VIDEO_WIRE_MAX_BYTES.
+    runtimeInputs = [
+      pyenv
+      pkgs.ffmpeg
+    ];
     text = ''
       exec python3 ${./qq-relay/qq_napcat_relay.py}
     '';
