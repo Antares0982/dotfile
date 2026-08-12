@@ -64,5 +64,6 @@
     thunar-archive-plugin
     waybar
     wl-clipboard
+    xdg-terminal-exec
   ];
 }

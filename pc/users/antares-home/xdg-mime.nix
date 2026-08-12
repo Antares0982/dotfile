@@ -1,5 +1,6 @@
 { ... }:
 {
+  xdg.configFile."xdg-terminals.list".text = "kitty.desktop\n";
   xdg.mimeApps = {
     enable = true;
     associations.added = {
@@ -8,6 +9,7 @@
       "image/gif" = [ "org.kde.gwenview.desktop" ];
       "image/jpeg" = [ "org.kde.gwenview.desktop" ];
       "image/png" = [ "org.kde.gwenview.desktop" ];
+      "image/webp" = [ "org.kde.gwenview.desktop" ];
       "image/svg+xml" = [ "google-chrome.desktop" ];
       "text/markdown" = [ "typora.desktop" ];
       "text/plain" = [ "nvim.desktop" ];
@@ -28,6 +30,7 @@
       "image/gif" = [ "org.kde.gwenview.desktop" ];
       "image/jpeg" = [ "org.kde.gwenview.desktop" ];
       "image/png" = [ "org.kde.gwenview.desktop" ];
+      "image/webp" = [ "org.kde.gwenview.desktop" ];
       "image/svg+xml" = [ "google-chrome.desktop" ];
       "text/html" = [ "google-chrome.desktop" ];
       "text/markdown" = [ "typora.desktop" ];
