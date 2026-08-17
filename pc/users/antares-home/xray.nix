@@ -5,9 +5,22 @@
   myXray,
   ...
 }:
+let
+  xs = pkgs.writeShellApplication {
+    name = "xs";
+    runtimeInputs = [
+      myXray
+      pkgs.jq
+      pkgs.curl
+      pkgs.systemd
+    ];
+    text = builtins.readFile ../../../resource/xs.sh;
+  };
+in
 {
   home.packages = [
     myXray
+    xs
   ];
 
   systemd.user.services.xray = {
