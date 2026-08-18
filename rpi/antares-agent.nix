@@ -310,6 +310,18 @@ in
       ANTARES_DB_PATH = "${stateDir}/antares.db";
       ANTARES_PROFILES_DIR = "${stateDir}/profiles";
 
+      # Profiles name a tier (`opus`/`sonnet`), never a provider model id, so
+      # one profile survives a change of endpoint. These are where the tier
+      # becomes concrete -- and they also cover the aliases the CLI resolves
+      # itself for subagents, which never see `profile.model`. Without them a
+      # spawned Explore asks the DeepSeek endpoint for "sonnet".
+      #
+      # F26: v4-flash barely fans out on its own, so the `deep` profile's
+      # orchestration tier has to be pro; `quick` is single-repo edits and
+      # flash is the right price for it.
+      ANTARES_MODEL_OPUS = "deepseek-v4-pro";
+      ANTARES_MODEL_SONNET = "deepseek-v4-flash";
+
       # The CLI's own model requests go through the local proxy; sandboxed Bash
       # cannot reach it (F22 measured the asymmetry).
       http_proxy = "http://127.0.0.1:1081";
