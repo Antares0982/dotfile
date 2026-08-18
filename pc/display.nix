@@ -7,7 +7,10 @@
       enable = true;
       package = pkgs.kdePackages.kdeconnect-kde;
     };
-    regreet = {
+  };
+
+  services = {
+    displayManager.regreet = {
       enable = true;
       extraCss = ''
         window.background {
@@ -17,9 +20,6 @@
         }
       '';
     };
-  };
-
-  services = {
     accounts-daemon.enable = true;
     gnome.gcr-ssh-agent.enable = false;
     greetd = {
