@@ -125,17 +125,8 @@ in
     };
   };
 
-  # Without this the dedicated log grows forever; the counter detects the
-  # truncation by size and restarts from offset 0.
-  services.logrotate.settings.blog-views = {
-    files = viewsLog;
-    frequency = "weekly";
-    rotate = 4;
-    compress = true;
-    delaycompress = true;
-    missingok = true;
-    notifempty = true;
-    su = "nginx nginx";
-    postrotate = "[ ! -f /run/nginx/nginx.pid ] || kill -USR1 `cat /run/nginx/nginx.pid`";
-  };
+  # No logrotate entry here on purpose: the nginx module already rotates
+  # /var/log/nginx/*.log, which this log matches, and logrotate refuses to
+  # start at all on a duplicate entry. The counter restarts from offset 0 when
+  # it sees the file has shrunk, so rotation needs no cooperation from it.
 }
