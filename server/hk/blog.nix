@@ -59,9 +59,17 @@ in
       # The literal UTF-8 here matches both encodings the wild uses -- lowercase
       # %e8%b8%a9 from WordPress's own links, uppercase from everything since --
       # because nginx decodes the URI before it matches locations.
+      #
+      # Both spellings are listed because the slash-adding redirect nginx does
+      # for directories cannot fire here: these directories no longer exist, so
+      # a slashless request would fall through to try_files and 404. WordPress
+      # canonicalised the slashless form too.
       "= /arch踩坑记录/".return = "301 /arch-pitfalls/";
+      "= /arch踩坑记录".return = "301 /arch-pitfalls/";
       "= /words/万事顺利/".return = "301 /words/all-going-well/";
+      "= /words/万事顺利".return = "301 /words/all-going-well/";
       "= /words/2022黄昏/".return = "301 /words/2022-dusk/";
+      "= /words/2022黄昏".return = "301 /words/2022-dusk/";
 
       "= /feed".return = "301 https://$host/feed/";
       # `alias` cannot serve this: the location ends in a slash, so nginx
