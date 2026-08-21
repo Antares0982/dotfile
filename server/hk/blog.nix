@@ -71,6 +71,12 @@ in
       "= /words/2022黄昏/".return = "301 /words/2022-dusk/";
       "= /words/2022黄昏".return = "301 /words/2022-dusk/";
 
+      # The privacy policy is gone: it described cookies only WordPress ever
+      # set, and nothing on the static site sets any. It had ~4.7k views, so
+      # inbound links land on the home page rather than a 404.
+      "= /privacy/".return = "301 /";
+      "= /privacy".return = "301 /";
+
       "= /feed".return = "301 https://$host/feed/";
       # `alias` cannot serve this: the location ends in a slash, so nginx
       # treats the request as a directory and appends the index file to the
