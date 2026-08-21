@@ -52,6 +52,17 @@ in
       # WordPress served the feed at /feed and 301'd to /feed/. The school's
       # RSS aggregator is subscribed to that URL, so both spellings keep
       # working and keep the same redirect.
+      # Three slugs were Chinese under WordPress and are ASCII now. Those URLs
+      # carry about 18k views of history and are what search results point at,
+      # so they redirect permanently rather than 404.
+      #
+      # The literal UTF-8 here matches both encodings the wild uses -- lowercase
+      # %e8%b8%a9 from WordPress's own links, uppercase from everything since --
+      # because nginx decodes the URI before it matches locations.
+      "= /arch踩坑记录/".return = "301 /arch-pitfalls/";
+      "= /words/万事顺利/".return = "301 /words/all-going-well/";
+      "= /words/2022黄昏/".return = "301 /words/2022-dusk/";
+
       "= /feed".return = "301 https://$host/feed/";
       # `alias` cannot serve this: the location ends in a slash, so nginx
       # treats the request as a directory and appends the index file to the
