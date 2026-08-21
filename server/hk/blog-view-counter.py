@@ -98,6 +98,20 @@ def write_atomic(path, data):
         raise
 
 
+def normalise_counts(counts):
+    """Fold percent-encoded keys onto their decoded form.
+
+    Runs on every load so state written before paths were decoded heals itself,
+    and so it stays correct if the two ever diverge again. Idempotent: decoding
+    an already-decoded path is a no-op.
+    """
+    folded = {}
+    for path, n in counts.items():
+        key = urllib.parse.unquote(path)
+        folded[key] = folded.get(key, 0) + n
+    return folded
+
+
 def run(log_path, state_path, out_path):
     try:
         with open(state_path) as f:
@@ -107,6 +121,7 @@ def run(log_path, state_path, out_path):
     state.setdefault("offset", 0)
     state.setdefault("counts", {})
     state.setdefault("seen", [])
+    state["counts"] = normalise_counts(state["counts"])
 
     if not os.path.exists(log_path):
         return 0
@@ -164,6 +179,17 @@ def self_test():
     assert state["counts"]["/xjb-vs-zmij/"] == 4
     assert state["day"] == "2026-08-20"
     assert state["seen"] == ["1.1.1.1\t/xjb-vs-zmij/"]
+
+    # State written before paths were decoded folds onto the decoded key rather
+    # than sitting there under one no page ever looks up.
+    assert normalise_counts(
+        {
+            "/arch%E8%B8%A9%E5%9D%91%E8%AE%B0%E5%BD%95/": 3,
+            "/arch%e8%b8%a9%e5%9d%91%e8%ae%b0%e5%bd%95/": 4,
+            "/arch踩坑记录/": 5,
+            "/hello-world/": 1,
+        }
+    ) == {"/arch踩坑记录/": 12, "/hello-world/": 1}
 
     print("self-test ok")
 
