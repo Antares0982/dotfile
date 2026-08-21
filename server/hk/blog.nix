@@ -53,12 +53,19 @@ in
       # RSS aggregator is subscribed to that URL, so both spellings keep
       # working and keep the same redirect.
       "= /feed".return = "301 https://$host/feed/";
+      # `alias` cannot serve this: the location ends in a slash, so nginx
+      # treats the request as a directory and appends the index file to the
+      # aliased path, yielding ".../index.xmlindex.html". Rewriting hands the
+      # request to the /index.xml location instead.
       "= /feed/".extraConfig = ''
-        default_type application/rss+xml;
-        alias ${site}/index.xml;
+        rewrite ^ /index.xml last;
       '';
+      # `.xml` is already in mime.types as text/xml, so default_type alone is
+      # ignored; the empty types block clears that mapping so it applies.
       "= /index.xml".extraConfig = ''
+        types { }
         default_type application/rss+xml;
+        charset utf-8;
       '';
 
       # Views recorded since the migration. Each page carries its WordPress
@@ -66,6 +73,7 @@ in
       "= /api/views.json" = {
         alias = "${viewsDir}/views.json";
         extraConfig = ''
+          types { }
           default_type application/json;
           add_header Cache-Control "public, max-age=300";
           # The file only exists once the timer has run at least once.
@@ -79,13 +87,24 @@ in
     };
   };
 
+  users.users.blog-views = {
+    isSystemUser = true;
+    group = "blog-views";
+    description = "Blog view-count aggregator";
+  };
+  users.groups.blog-views = { };
+
   systemd.services.blog-view-counter = {
     description = "Roll up blog page views from the nginx access log";
     serviceConfig = {
       Type = "oneshot";
       ExecStart = "${viewCounter}/bin/blog-view-counter --log ${viewsLog} --state ${viewsDir}/state.json --out ${viewsDir}/views.json";
-      DynamicUser = true;
+      # Not DynamicUser: that puts the state under /var/lib/private, which is
+      # 0700 root, so nginx cannot traverse it to reach views.json.
+      User = "blog-views";
+      Group = "blog-views";
       StateDirectory = "blog-views";
+      StateDirectoryMode = "0755";
       # /var/log/nginx is nginx:nginx 0750, so reading the log needs the group.
       SupplementaryGroups = [ "nginx" ];
       ProtectSystem = "strict";

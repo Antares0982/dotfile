@@ -23,6 +23,7 @@ import os
 import re
 import sys
 import tempfile
+import urllib.parse
 
 # Every page on the site is a directory index, so a view is a request whose
 # path ends in a slash. That drops assets, the feed and /api/views.json without
@@ -44,7 +45,12 @@ def parse(line):
     ts, addr, status, uri, ua = parts
     if status != "200":
         return None
-    path = uri.split("?", 1)[0]
+    # $request_uri is whatever the client sent, so the Chinese slugs arrive
+    # percent-encoded in whichever case the referring link used -- WordPress
+    # minted lowercase, Hugo emits uppercase. Decoding normalises both onto the
+    # same key, which is also what the page sends back through
+    # decodeURIComponent.
+    path = urllib.parse.unquote(uri.split("?", 1)[0])
     if not PAGE.match(path):
         return None
     # An empty User-Agent is never a real reader and is the cheapest thing for
@@ -140,10 +146,18 @@ def self_test():
         "2026-08-19T10:00:12+08:00\t6.6.6.6\t200\t/xjb-vs-zmij/\t-",
         # the root page counts
         f"2026-08-19T10:00:13+08:00\t7.7.7.7\t200\t/\t{ua}",
+        # Chinese slugs arrive percent-encoded in either case; both must land
+        # on the decoded key the page looks up.
+        f"2026-08-19T10:00:14+08:00\t8.8.8.8\t200\t/arch%e8%b8%a9%e5%9d%91%e8%ae%b0%e5%bd%95/\t{ua}",
+        f"2026-08-19T10:00:15+08:00\t9.9.9.9\t200\t/arch%E8%B8%A9%E5%9D%91%E8%AE%B0%E5%BD%95/\t{ua}",
     ]
     state = {"offset": 0, "counts": {}, "seen": []}
-    assert aggregate(state, lines) == 4, state
-    assert state["counts"] == {"/xjb-vs-zmij/": 3, "/": 1}, state["counts"]
+    assert aggregate(state, lines) == 6, state
+    assert state["counts"] == {
+        "/xjb-vs-zmij/": 3,
+        "/": 1,
+        "/arch踩坑记录/": 2,
+    }, state["counts"]
 
     # A new day clears the dedup set, so the same reader counts again.
     assert aggregate(state, [f"2026-08-20T09:00:00+08:00\t1.1.1.1\t200\t/xjb-vs-zmij/\t{ua}"]) == 1
