@@ -43,6 +43,13 @@
       url = "github:antares0982/visitor-badge";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # Hugo source for chr.fan. Lives in its own repo so publishing a post does
+    # not churn this host's lock file, and so giscus has a public repo to hang
+    # its Discussions on.
+    blog = {
+      url = "github:Antares0982/blog";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     renewal = {
       url = "github:Antares0982/renewal";
       inputs.nixpkgs.follows = "nixpkgs";

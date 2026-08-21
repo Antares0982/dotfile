@@ -90,6 +90,27 @@
         "type": "gitlab"
       }
     },
+    "blog": {
+      "inputs": {
+        "diary": "diary",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1787323973,
+        "narHash": "sha256-ceDtA8+hXOr132rV3CZfiVNqD2XmQARzDJYF+vtTjg4=",
+        "owner": "Antares0982",
+        "repo": "blog",
+        "rev": "b64a300c2102634fc99ab60175a520810352ed13",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Antares0982",
+        "repo": "blog",
+        "type": "github"
+      }
+    },
     "darwin": {
       "inputs": {
         "nixpkgs": [
@@ -109,6 +130,22 @@
         "owner": "lnl7",
         "ref": "master",
         "repo": "nix-darwin",
+        "type": "github"
+      }
+    },
+    "diary": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1769793441,
+        "narHash": "sha256-+bvVXTArS3NmfhkQanCMxk6Ogjo5BfzHzDub4lGNuc8=",
+        "owner": "AmazingRise",
+        "repo": "hugo-theme-diary",
+        "rev": "0d8afbaf3d6be6ae3b37c8f87cecf2946af5f8c1",
+        "type": "github"
+      },
+      "original": {
+        "owner": "AmazingRise",
+        "repo": "hugo-theme-diary",
         "type": "github"
       }
     },
@@ -434,6 +471,7 @@
         "agenix": "agenix",
         "antares-monitor": "antares-monitor",
         "antares-rpc-client": "antares-rpc-client",
+        "blog": "blog",
         "flake-compat": "flake-compat",
         "flake-parts": "flake-parts",
         "git-hooks": "git-hooks",

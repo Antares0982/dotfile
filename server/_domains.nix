@@ -4,6 +4,7 @@ let
     "alyr.dev" = "cloudflare";
     "mail.alyr.dev" = "cloudflare";
     "chr.fan" = "cloudflare";
+    "blog.chr.fan" = "cloudflare";
     "en.chr.fan" = "cloudflare";
     "couch.chr.fan" = "cloudflare";
     "pwa.chr.fan" = "cloudflare";
@@ -16,6 +17,7 @@ in
     "chr.fan"
     "alyr.dev"
     "mail.alyr.dev"
+    "blog.chr.fan"
     "en.chr.fan"
     "couch.chr.fan"
     "pwa.chr.fan"

@@ -16,6 +16,7 @@ let
     antares-monitor
     antares-rpc-client
     visitor-badge
+    blog
     pull-all
     renewal
     napcat-nix
@@ -75,6 +76,7 @@ curNixosSystem {
       antares-monitor
       antares-rpc-client
       visitor-badge
+      blog
       pull-all
       renewal
       pkgs-old
