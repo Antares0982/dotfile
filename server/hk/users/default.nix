@@ -23,17 +23,17 @@ in
       inherit (userCommonSettings) hashedPasswordFile;
       linger = true;
     };
-    openai = {
-      isNormalUser = true;
-      home = "/home/openai";
-      description = "openai session keeper";
-      useDefaultShell = true;
-      openssh.authorizedKeys.keys = [
-        userCommonSettings.commonUserAuthorizedKey
-      ];
-      inherit (userCommonSettings) hashedPasswordFile;
-      linger = true;
-    };
+    # openai = {
+    #   isNormalUser = true;
+    #   home = "/home/openai";
+    #   description = "openai session keeper";
+    #   useDefaultShell = true;
+    #   openssh.authorizedKeys.keys = [
+    #     userCommonSettings.commonUserAuthorizedKey
+    #   ];
+    #   inherit (userCommonSettings) hashedPasswordFile;
+    #   linger = true;
+    # };
     acme = {
       extraGroups = [ "nginx" ];
     };
@@ -49,7 +49,7 @@ in
   home-manager.useGlobalPkgs = true;
   home-manager.users = {
     alice = import ./alice;
-    openai = import ./openai;
+    # openai = import ./openai;
   };
   home-manager.backupFileExtension = "backup";
   home-manager.extraSpecialArgs = {
