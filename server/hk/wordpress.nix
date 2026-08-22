@@ -98,89 +98,84 @@ let
   # };
 in
 {
-  services.wordpress.webserver = "nginx";
-  services.nginx.package = pkgs.nginx.overrideAttrs (old: rec {
-    version = "1.30.1";
-    src = pkgs.fetchurl {
-      url = "https://nginx.org/download/nginx-${version}.tar.gz";
-      hash = "sha256-mXZQANl0iWsxyliC2MJ5zj/n729cb58Kln7X/TQH+cw=";
+  services = {
+    wordpress = {
+      webserver = "nginx";
+      sites = {
+        "chr.fan" = {
+          languages = [ wordpress-language-cn ];
+          settings = {
+            WPLANG = "zh_CN";
+          };
+          virtualHost = {
+            useACMEHost = "chr.fan";
+          };
+          database = {
+            user = "wordpress";
+            name = "wordpress";
+          };
+          themes = {
+            Sakurairo = sakurairo-theme;
+          };
+          plugins = {
+            inherit (pkgs.wordpressPackages.plugins)
+              akismet
+              login-lockdown
+              wordpress-seo
+              wp-statistics
+              # wordpress-language-cn
+              ;
+            inherit wp-editormd polylang;
+          };
+        };
+
+        "en.chr.fan" = {
+          languages = [ ];
+          settings = {
+            WPLANG = "en_US";
+          };
+          virtualHost = {
+            useACMEHost = "en.chr.fan";
+          };
+          database = {
+            user = "wordpress";
+            name = "wordpress_en";
+          };
+          themes = {
+            Sakurairo = sakurairo-theme;
+          };
+          plugins = {
+            inherit (pkgs.wordpressPackages.plugins)
+              akismet
+              login-lockdown
+              wordpress-seo
+              wp-statistics
+              # wordpress-language-cn
+              ;
+            inherit wp-editormd polylang;
+          };
+        };
+
+      };
     };
-  });
-  services.wordpress.sites."chr.fan" = {
-    languages = [ wordpress-language-cn ];
-    settings = {
-      WPLANG = "zh_CN";
-    };
-    virtualHost = {
-      useACMEHost = "chr.fan";
-      # sslServerKey = "/var/chr.fan.key";
-      # sslServerCert = "/var/chr.fan_bundle.crt";
-    };
-    database = {
-      user = "wordpress";
-      name = "wordpress";
-    };
-    themes = {
-      Sakurairo = sakurairo-theme;
-    };
-    plugins = {
-      inherit (pkgs.wordpressPackages.plugins)
-        akismet
-        login-lockdown
-        wordpress-seo
-        wp-statistics
-        # wordpress-language-cn
-        ;
-      inherit wp-editormd polylang;
-    };
-  };
-  services.wordpress.sites."en.chr.fan" = {
-    languages = [ ];
-    settings = {
-      WPLANG = "en_US";
-    };
-    virtualHost = {
-      useACMEHost = "en.chr.fan";
-      # sslServerKey = "/var/chr.fan.key";
-      # sslServerCert = "/var/chr.fan_bundle.crt";
-    };
-    database = {
-      user = "wordpress";
-      name = "wordpress_en";
-    };
-    themes = {
-      Sakurairo = sakurairo-theme;
-    };
-    plugins = {
-      inherit (pkgs.wordpressPackages.plugins)
-        akismet
-        login-lockdown
-        wordpress-seo
-        wp-statistics
-        # wordpress-language-cn
-        ;
-      inherit wp-editormd polylang;
-    };
-  };
-  services.nginx.virtualHosts = {
-    "chr.fan" = {
-      addSSL = true;
-      enableACME = true;
-      # sslCertificate = "/var/chr.fan_bundle.crt";
-      # sslCertificateKey = "/var/chr.fan.key";
-    };
-    "alyr.dev" =
-      let
-        confMain = config.services.nginx.virtualHosts."chr.fan";
-      in
-      {
+    nginx.virtualHosts = {
+      "chr.fan" = {
         addSSL = true;
         enableACME = true;
-        inherit (confMain) root locations extraConfig;
       };
-    "en.chr.fan" = {
-      addSSL = true;
-      enableACME = true;
+      "alyr.dev" =
+        let
+          confMain = config.services.nginx.virtualHosts."chr.fan";
+        in
+        {
+          addSSL = true;
+          enableACME = true;
+          inherit (confMain) root locations extraConfig;
+        };
+      "en.chr.fan" = {
+        addSSL = true;
+        enableACME = true;
+      };
     };
   };
 }
