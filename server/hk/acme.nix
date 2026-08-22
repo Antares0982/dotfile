@@ -7,7 +7,7 @@
 }:
 let
   domainSettings = pkgs.callPackage ../_domains.nix { inherit currentDevice; };
-  domainDNSProvider = domainSettings.domainDNSProvider;
+  inherit (domainSettings) domainDNSProvider;
 in
 {
   security.acme = {

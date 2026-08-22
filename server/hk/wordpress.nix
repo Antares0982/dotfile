@@ -1,6 +1,5 @@
 { config, pkgs, ... }:
 let
-  fetchzip = pkgs.fetchzip;
   wordpress-lang-version-hash = {
     # if a version does not exist, add `wordpress-language-cn` to plugins, and call
     # nix build .\#nixosConfigurations.hk.config.services.wordpress.sites.\"chr.fan\".plugins.wordpress-language-cn
@@ -51,7 +50,7 @@ let
     pkgDefine:
     pkgs.stdenvNoCC.mkDerivation {
       inherit (pkgDefine) name;
-      src = fetchzip {
+      src = pkgs.fetchzip {
         executable = false;
         inherit (pkgDefine) url hash;
       };

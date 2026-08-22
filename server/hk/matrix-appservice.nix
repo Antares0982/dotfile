@@ -1,4 +1,4 @@
-{ ... }:
+{ config, ... }:
 let
   # mautrix-python appservice listener (appservice.port).
   # Must match the bridge config and the registration file's `url:`.

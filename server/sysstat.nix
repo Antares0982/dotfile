@@ -1,4 +1,4 @@
-{ ... }:
+{ config, ... }:
 {
   # Persist CPU / load / network activity to disk so that, after an SSH
   # outage, the resource state at the outage timestamp can be inspected.
