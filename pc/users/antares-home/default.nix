@@ -20,7 +20,7 @@ in
   programs.home-manager.enable = true;
   nix.gc = {
     automatic = true;
-    options = "--delete-older-than 30d";
+    options = "--delete-older-than 7d";
   };
   home = {
     stateVersion = "24.05";

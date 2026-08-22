@@ -9,7 +9,7 @@
   home.stateVersion = "24.05";
   nix.gc = {
     automatic = true;
-    options = "--delete-older-than 30d";
+    options = "--delete-older-than 7d";
   };
   imports = [
     ./openai.nix
