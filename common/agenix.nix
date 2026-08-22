@@ -175,24 +175,12 @@ in
         group = "users";
         mode = "440";
       };
-      rabbitClientCfgOpenai = {
-        file = ../secrets/rabbit-client-cfg-openai.age;
-        owner = "openai";
-        group = "users";
-        mode = "440";
-      };
       mailPasswordAntares = {
         file = ../secrets/mail-password-antares.age;
       };
       mailPasswordAlyr = {
         file = ../secrets/mail-password-alyr.age;
       };
-      # couchdbAdminPassword = {
-      #   file = ../secrets/couchdb-password.age;
-      #   owner = "couchdb";
-      #   group = "couchdb";
-      #   mode = "400";
-      # };
       rabbitmqDefinitions = {
         file = ../secrets/rabbitmq-definitions.age;
         owner = "rabbitmq";
