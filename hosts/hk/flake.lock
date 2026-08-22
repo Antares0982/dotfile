@@ -95,14 +95,15 @@
         "diary": "diary",
         "nixpkgs": [
           "nixpkgs"
-        ]
+        ],
+        "terminal": "terminal"
       },
       "locked": {
-        "lastModified": 1787406859,
-        "narHash": "sha256-e8fU9HjKoX/mGGg1YjXKowB/XyNH6G8OFBHY6/R9nug=",
+        "lastModified": 1787415978,
+        "narHash": "sha256-zQWktrvtV+tu2SgFm+KAu8uzOoYNUGQyLVp47bQ2nsI=",
         "owner": "Antares0982",
         "repo": "blog",
-        "rev": "b945365ec1681ecf73e5eb5bc4a0ca1f9cb4299b",
+        "rev": "b0dc52548ca6ec2909d5c9af9f3897703fdf80f8",
         "type": "github"
       },
       "original": {
@@ -502,6 +503,22 @@
       "original": {
         "owner": "nix-systems",
         "repo": "default",
+        "type": "github"
+      }
+    },
+    "terminal": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1775424101,
+        "narHash": "sha256-6xrlhTqxJoB2LMFa0lcsDB73i7aJxvbVhScKxqoVeXc=",
+        "owner": "panr",
+        "repo": "hugo-theme-terminal",
+        "rev": "4acd067c48195ac503541ba75f9259c7158d3792",
+        "type": "github"
+      },
+      "original": {
+        "owner": "panr",
+        "repo": "hugo-theme-terminal",
         "type": "github"
       }
     },
