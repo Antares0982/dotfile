@@ -99,11 +99,11 @@
         "terminal": "terminal"
       },
       "locked": {
-        "lastModified": 1787415978,
-        "narHash": "sha256-zQWktrvtV+tu2SgFm+KAu8uzOoYNUGQyLVp47bQ2nsI=",
+        "lastModified": 1787417962,
+        "narHash": "sha256-LZbihJy/QVXGz95IioYPPjkJJ8K8QJ9POrZQGUhsu9c=",
         "owner": "Antares0982",
         "repo": "blog",
-        "rev": "b0dc52548ca6ec2909d5c9af9f3897703fdf80f8",
+        "rev": "fe01a90ceb95ea92ea0c4aed75531f3ffe21f0b8",
         "type": "github"
       },
       "original": {
