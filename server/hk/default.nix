@@ -6,7 +6,6 @@
   ++ [
     ./acme.nix
     ./blog.nix
-    ./couchdb.nix
     ./monitor.nix
     ./hermes-pwa.nix
     ./mail.nix
