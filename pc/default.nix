@@ -9,7 +9,6 @@
   imports = [
     ./audio.nix
     ./bluetooth.nix
-    ./chrome.nix
     ./configuration.nix
     ./display.nix
     ./fcitx5.nix

@@ -7,10 +7,10 @@
 }:
 {
   imports = [ ../common/packages.nix ];
+  # alphabet order
   environment.systemPackages = with pkgs; [
     android-tools
     aria2
-    basedpyright
     cheat
     clang-tools
     claude-code
@@ -19,6 +19,7 @@
     # discord
     element-desktop
     ffmpeg
+    google-chrome
     haruna
     imagemagick
     # kdePackages.dolphin

@@ -1,4 +1,4 @@
-{ ... }:
+{ config, ... }:
 {
   xdg = {
     configFile."xdg-terminals.list".text = "kitty.desktop\n";
