@@ -1,0 +1,28 @@
+{
+  "vhosts": [
+    { "name": "remotecall" }
+  ],
+
+  "users": [
+    { "name": "controller", "password_hash": "REPLACE_CONTROLLER_HASH", "hashing_algorithm": "rabbit_password_hashing_sha256", "tags": [] },
+    { "name": "pc",         "password_hash": "REPLACE_PC_HASH",         "hashing_algorithm": "rabbit_password_hashing_sha256", "tags": [] },
+    { "name": "rpi",        "password_hash": "REPLACE_RPI_HASH",        "hashing_algorithm": "rabbit_password_hashing_sha256", "tags": [] }
+  ],
+
+  "permissions": [
+    { "user": "controller", "vhost": "remotecall", "configure": "^(all|pc|rpi)$",        "write": "^(all|pc|rpi)$", "read": "^$" },
+    { "user": "pc",         "vhost": "remotecall", "configure": "^(amq\\.gen.*|pc|all)$", "write": "^amq\\.gen.*$",  "read": "^(amq\\.gen.*|pc|all)$" },
+    { "user": "rpi",        "vhost": "remotecall", "configure": "^(amq\\.gen.*|rpi|all)$","write": "^amq\\.gen.*$",  "read": "^(amq\\.gen.*|rpi|all)$" }
+  ],
+
+  "topic_permissions": [
+    { "user": "controller", "vhost": "remotecall", "exchange": "all", "write": "^all\\..*$", "read": "^$" },
+    { "user": "controller", "vhost": "remotecall", "exchange": "pc",  "write": "^pc\\..*$",  "read": "^$" },
+    { "user": "controller", "vhost": "remotecall", "exchange": "rpi", "write": "^rpi\\..*$", "read": "^$" },
+
+    { "user": "pc",  "vhost": "remotecall", "exchange": "pc",  "write": "^$", "read": "^pc\\..*$" },
+    { "user": "pc",  "vhost": "remotecall", "exchange": "all", "write": "^$", "read": "^all\\..*$" },
+    { "user": "rpi", "vhost": "remotecall", "exchange": "rpi", "write": "^$", "read": "^rpi\\..*$" },
+    { "user": "rpi", "vhost": "remotecall", "exchange": "all", "write": "^$", "read": "^all\\..*$" }
+  ]
+}
