@@ -37,13 +37,6 @@ in
     acme = {
       extraGroups = [ "nginx" ];
     };
-    pwa = {
-      isNormalUser = true;
-      home = "/home/pwa";
-      description = "PWA mobile AI assistant";
-      useDefaultShell = true;
-      linger = true;
-    };
   };
   # home manager
   home-manager.useGlobalPkgs = true;

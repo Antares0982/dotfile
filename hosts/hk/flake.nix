@@ -6,10 +6,6 @@
     nixpkgs-old.url = "github:NixOS/nixpkgs/nixos-26.05";
 
     flake-compat.url = "github:edolstra/flake-compat";
-    flake-parts = {
-      url = "github:hercules-ci/flake-parts";
-      inputs.nixpkgs-lib.follows = "nixpkgs";
-    };
 
     home-manager = {
       url = "github:nix-community/home-manager/master";
@@ -70,7 +66,7 @@
       };
     };
 
-    # hermes-agent python stack (follows kept to pin against this host's nixpkgs)
+    # antares-monitor python stack (follows kept to pin against this host's nixpkgs)
     pyproject-nix = {
       url = "github:pyproject-nix/pyproject.nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -88,32 +84,6 @@
         nixpkgs.follows = "nixpkgs";
         pyproject-nix.follows = "pyproject-nix";
         uv2nix.follows = "uv2nix";
-      };
-    };
-    npm-lockfile-fix = {
-      url = "github:jeslie0/npm-lockfile-fix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    hermes-agent = {
-      url = "github:Antares0982/hermes-agent/antares";
-      inputs = {
-        nixpkgs.follows = "nixpkgs";
-        flake-parts.follows = "flake-parts";
-        pyproject-nix.follows = "pyproject-nix";
-        uv2nix.follows = "uv2nix";
-        pyproject-build-systems.follows = "pyproject-build-systems";
-        npm-lockfile-fix.follows = "npm-lockfile-fix";
-      };
-    };
-    hermes-agent-pwa = {
-      url = "github:Antares0982/hermes-agent/pwa";
-      inputs = {
-        nixpkgs.follows = "nixpkgs";
-        flake-parts.follows = "flake-parts";
-        pyproject-nix.follows = "pyproject-nix";
-        uv2nix.follows = "uv2nix";
-        pyproject-build-systems.follows = "pyproject-build-systems";
-        npm-lockfile-fix.follows = "npm-lockfile-fix";
       };
     };
   };

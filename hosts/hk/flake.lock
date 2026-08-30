@@ -165,26 +165,6 @@
         "type": "github"
       }
     },
-    "flake-parts": {
-      "inputs": {
-        "nixpkgs-lib": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1787559586,
-        "narHash": "sha256-onL0VLf9vPllmT0H/OlURIU5r5t5WIEl7t4tVNKT0Nw=",
-        "owner": "hercules-ci",
-        "repo": "flake-parts",
-        "rev": "9d0d87172c374f89da73c1cfe6d81ae62feac1f1",
-        "type": "github"
-      },
-      "original": {
-        "owner": "hercules-ci",
-        "repo": "flake-parts",
-        "type": "github"
-      }
-    },
     "git-hooks": {
       "inputs": {
         "flake-compat": [
@@ -205,78 +185,6 @@
       "original": {
         "owner": "cachix",
         "repo": "git-hooks.nix",
-        "type": "github"
-      }
-    },
-    "hermes-agent": {
-      "inputs": {
-        "flake-parts": [
-          "flake-parts"
-        ],
-        "nixpkgs": [
-          "nixpkgs"
-        ],
-        "npm-lockfile-fix": [
-          "npm-lockfile-fix"
-        ],
-        "pyproject-build-systems": [
-          "pyproject-build-systems"
-        ],
-        "pyproject-nix": [
-          "pyproject-nix"
-        ],
-        "uv2nix": [
-          "uv2nix"
-        ]
-      },
-      "locked": {
-        "lastModified": 1781884114,
-        "narHash": "sha256-HBbbMKCLHoMKS51a9zD0i9Y43PWbXSBfQ24mRzc/eis=",
-        "owner": "Antares0982",
-        "repo": "hermes-agent",
-        "rev": "c6a55fc076f96249eb939afd010e0d81cf571065",
-        "type": "github"
-      },
-      "original": {
-        "owner": "Antares0982",
-        "ref": "antares",
-        "repo": "hermes-agent",
-        "type": "github"
-      }
-    },
-    "hermes-agent-pwa": {
-      "inputs": {
-        "flake-parts": [
-          "flake-parts"
-        ],
-        "nixpkgs": [
-          "nixpkgs"
-        ],
-        "npm-lockfile-fix": [
-          "npm-lockfile-fix"
-        ],
-        "pyproject-build-systems": [
-          "pyproject-build-systems"
-        ],
-        "pyproject-nix": [
-          "pyproject-nix"
-        ],
-        "uv2nix": [
-          "uv2nix"
-        ]
-      },
-      "locked": {
-        "lastModified": 1781890164,
-        "narHash": "sha256-GbDXoan25DdeYbX3gaZdXgLQQ0iHVSJDdigcqNkK5sE=",
-        "owner": "Antares0982",
-        "repo": "hermes-agent",
-        "rev": "1b077ba6d41f264da8f4abbf7af6073ecf893565",
-        "type": "github"
-      },
-      "original": {
-        "owner": "Antares0982",
-        "ref": "pwa",
-        "repo": "hermes-agent",
         "type": "github"
       }
     },
@@ -381,26 +289,6 @@
         "type": "github"
       }
     },
-    "npm-lockfile-fix": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1775903712,
-        "narHash": "sha256-2GV79U6iVH4gKAPWYrxUReB0S41ty/Y3dBLquU8AlaA=",
-        "owner": "jeslie0",
-        "repo": "npm-lockfile-fix",
-        "rev": "c6093acb0c0548e0f9b8b3d82918823721930fe8",
-        "type": "github"
-      },
-      "original": {
-        "owner": "jeslie0",
-        "repo": "npm-lockfile-fix",
-        "type": "github"
-      }
-    },
     "pyproject-build-systems": {
       "inputs": {
         "nixpkgs": [
@@ -474,16 +362,12 @@
         "antares-rpc-client": "antares-rpc-client",
         "blog": "blog",
         "flake-compat": "flake-compat",
-        "flake-parts": "flake-parts",
         "git-hooks": "git-hooks",
-        "hermes-agent": "hermes-agent",
-        "hermes-agent-pwa": "hermes-agent-pwa",
         "home-manager": "home-manager",
         "myXray": "myXray",
         "nixos-mailserver": "nixos-mailserver",
         "nixpkgs": "nixpkgs",
         "nixpkgs-old": "nixpkgs-old",
-        "npm-lockfile-fix": "npm-lockfile-fix",
         "pyproject-build-systems": "pyproject-build-systems",
         "pyproject-nix": "pyproject-nix",
         "renewal": "renewal",
