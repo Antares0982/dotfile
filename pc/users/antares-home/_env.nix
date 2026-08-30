@@ -35,6 +35,7 @@ rec {
     GPG_TTY = "$TTY";
     NIX_BUILD_SHELL = "${nix-zshell}/bin/nix-zshell";
     NIX_DOT_FILES = "${localFileDef.docDir}/Nix";
+    EDITOR = "nvim";
   };
   aliases = commonEnv.aliases // {
     yt-dlp = "yt-dlp --cookies-from-browser chrome";
