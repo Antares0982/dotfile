@@ -9,15 +9,30 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - host: nixos
+          runner: '["ubuntu-latest"]'
+          self_hosted: false
+        - host: hk
+          runner: '["ubuntu-latest"]'
+          self_hosted: false
+        - host: rpi5
+          runner: '["self-hosted", "Linux", "ARM64"]'
+          self_hosted: true
+    runs-on: ${{ fromJSON(matrix.runner) }}
     steps:
     - name: Checkout
       uses: actions/checkout@v6
 
     - name: Install nix
+      if: ${{ !matrix.self_hosted }}
       uses: cachix/install-nix-action@v31
 
     - name: Set nix daemon tmp path
+      if: ${{ !matrix.self_hosted }}
       run: |
         sudo mkdir --parents /nix/tmp
         sudo chmod 777 /nix/tmp
@@ -42,13 +57,18 @@ jobs:
       with:
         name: antares0982
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+        skipAddingSubstituter: ${{ matrix.self_hosted }}
 
     - name: Nix flake update
+      env:
+        HOST: ${{ matrix.host }}
       run: |
-        nix flake update --flake ./hosts/nixos --commit-lock-file
+        nix flake update --flake "./hosts/${HOST}" --commit-lock-file
 
     - name: Check nixpkgs version and decide whether to build
       id: check
+      env:
+        HOST: ${{ matrix.host }}
       run: |
         set -euo pipefail
 
@@ -58,14 +78,14 @@ jobs:
           // (.nodes[]?.locked.rev // .nodes[]?.locked.revision)
           // .locks["nixpkgs"]?.locked.rev
           // .locks["nixpkgs"]?.locked.revision
-          )' hosts/nixos/flake.lock 2>/dev/null | head -n1 || true)
+          )' "hosts/${HOST}/flake.lock" 2>/dev/null | head -n1 || true)
 
         if [ -z "$rev" ] || [ "$rev" = "null" ]; then
           rev=$(date -u +"%Y%m%dT%H%M%SZ")
         fi
 
         short_rev=${rev:0:12}
-        branch="flake-update/nixpkgs-${short_rev}"
+        branch="flake-update/${HOST}/nixpkgs-${short_rev}"
 
         echo "nixpkgs_rev=$short_rev" >> "$GITHUB_OUTPUT"
         echo "branch_name=$branch" >> "$GITHUB_OUTPUT"
@@ -93,8 +113,10 @@ jobs:
 
     - name: Nix build
       if: steps.check.outputs.skip_build == 'false'
+      env:
+        HOST: ${{ matrix.host }}
       run: |
-        nix build -L ./hosts/nixos#nixosConfigurations.nixos.config.system.build.toplevel --show-trace
+        nix build -L "./hosts/${HOST}#nixosConfigurations.${HOST}.config.system.build.toplevel" --show-trace
 
     - name: Push branch
       if: steps.check.outputs.skip_build == 'false'
