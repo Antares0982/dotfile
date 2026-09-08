@@ -72,22 +72,34 @@ jobs:
       run: |
         set -euo pipefail
 
-        rev=$(jq -r '
-          ( .nodes["nixpkgs"]?.locked.rev
-          // .nodes["nixpkgs"]?.locked.revision
-          // (.nodes[]?.locked.rev // .nodes[]?.locked.revision)
-          // .locks["nixpkgs"]?.locked.rev
-          // .locks["nixpkgs"]?.locked.revision
-          )' "hosts/${HOST}/flake.lock" 2>/dev/null | head -n1 || true)
+        lock_file="hosts/${HOST}/flake.lock"
+        # Lock node names are implementation details and may be suffixed when
+        # transitive inputs collide. Follow the root flake's nixpkgs edge to
+        # find the node that this host actually uses.
+        IFS=$'\t' read -r nixpkgs_node rev < <(
+          jq -er '
+            .root as $root
+            | .nodes[$root].inputs.nixpkgs as $node
+            | if ($node | type) != "string" then
+                error("root input nixpkgs does not resolve to a lock node")
+              else
+                [
+                  $node,
+                  (.nodes[$node].locked.rev
+                   // .nodes[$node].locked.revision
+                   // error("root nixpkgs lock node has no revision"))
+                ]
+                | @tsv
+              end
+          ' "$lock_file"
+        )
 
-        if [ -z "$rev" ] || [ "$rev" = "null" ]; then
-          rev=$(date -u +"%Y%m%dT%H%M%SZ")
-        fi
+        echo "Resolved root nixpkgs input: node=${nixpkgs_node}, revision=${rev}"
 
         short_rev=${rev:0:12}
         branch="flake-update/${HOST}/nixpkgs-${short_rev}"
 
-        echo "nixpkgs_rev=$short_rev" >> "$GITHUB_OUTPUT"
+        echo "nixpkgs_rev=$rev" >> "$GITHUB_OUTPUT"
         echo "branch_name=$branch" >> "$GITHUB_OUTPUT"
 
         if git ls-remote --heads origin "$branch" | grep -q .; then

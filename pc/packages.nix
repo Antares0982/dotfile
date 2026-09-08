@@ -9,6 +9,7 @@
   imports = [ ../common/packages.nix ];
   # alphabet order
   environment.systemPackages = with pkgs; [
+    actionlint
     android-tools
     aria2
     cheat
