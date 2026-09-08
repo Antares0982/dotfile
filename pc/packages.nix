@@ -13,8 +13,8 @@
     aria2
     cheat
     clang-tools
-    claude-code
     cmake
+    codex
     direnv
     # discord
     element-desktop
