@@ -12,7 +12,7 @@
 
 Multi-machine Nix configuration flake managing:
 - `nixos` — desktop PC (x86_64-linux, KDE Plasma, NVIDIA, home-manager)
-- `hk` — Hong Kong server (x86_64-linux, nginx/wordpress/mail services)
+- `hk` — Hong Kong server (x86_64-linux, nginx/mail services)
 - `rpi5` — Raspberry Pi 5 (aarch64-linux)
 - `wsl` — Windows Subsystem for Linux (x86_64-linux)
 - `macbook` — macOS (aarch64-darwin, nix-darwin)

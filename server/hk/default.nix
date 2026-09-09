@@ -8,7 +8,6 @@
     ./blog.nix
     ./monitor.nix
     ./mail.nix
-    ./wordpress.nix
     ./visitorbadge.nix
     ./matrix-appservice.nix
   ];

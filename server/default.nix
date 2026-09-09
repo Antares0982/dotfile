@@ -51,9 +51,6 @@ in
   };
   programs.zsh = {
     shellAliases = commonEnvs.aliases;
-    # interactiveShellInit = ''
-    #   WPDIR=$(cat $(ps aux | grep nginx.conf | grep -v grep | awk '{for(i=NF; i>0; i--) if($i != "") {print $i; break}}') | grep share/wordpress | awk '{for(i=NF; i>0; i--) if($i != "") {print $i; break}}' | sed 's/.$//')
-    # '';
     shellInit = ''
       export PATH=$PATH:$HOME/scripts:$HOME/scripts/linux
     '';

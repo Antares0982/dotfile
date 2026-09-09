@@ -21,12 +21,14 @@ let
   viewsLog = "/var/log/nginx/blog-views.log";
 in
 {
+  services.nginx.enable = true;
+
   services.nginx.commonHttpConfig = ''
     log_format blogviews escape=none
       '$time_iso8601	$remote_addr	$status	$request_uri	$http_user_agent';
   '';
 
-  services.nginx.virtualHosts."blog.chr.fan" = {
+  services.nginx.virtualHosts."chr.fan" = {
     addSSL = true;
     enableACME = true;
     root = "${site}";
@@ -109,6 +111,27 @@ in
         default_type application/json;
         return 200 '{}';
       '';
+    };
+  };
+
+  services.nginx.virtualHosts."blog.chr.fan" = {
+    addSSL = true;
+    enableACME = true;
+    locations."/".return = "301 https://chr.fan$request_uri";
+  };
+
+  services.nginx.virtualHosts."alyr.dev" = {
+    addSSL = true;
+    enableACME = true;
+    locations."/".return = "301 https://chr.fan$request_uri";
+  };
+
+  services.nginx.virtualHosts."en.chr.fan" = {
+    addSSL = true;
+    enableACME = true;
+    locations = {
+      "~ ^/[0-9]{4}/[0-9]{2}/[0-9]{2}/(.+)$".return = "301 https://chr.fan/en/$1$is_args$args";
+      "/".return = "301 https://chr.fan/en$request_uri";
     };
   };
 
