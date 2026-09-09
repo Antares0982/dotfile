@@ -16,7 +16,6 @@
         "text/plain" = [ "nvim.desktop" ];
         "application/x-shellscript" = [ "nvim.desktop" ];
         "x-scheme-handler/baiduyunguanjia" = [ "baidunetdisk.desktop" ];
-        "x-scheme-handler/claude-cli" = [ "claude-code-url-handler.desktop" ];
         "x-scheme-handler/http" = [ "google-chrome.desktop" ];
         "x-scheme-handler/https" = [ "google-chrome.desktop" ];
         "x-scheme-handler/tg" = [ "org.telegram.desktop.desktop" ];
@@ -38,7 +37,6 @@
         "text/plain" = [ "nvim.desktop" ];
         "application/x-shellscript" = [ "nvim.desktop" ];
         "x-scheme-handler/baiduyunguanjia" = [ "baidunetdisk.desktop" ];
-        "x-scheme-handler/claude-cli" = [ "claude-code-url-handler.desktop" ];
         "x-scheme-handler/http" = [ "google-chrome.desktop" ];
         "x-scheme-handler/https" = [ "google-chrome.desktop" ];
         "x-scheme-handler/tg" = [ "org.telegram.desktop.desktop" ];

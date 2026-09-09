@@ -129,7 +129,7 @@ rec {
     zo() { _zz o "$@"; }
 
     c() {
-      _f claude $@
+      _f codex $@
     }
 
     zc() { _zz c "$@"; }

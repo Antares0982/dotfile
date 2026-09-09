@@ -1,8 +1,5 @@
 { pkgs, ... }:
 {
-  # mcp-nixos run as a long-lived HTTP MCP server on loopback. Claude Code
-  # (and any other local MCP client) connects to http://127.0.0.1:8000/mcp
-  # instead of spawning its own stdio process.
   systemd.services.mcp-nixos = {
     description = "MCP NixOS server (HTTP)";
     after = [ "network-online.target" ];
