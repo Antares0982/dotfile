@@ -130,7 +130,8 @@ in
     addSSL = true;
     enableACME = true;
     locations = {
-      "~ ^/[0-9]{4}/[0-9]{2}/[0-9]{2}/(.+)$".return = "301 https://chr.fan/en/$1$is_args$args";
+      "= /2026/01/07/python-json".return = "301 https://chr.fan/en/python-json/$is_args$args";
+      "= /2026/01/07/python-json/".return = "301 https://chr.fan/en/python-json/$is_args$args";
       "/".return = "301 https://chr.fan/en$request_uri";
     };
   };
