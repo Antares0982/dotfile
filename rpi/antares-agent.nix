@@ -319,8 +319,8 @@ in
       # F26: v4-flash barely fans out on its own, so the `deep` profile's
       # orchestration tier has to be pro; `quick` is single-repo edits and
       # flash is the right price for it.
-      ANTARES_MODEL_OPUS = "deepseek-v4-pro";
-      ANTARES_MODEL_SONNET = "deepseek-v4-flash";
+      ANTARES_MODEL_OPUS = "deepseek-v4.1-flash";
+      ANTARES_MODEL_SONNET = "deepseek-v4.1-flash";
 
       # The CLI's own model requests go through the local proxy; sandboxed Bash
       # cannot reach it (F22 measured the asymmetry).
