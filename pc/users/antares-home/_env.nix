@@ -99,15 +99,47 @@ rec {
         echo "Need an arg."
         return 1
       fi
-      if [[ -f flake.nix ]] && grep -q 'devShell' flake.nix; then
-        nix develop -c $@
+
+      if [[ ! -f flake.nix ]] || (( ! $+commands[nix] )); then
+        command "$@"
+        return
+      fi
+
+      local hasShell
+      hasShell=$(nix eval --impure --json --expr '
+        let
+          flake = builtins.getFlake (toString ./.);
+          system = builtins.currentSystem;
+        in
+          flake.outputs ? devShells
+          && builtins.hasAttr system flake.outputs.devShells
+          && builtins.hasAttr "default" (builtins.getAttr system flake.outputs.devShells)
+      ' 2>/dev/null)
+      if [[ $? -eq 0 && "$hasShell" != true ]]; then
+        command "$@"
+        return
+      fi
+
+      local mark code reply
+      mark=$(mktemp) || return 1
+      nix develop -c ${pkgs.runtimeShell} -c 'printf 1 > "$1"; shift; exec "$@"' _ "$mark" "$@"
+      code=$?
+      if [[ -s "$mark" ]]; then
+        rm -f "$mark"
+        return $code
+      fi
+
+      rm -f "$mark"
+      read -r "reply?nix develop failed. Run normally? [Y/n] " || return $code
+      if [[ -z "$reply" || "$reply" == [Yy] ]]; then
+        command "$@"
       else
-        command $@
+        return $code
       fi
     }
 
     n() {
-      _f nvim $@
+      _f nvim "$@"
     }
 
     _zz() {
@@ -123,13 +155,13 @@ rec {
     zn() { _zz n "$@"; }
 
     o() {
-      _f opencode $@
+      _f opencode "$@"
     }
 
     zo() { _zz o "$@"; }
 
     c() {
-      _f codex $@
+      _f codex "$@"
     }
 
     zc() { _zz c "$@"; }
