@@ -24,6 +24,10 @@ Each machine is its own flake under `hosts/<name>/`, with an independent
 code stays at the repo root and is pulled in via `import ../../<file>`. There is
 no root `flake.nix`.
 
+Do not build a host whose system platform differs from the current machine.
+For those hosts, only run local evaluation; perform full builds on a matching
+host or an explicitly configured remote builder.
+
 **NixOS systems** (from this repo directory):
 ```bash
 # Build without switching (dry-run check)

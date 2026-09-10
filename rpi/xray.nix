@@ -9,6 +9,12 @@
 let
   xrayDir = "/var/lib/xray";
   subsDir = "${xrayDir}/subscriptions";
+  xs = import ../common/xs.nix {
+    inherit pkgs myXray;
+    inherit xrayDir;
+    configPath = "${subsDir}/active.json";
+    systemdScope = "system";
+  };
 
   # Inside the agent's workspace, not its home: ProtectHome=tmpfs shadows
   # /home/agent for the unit, and the bubblewrap sandbox only permits writes
@@ -17,6 +23,8 @@ let
   triggerDir = "/home/agent/agent_work/.agent/xray-trigger";
 in
 {
+  environment.systemPackages = [ xs ];
+
   # ── shared group for xray management ──
   users.groups.xray = {
     members = [

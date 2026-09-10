@@ -1,8 +1,8 @@
 set -euo pipefail
 
-XDIR="${XDG_CONFIG_HOME:-$HOME/.config}/xray"
+XDIR="${XRAY_CONF_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/xray}"
 SUBS="$XDIR/subscriptions"
-CFG="$XDIR/config.json"
+CFG="${XS_CONFIG_PATH:-$XDIR/config.json}"
 SPEED="$XDIR/speed_test.json"
 
 FILTER="${XS_FILTER:-Japan}"
@@ -10,6 +10,12 @@ MAX_AGE=600
 BASE_PORT=24100
 TEST_URL="${XS_TEST_URL:-https://www.gstatic.com/generate_204}"
 TIMEOUT=5
+SCOPE="${XS_SYSTEMD_SCOPE:-user}"
+
+case "$SCOPE" in
+  user|system) ;;
+  *) echo "xs: invalid systemd scope '$SCOPE'" >&2; exit 1 ;;
+esac
 
 # Boot one xray on a private socks port, time one real request through it.
 probe() {
@@ -78,5 +84,9 @@ fi
 
 sel="${names[$idx]}"
 ln -sfn "$SUBS/$sel" "$CFG"
-systemctl --user restart xray.service
+if [ "$SCOPE" = system ]; then
+  sudo systemctl restart xray.service
+else
+  systemctl --user restart xray.service
+fi
 printf 'xs: %s (%.3fs)\n' "$sel" "$(jq -r --arg f "$sel" 'first(.[] | select(.file == $f)).latency' "$SPEED")"
