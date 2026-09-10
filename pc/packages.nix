@@ -12,6 +12,7 @@
     actionlint
     android-tools
     aria2
+    blender
     cheat
     clang-tools
     cmake
