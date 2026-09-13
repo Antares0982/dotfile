@@ -27,6 +27,8 @@ rec {
   envs = rec {
     http_proxy = "http://127.0.0.1:1081";
     https_proxy = "http://127.0.0.1:1081";
+    HTTP_PROXY = http_proxy;
+    HTTPS_PROXY = https_proxy;
     GITHUB_DIR = localFileDef.githubDir;
     SCRIPT_DIR = localFileDef.scriptDir;
     XRAY_CONF_DIR = localFileDef.xrayConfDir;
