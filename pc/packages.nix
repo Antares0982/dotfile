@@ -26,6 +26,7 @@
     imagemagick
     # kdePackages.dolphin
     kdePackages.gwenview
+    kdePackages.kolourpaint
     # kdePackages.konsole
     libnotify
     # libreoffice
@@ -33,7 +34,6 @@
     nixos-shell
     obsidian
     opencode
-    openspec
     openssl
     perf
     pyright
