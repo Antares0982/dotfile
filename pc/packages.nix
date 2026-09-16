@@ -24,6 +24,7 @@
     google-chrome
     haruna
     imagemagick
+    (callPackage ./vtune.nix { })
     # kdePackages.dolphin
     kdePackages.gwenview
     kdePackages.kolourpaint
