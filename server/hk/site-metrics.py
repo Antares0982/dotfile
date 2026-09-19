@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import argparse
 import datetime
-import hashlib
 import json
 import os
 import re
@@ -12,8 +11,6 @@ import urllib.parse
 
 
 DB = "site_metrics"
-BLOG_MARK = "blog-state-v1"
-BADGE_MARK = "badge-counter-v1"
 PAGE = re.compile(r"^/(?:[^?#]*/)?$")
 BOT = re.compile(
     r"bot|spider|crawl|slurp|fetch|monitor|preview|scrape|"
@@ -36,14 +33,6 @@ def sql(text):
 def sql_text(value):
     data = value.encode("utf-8").hex()
     return "''" if not data else f"CONVERT(0x{data} USING utf8mb4)"
-
-
-def file_hash(path):
-    digest = hashlib.sha256()
-    with open(path, "rb") as source:
-        for chunk in iter(lambda: source.read(65536), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def parse_blog(line):
@@ -189,80 +178,13 @@ CREATE TABLE IF NOT EXISTS log_cursors (
   position BIGINT UNSIGNED NOT NULL,
   PRIMARY KEY (stream)
 ) ENGINE=InnoDB;
-CREATE TABLE IF NOT EXISTS migrations (
-  name VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-  source_path VARCHAR(512) NOT NULL,
-  source_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-  completed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (name)
-) ENGINE=InnoDB;
 """
     )
 
 
-def marker_names():
-    return set(sql("SELECT name FROM migrations;"))
-
-
-def initial_cursor(path, position):
-    info = os.stat(path)
-    if info.st_size < position:
-        position = 0
-    return info.st_dev, info.st_ino, position
-
-
-def import_old(args):
+def init_db(args):
     make_schema()
-    markers = marker_names()
-    statements = ["START TRANSACTION;"]
-
-    if BLOG_MARK not in markers:
-        with open(args.blog_state) as source:
-            state = json.load(source)
-        counts = {}
-        for path, count in state.get("counts", {}).items():
-            key = urllib.parse.unquote(path)
-            counts[key] = counts.get(key, 0) + int(count)
-        for path, count in counts.items():
-            statements.append(
-                "INSERT INTO blog_views(path,count) VALUES "
-                f"({sql_text(path)},{count}) ON DUPLICATE KEY UPDATE "
-                "count=VALUES(count);"
-            )
-        day = state.get("day")
-        if day:
-            datetime.date.fromisoformat(day)
-            for item in state.get("seen", []):
-                addr, path = item.split("\t", 1)
-                statements.append(
-                    "INSERT IGNORE INTO blog_seen(day,addr,path) VALUES "
-                    f"('{day}',{sql_text(addr)},{sql_text(path)});"
-                )
-        cursor = initial_cursor(args.blog_log, int(state.get("offset", 0)))
-        statements.append(cursor_sql("blog", cursor))
-        statements.append(
-            "INSERT INTO migrations(name,source_path,source_hash) VALUES "
-            f"('{BLOG_MARK}',{sql_text(args.blog_state)},"
-            f"'{file_hash(args.blog_state)}');"
-        )
-
-    if BADGE_MARK not in markers:
-        with open(args.badge_state) as source:
-            count = int(source.read().strip())
-        if count < 0:
-            raise ValueError("negative badge count")
-        statements.append(
-            "INSERT INTO badge_counts(id,count) VALUES "
-            f"('antares0982',{count}) ON DUPLICATE KEY UPDATE count=VALUES(count);"
-        )
-        statements.append(
-            "INSERT INTO migrations(name,source_path,source_hash) VALUES "
-            f"('{BADGE_MARK}',{sql_text(args.badge_state)},"
-            f"'{file_hash(args.badge_state)}');"
-        )
-
-    statements.append("COMMIT;")
-    sql("\n".join(statements))
+    sql("INSERT IGNORE INTO badge_counts(id,count) VALUES ('antares0982',0);")
     make_output(args.out_dir)
 
 
@@ -308,68 +230,6 @@ def update_db(args):
     print(f"blog lines={len(blog_lines)} badge views={badge_added}", file=sys.stderr)
 
 
-def verify_old(args):
-    rows = sql(
-        "SELECT name, source_path, source_hash FROM migrations "
-        f"WHERE name IN ('{BLOG_MARK}','{BADGE_MARK}');"
-    )
-    records = {row.split("\t", 2)[0]: row.split("\t", 2)[1:] for row in rows}
-    expected = {
-        BLOG_MARK: args.blog_state,
-        BADGE_MARK: args.badge_state,
-    }
-    for name, path in expected.items():
-        if name not in records:
-            raise RuntimeError(f"missing migration marker: {name}")
-        source_path, source_hash = records[name]
-        if source_path != path or file_hash(path) != source_hash:
-            raise RuntimeError(f"legacy source changed: {path}")
-
-    with open(args.blog_state) as source:
-        old_state = json.load(source)
-    old_counts = {}
-    for path, count in old_state.get("counts", {}).items():
-        key = urllib.parse.unquote(path)
-        old_counts[key] = old_counts.get(key, 0) + int(count)
-    db_counts = {}
-    for row in sql("SELECT HEX(path), count FROM blog_views;"):
-        encoded, count = row.split("\t")
-        db_counts[bytes.fromhex(encoded).decode("utf-8")] = int(count)
-    for path, count in old_counts.items():
-        if db_counts.get(path, -1) < count:
-            raise RuntimeError(f"blog count regressed: {path}")
-
-    with open(args.badge_state) as source:
-        old_badge = int(source.read().strip())
-    rows = sql("SELECT count FROM badge_counts WHERE id='antares0982';")
-    if not rows or int(rows[0]) < old_badge:
-        raise RuntimeError("badge count regressed")
-
-    for name in ("views.json", "visitor-badge.svg"):
-        path = os.path.join(args.out_dir, name)
-        if not os.path.isfile(path) or not os.path.getsize(path):
-            raise RuntimeError(f"missing output: {path}")
-
-
-def clean_old(args):
-    verify_old(args)
-    for path in (
-        args.blog_state,
-        args.blog_output,
-        args.badge_state,
-        args.badge_state + ".tmp",
-    ):
-        try:
-            os.unlink(path)
-        except FileNotFoundError:
-            pass
-    for path in (os.path.dirname(args.blog_state), os.path.dirname(args.badge_state)):
-        try:
-            os.rmdir(path)
-        except OSError:
-            pass
-
-
 def self_test():
     agent = "Mozilla/5.0"
     lines = [
@@ -389,31 +249,24 @@ def self_test():
 
 
 def add_paths(parser):
-    parser.add_argument("--blog-state", default="/var/lib/blog-views/state.json")
-    parser.add_argument("--badge-state", default="/var/visitor/counterfile.txt")
     parser.add_argument("--blog-log", default="/var/log/nginx/blog-views.log")
     parser.add_argument("--badge-log", default="/var/log/nginx/visitor-badge.log")
     parser.add_argument("--out-dir", default="/var/lib/site-metrics")
-    parser.add_argument("--blog-output", default="/var/lib/blog-views/views.json")
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--self-test", action="store_true")
     commands = parser.add_subparsers(dest="command")
-    for name in ("init", "update", "verify", "clean"):
+    for name in ("init", "update"):
         add_paths(commands.add_parser(name))
     args = parser.parse_args()
     if args.self_test:
         self_test()
     elif args.command == "init":
-        import_old(args)
+        init_db(args)
     elif args.command == "update":
         update_db(args)
-    elif args.command == "verify":
-        verify_old(args)
-    elif args.command == "clean":
-        clean_old(args)
     else:
         parser.error("a command is required")
 

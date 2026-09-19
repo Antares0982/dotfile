@@ -40,14 +40,9 @@ in
   ];
 
   systemd.services.site-metrics-init = {
-    description = "Initialize and migrate site metrics";
+    description = "Initialize site metrics";
     after = [ "mysql.service" ];
     requires = [ "mysql.service" ];
-    conflicts = [
-      "blog-view-counter.service"
-      "blog-view-counter.timer"
-      "visitorbadge.service"
-    ];
     before = [ "site-metrics.service" ];
     wantedBy = [ "multi-user.target" ];
     path = paths;
@@ -59,11 +54,6 @@ in
       ProtectHome = true;
       PrivateDevices = true;
       NoNewPrivileges = true;
-      ReadOnlyPaths = [
-        "-/var/lib/blog-views"
-        "-/var/visitor"
-        "/var/log/nginx"
-      ];
       ReadWritePaths = [ metricsDir ];
     };
   };
@@ -105,21 +95,4 @@ in
     };
   };
 
-  systemd.services.site-metrics-legacy-cleanup = {
-    description = "Remove migrated site metrics files";
-    path = paths;
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${command} clean";
-      ProtectSystem = "strict";
-      ProtectHome = true;
-      PrivateDevices = true;
-      NoNewPrivileges = true;
-      ReadWritePaths = [
-        "-/var/lib/blog-views"
-        "-/var/visitor"
-      ];
-      ReadOnlyPaths = [ metricsDir ];
-    };
-  };
 }
