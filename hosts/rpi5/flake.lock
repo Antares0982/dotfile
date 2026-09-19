@@ -371,6 +371,22 @@
         "type": "github"
       }
     },
+    "qq-codex-agent": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789806838,
+        "narHash": "sha256-SUTwSDMuDznXd1U6/4IMGcS4T9r/MIxDRr9D96ByGlg=",
+        "owner": "Antares0982",
+        "repo": "qq-codex-agent",
+        "rev": "d5e2170e933610fc558a40ba8b0297f5d7d3e516",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Antares0982",
+        "repo": "qq-codex-agent",
+        "type": "github"
+      }
+    },
     "renewal": {
       "inputs": {
         "nixpkgs": [
@@ -406,6 +422,7 @@
         "nixpkgs-old": "nixpkgs-old",
         "pyproject-build-systems": "pyproject-build-systems",
         "pyproject-nix": "pyproject-nix",
+        "qq-codex-agent": "qq-codex-agent",
         "renewal": "renewal",
         "uv2nix": "uv2nix",
         "vscode-server": "vscode-server"

@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  qq-codex-agent,
   ...
 }:
 let
@@ -9,7 +10,7 @@ let
   user = "qq-codex-agent";
   state = "/var/lib/qq-codex-agent";
   work = "/var/lib/qq-codex-work";
-  app = "/opt/qq-codex-agent";
+  app = qq-codex-agent;
   runtime = pkgs.buildEnv {
     name = "qq-codex-runtime";
     paths = with pkgs; [
@@ -25,6 +26,7 @@ let
   closure = pkgs.closureInfo {
     rootPaths = [
       runtime
+      app
       pkgs.python313
       pkgs.glibcLocales
       pkgs.tzdata
@@ -75,7 +77,6 @@ let
     StateDirectoryMode = "0700";
     UMask = "0077";
     BindReadOnlyPaths = [
-      "${app}:${app}"
       "${configFile}:/etc/qq-codex-agent/config.toml"
       "${cfg.agentsFile}:/etc/qq-codex-agent/AGENTS.md"
       "${cfg.agentsFile}:${state}/codex/AGENTS.md"
@@ -153,18 +154,9 @@ in
       "d ${state}/codex 0700 ${user} ${user} -"
       "d ${work} 0700 ${user} ${user} -"
       "d /etc/qq-codex-agent 0750 root ${user} -"
+      "C /etc/qq-codex-agent/AGENTS.md 0640 root ${user} - ${app}/share/qq-codex-agent/AGENTS.md"
     ];
     systemd.generators.qq-codex-mounts = generator;
-    environment.systemPackages = [
-      (pkgs.writeShellApplication {
-        name = "qq-codex-sync";
-        runtimeInputs = [ pkgs.uv ];
-        text = ''
-          test "$(id -u)" -eq 0
-          uv sync --frozen --no-editable --python ${pkgs.python313}/bin/python3 --project ${app}
-        '';
-      })
-    ];
     systemd.services.qq-codex-agent = {
       description = "QQ Codex agent";
       wantedBy = [ "multi-user.target" ];
@@ -176,8 +168,8 @@ in
       wants = [ "network-online.target" ];
       inherit environment;
       serviceConfig = serviceConfig // {
-        ExecStartPre = "${app}/.venv/bin/python ${app}/check_sandbox.py";
-        ExecStart = "${app}/.venv/bin/qq-codex-agent";
+        ExecStartPre = "${app}/bin/qq-codex-check";
+        ExecStart = "${app}/bin/qq-codex-agent";
         BindReadOnlyPaths = serviceConfig.BindReadOnlyPaths ++ [
           "${cfg.tokenFile}:/etc/qq-codex-agent/napcat-token"
         ];
@@ -191,7 +183,7 @@ in
       after = [ "network-online.target" ];
       inherit environment;
       serviceConfig = serviceConfig // {
-        ExecStart = "${app}/.venv/bin/qq-codex-agent --login";
+        ExecStart = "${app}/bin/qq-codex-agent --login";
         Restart = "no";
       };
     };

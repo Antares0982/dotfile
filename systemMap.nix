@@ -88,6 +88,9 @@ curNixosSystem {
   }
   // lib.attrsets.optionalAttrs currentDevice.rpi {
     inherit nixos-raspberrypi napcat;
+    qq-codex-agent = import ./rpi/qq-codex-package.nix {
+      inherit inputs system;
+    };
   };
   modules = [
     ./configuration.nix

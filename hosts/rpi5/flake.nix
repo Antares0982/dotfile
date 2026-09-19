@@ -34,6 +34,10 @@
         flake-utils.follows = "flake-utils";
       };
     };
+    qq-codex-agent = {
+      url = "github:Antares0982/qq-codex-agent";
+      flake = false;
+    };
     myXray = {
       url = "github:Antares0982/rules-dat-xray-flake";
       inputs.nixpkgs.follows = "nixpkgs-old";
@@ -56,7 +60,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # antares-monitor python stack
     pyproject-nix = {
       url = "github:pyproject-nix/pyproject.nix";
       inputs.nixpkgs.follows = "nixpkgs";
