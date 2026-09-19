@@ -22,6 +22,7 @@
     ./xray.nix
     ./napcat.nix
     ./qq-relay.nix
+    ./qq-codex-agent.nix
   ]
   ++ [
     ../common/agenix.nix
