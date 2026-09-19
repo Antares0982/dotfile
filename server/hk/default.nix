@@ -6,9 +6,9 @@
   ++ [
     ./acme.nix
     ./blog.nix
+    ./site-metrics.nix
     ./monitor.nix
     ./mail.nix
-    ./visitorbadge.nix
     ./matrix-appservice.nix
   ];
 }

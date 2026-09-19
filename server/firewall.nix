@@ -5,7 +5,6 @@
     allowedTCPPorts = [
       80
       443
-      30419 # for visit badge
     ];
     allowedUDPPorts = [
       53

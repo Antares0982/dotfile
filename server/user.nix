@@ -37,14 +37,7 @@ in
         ];
         inherit (userCommonSettings) hashedPasswordFile;
       };
-      visitorbadge = {
-        isSystemUser = true;
-        description = "Visitor Badge service user";
-        shell = "/usr/sbin/nologin";
-        group = "visitorbadge";
-      };
     };
-    groups.visitorbadge = { };
     defaultUserShell = pkgs.zsh;
   };
 }

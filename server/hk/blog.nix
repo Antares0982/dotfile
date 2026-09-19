@@ -6,25 +6,18 @@
 }:
 let
   site = blog.packages.${pkgs.stdenv.hostPlatform.system}.blog;
-
-  # A page view on a static site cannot be counted in the request path without
-  # standing a service in front of every request. nginx is already writing a
-  # log line per request, so this rolls those up on a timer instead. See the
-  # script's docstring for the format and the WordPress-baseline split.
-  viewCounter = pkgs.runCommand "blog-view-counter" { } ''
-    mkdir -p $out/bin
-    install -m755 ${./blog-view-counter.py} $out/bin/blog-view-counter
-    sed -i "1s|.*|#!${pkgs.python3}/bin/python3|" $out/bin/blog-view-counter
-  '';
-
-  viewsDir = "/var/lib/blog-views";
+  metricsDir = "/var/lib/site-metrics";
   viewsLog = "/var/log/nginx/blog-views.log";
+  badgeLog = "/var/log/nginx/visitor-badge.log";
+  badgeFallback = pkgs.writeText "visitor-badge-unavailable.svg" ''
+    <svg xmlns="http://www.w3.org/2000/svg" width="164" height="20" role="img" aria-label="visitors: unavailable"><title>visitors: unavailable</title><linearGradient id="s" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><clipPath id="r"><rect width="164" height="20" rx="3" fill="#fff"/></clipPath><g clip-path="url(#r)"><rect width="57" height="20" fill="#595959"/><rect x="57" width="107" height="20" fill="#1283c3"/><rect width="164" height="20" fill="url(#s)"/></g><g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="11"><text x="28.5" y="15" fill="#010101" fill-opacity=".3">visitors</text><text x="28.5" y="14">visitors</text><text x="109.5" y="15" fill="#010101" fill-opacity=".3">unavailable</text><text x="109.5" y="14">unavailable</text></g></svg>
+  '';
 in
 {
   services.nginx.enable = true;
 
   services.nginx.commonHttpConfig = ''
-    log_format blogviews escape=none
+    log_format siteviews escape=none
       '$time_iso8601	$remote_addr	$status	$request_uri	$http_user_agent';
   '';
 
@@ -34,7 +27,7 @@ in
     root = "${site}";
 
     extraConfig = ''
-      access_log ${viewsLog} blogviews;
+      access_log ${viewsLog} siteviews;
 
       # Hugo writes every page as <slug>/index.html, so a missing trailing
       # slash still has to resolve.
@@ -98,7 +91,7 @@ in
       # Views recorded since the migration. Each page carries its WordPress
       # total in the HTML and adds this on top.
       "= /api/views.json" = {
-        alias = "${viewsDir}/views.json";
+        alias = "${metricsDir}/views.json";
         extraConfig = ''
           types { }
           default_type application/json;
@@ -111,6 +104,26 @@ in
         default_type application/json;
         return 200 '{}';
       '';
+      "= /api/visitor-badge.svg" = {
+        alias = "${metricsDir}/visitor-badge.svg";
+        extraConfig = ''
+          access_log ${badgeLog} siteviews;
+          types { }
+          default_type image/svg+xml;
+          add_header Cache-Control "no-cache, max-age=0, no-store, s-maxage=0, proxy-revalidate";
+          expires -1;
+          error_page 404 =200 /api/visitor-badge-unavailable.svg;
+        '';
+      };
+      "= /api/visitor-badge-unavailable.svg" = {
+        alias = badgeFallback;
+        extraConfig = ''
+          internal;
+          access_log off;
+          types { }
+          default_type image/svg+xml;
+        '';
+      };
     };
   };
 
@@ -135,47 +148,4 @@ in
       "/".return = "301 https://chr.fan/en$request_uri";
     };
   };
-
-  users.users.blog-views = {
-    isSystemUser = true;
-    group = "blog-views";
-    description = "Blog view-count aggregator";
-  };
-  users.groups.blog-views = { };
-
-  systemd.services.blog-view-counter = {
-    description = "Roll up blog page views from the nginx access log";
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${viewCounter}/bin/blog-view-counter --log ${viewsLog} --state ${viewsDir}/state.json --out ${viewsDir}/views.json";
-      # Not DynamicUser: that puts the state under /var/lib/private, which is
-      # 0700 root, so nginx cannot traverse it to reach views.json.
-      User = "blog-views";
-      Group = "blog-views";
-      StateDirectory = "blog-views";
-      StateDirectoryMode = "0755";
-      # /var/log/nginx is nginx:nginx 0750, so reading the log needs the group.
-      SupplementaryGroups = [ "nginx" ];
-      ProtectSystem = "strict";
-      ProtectHome = true;
-      PrivateDevices = true;
-      NoNewPrivileges = true;
-      ReadOnlyPaths = [ "/var/log/nginx" ];
-    };
-  };
-
-  systemd.timers.blog-view-counter = {
-    description = "Periodically roll up blog page views";
-    wantedBy = [ "timers.target" ];
-    timerConfig = {
-      OnBootSec = "5m";
-      OnUnitActiveSec = "5m";
-      Persistent = true;
-    };
-  };
-
-  # No logrotate entry here on purpose: the nginx module already rotates
-  # /var/log/nginx/*.log, which this log matches, and logrotate refuses to
-  # start at all on a duplicate entry. The counter restarts from offset 0 when
-  # it sees the file has shrunk, so rotation needs no cooperation from it.
 }
