@@ -14,7 +14,7 @@ while IFS=$'\t' read -r _ ref; do
 		parsed=$(date -d "${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-${BASH_REMATCH[3]} ${BASH_REMATCH[4]}:${BASH_REMATCH[5]}" '+%Y-%m-%d-%H-%M' 2>/dev/null || true)
 		[[ $parsed == "$stamp" && $stamp < $cutoff ]] && old_tags+=("$tag")
 	fi
-done <<< "$refs"
+done <<<"$refs"
 
 for tag in "${old_tags[@]}"; do
 	git show-ref --verify --quiet "refs/tags/$tag" && local_tags+=("$tag")
@@ -29,7 +29,10 @@ echo "Tags older than $cutoff on remote '$remote':"
 printf '  %s\n' "${old_tags[@]}"
 echo
 read -rp "Delete ${#old_tags[@]} remote tag(s)? [y/N] " confirm
-[[ $confirm =~ ^[Yy]$ ]] || { echo "Aborted."; exit 0; }
+[[ $confirm =~ ^[Yy]$ ]] || {
+	echo "Aborted."
+	exit 0
+}
 
 delete_refs=()
 for tag in "${old_tags[@]}"; do

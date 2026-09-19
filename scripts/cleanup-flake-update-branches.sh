@@ -20,9 +20,9 @@ fi
 
 mapfile -t hosts < <(git for-each-ref \
 	--format='%(refname:strip=3)' \
-	"refs/remotes/${remote}/flake-update/*/nixpkgs-*" \
-	| cut -d/ -f2 \
-	| sort -u)
+	"refs/remotes/${remote}/flake-update/*/nixpkgs-*" |
+	cut -d/ -f2 |
+	sort -u)
 
 if ((${#hosts[@]} == 0)); then
 	echo "No flake-update branches found on remote '${remote}'."

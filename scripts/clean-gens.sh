@@ -10,15 +10,15 @@ PROFILE=/nix/var/nix/profiles/system
 current_system=$(readlink -f /run/current-system)
 current_gen=""
 for link in "$PROFILE"-*-link; do
-  if [[ "$(readlink -f "$link")" == "$current_system" ]]; then
-    current_gen=$(basename "$link" | grep -oP '(?<=system-)\d+(?=-link)')
-    break
-  fi
+	if [[ "$(readlink -f "$link")" == "$current_system" ]]; then
+		current_gen=$(basename "$link" | grep -oP '(?<=system-)\d+(?=-link)')
+		break
+	fi
 done
 
 if [[ -z "$current_gen" ]]; then
-  echo "Error: could not match /run/current-system to any generation profile" >&2
-  exit 1
+	echo "Error: could not match /run/current-system to any generation profile" >&2
+	exit 1
 fi
 
 echo "Current generation: $current_gen"
@@ -28,30 +28,31 @@ echo ""
 # nix-env --list-generations requires sudo for the system profile, so we avoid it here.
 to_delete_nums=()
 for link in "$PROFILE"-*-link; do
-  n=$(basename "$link" | grep -oP '(?<=system-)\d+(?=-link)')
-  (( n > current_gen )) && to_delete_nums+=("$n")
+	n=$(basename "$link" | grep -oP '(?<=system-)\d+(?=-link)')
+	((n > current_gen)) && to_delete_nums+=("$n")
 done
 
 # Sort numerically
-IFS=$'\n' to_delete_nums=($(printf '%s\n' "${to_delete_nums[@]}" | sort -n)); unset IFS
+IFS=$'\n' to_delete_nums=($(printf '%s\n' "${to_delete_nums[@]}" | sort -n))
+unset IFS
 
 if [[ ${#to_delete_nums[@]} -eq 0 ]]; then
-  echo "No generations above $current_gen. Nothing to delete."
-  exit 0
+	echo "No generations above $current_gen. Nothing to delete."
+	exit 0
 fi
 
 # Display with dates from sudo nix-env --list-generations
 echo "Generations to be deleted:"
 echo "---"
-sudo nix-env -p "$PROFILE" --list-generations \
-  | awk -v nums=" ${to_delete_nums[*]} " 'index(nums, " "$1" ") > 0 {print "  " $0}'
+sudo nix-env -p "$PROFILE" --list-generations |
+	awk -v nums=" ${to_delete_nums[*]} " 'index(nums, " "$1" ") > 0 {print "  " $0}'
 echo "---"
 echo ""
 
 read -rp "Delete ${#to_delete_nums[@]} generation(s) listed above? [y/N] " confirm
 if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-  echo "Aborted."
-  exit 0
+	echo "Aborted."
+	exit 0
 fi
 
 echo "Deleting generations: ${to_delete_nums[*]}"
