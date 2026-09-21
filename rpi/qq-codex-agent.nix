@@ -11,9 +11,10 @@ let
   state = "/var/lib/qq-codex-agent";
   work = "/var/lib/qq-codex-work";
   app = qq-codex-agent;
+  ghToken = "/etc/qq-codex-agent/gh-token";
   launcher = pkgs.writeShellScript "qq-codex-launch" ''
     set -eu
-    export GH_TOKEN="$(${pkgs.coreutils}/bin/cat ${config.age.secrets.qqCodexGhToken.path})"
+    export GH_TOKEN="$(${pkgs.coreutils}/bin/cat ${ghToken})"
     exec ${app}/bin/qq-codex-agent
   '';
   threadCheck = pkgs.writeText "qq-codex-thread-check.py" ''
@@ -51,7 +52,7 @@ let
                         "--",
                         "/bin/sh",
                         "-ec",
-                        'for tool in git gh uv nix; do command -v "$tool"; "$tool" --version >/dev/null; done',
+                        'test ! -r ${ghToken}; for tool in git gh uv nix; do command -v "$tool"; "$tool" --version >/dev/null; done',
                     ],
                     cwd=directory,
                     env={**os.environ, "CODEX_HOME": str(settings.state_dir / "codex")},
@@ -93,7 +94,7 @@ let
     allowed_approvals_reviewers = ["auto_review"]
     allowed_sandbox_modes = ["workspace-write", "read-only"]
     [permissions.filesystem]
-    deny_read = ["${state}", "/etc/qq-codex-agent/napcat-token", "/etc/qq-codex-agent/allowlist.toml", "${config.age.secrets.qqCodexGhToken.path}"]
+    deny_read = ["${state}", "/etc/qq-codex-agent/napcat-token", "/etc/qq-codex-agent/allowlist.toml", "${ghToken}"]
   '';
   serviceConfig = {
     Type = "exec";
@@ -114,7 +115,7 @@ let
       "${state}/codex/tmp/arg0"
       "${configFile}:/etc/qq-codex-agent/config.toml"
       "${config.age.secrets.qqCodexAllowlist.path}:/etc/qq-codex-agent/allowlist.toml"
-      config.age.secrets.qqCodexGhToken.path
+      "${config.age.secrets.qqCodexGhToken.path}:${ghToken}"
       "${cfg.agentsFile}:/etc/qq-codex-agent/AGENTS.md"
       "${cfg.agentsFile}:${state}/codex/AGENTS.md"
       "${requirements}:/etc/codex/requirements.toml"
