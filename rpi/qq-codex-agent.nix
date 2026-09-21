@@ -78,6 +78,11 @@ let
       cacert
     ];
   };
+  codexConfig = pkgs.writeText "qq-codex-codex-config.toml" ''
+    [sandbox_workspace_write]
+    network_access = true
+    writable_roots = ["${work}/.uv"]
+  '';
   nsswitch = pkgs.writeText "qq-codex-nsswitch.conf" "hosts: files dns\n";
   configFile = (pkgs.formats.toml { }).generate "qq-codex-config.toml" {
     allowlist_file = "/etc/qq-codex-agent/allowlist.toml";
@@ -93,6 +98,7 @@ let
     allowed_approval_policies = ["on-request"]
     allowed_approvals_reviewers = ["auto_review"]
     allowed_sandbox_modes = ["workspace-write", "read-only"]
+    allow_login_shell = false
     [permissions.filesystem]
     deny_read = ["${state}", "/etc/qq-codex-agent/napcat-token", "/etc/qq-codex-agent/allowlist.toml", "${ghToken}"]
   '';
@@ -118,6 +124,7 @@ let
       "${config.age.secrets.qqCodexGhToken.path}:${ghToken}"
       "${cfg.agentsFile}:/etc/qq-codex-agent/AGENTS.md"
       "${cfg.agentsFile}:${state}/codex/AGENTS.md"
+      "${codexConfig}:${state}/codex/config.toml"
       "${requirements}:/etc/codex/requirements.toml"
       "${pkgs.bash}/bin/bash:/bin/sh"
       "${pkgs.coreutils}/bin/env:/usr/bin/env"
@@ -148,9 +155,12 @@ let
   };
   environment = {
     HOME = state;
-    PATH = lib.mkForce "${runtime}/bin";
+    PATH = lib.mkForce "${work}/.uv/bin:${runtime}/bin";
     XDG_CONFIG_HOME = "/tmp/qq-codex-config";
     XDG_CACHE_HOME = "/tmp/qq-codex-cache";
+    UV_CACHE_DIR = "${work}/.uv/cache";
+    UV_PYTHON_INSTALL_DIR = "${work}/.uv/python";
+    UV_PYTHON_BIN_DIR = "${work}/.uv/bin";
     NIX_REMOTE = "daemon";
     NIX_CONFIG = "experimental-features = nix-command flakes";
     SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
@@ -196,6 +206,7 @@ in
       "d ${state}/codex 0700 ${user} ${user} -"
       "d ${state}/codex/tmp/arg0 0700 ${user} ${user} -"
       "d ${work} 0700 ${user} ${user} -"
+      "d ${work}/.uv 0700 ${user} ${user} -"
       "d /etc/qq-codex-agent 0750 root ${user} -"
       "C /etc/qq-codex-agent/AGENTS.md 0640 root ${user} - ${app}/share/qq-codex-agent/AGENTS.md"
     ];
