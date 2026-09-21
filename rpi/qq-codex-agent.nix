@@ -11,10 +11,18 @@ let
   state = "/var/lib/qq-codex-agent";
   work = "/var/lib/qq-codex-work";
   app = qq-codex-agent;
+  launcher = pkgs.writeShellScript "qq-codex-launch" ''
+    set -eu
+    export GH_TOKEN="$(${pkgs.coreutils}/bin/cat ${config.age.secrets.qqCodexGhToken.path})"
+    exec ${app}/bin/qq-codex-agent
+  '';
   threadCheck = pkgs.writeText "qq-codex-thread-check.py" ''
     import asyncio
+    import os
+    import subprocess
     import tempfile
 
+    from codex_cli_bin import bundled_codex_path
     from openai_codex import ApprovalMode, AsyncCodex, Sandbox
     from qq_codex_agent import Settings, codex_config
 
@@ -30,6 +38,26 @@ let
                         ephemeral=True,
                         config={"projects": {directory: {"trust_level": "trusted"}}},
                     )
+                subprocess.run(
+                    [
+                        str(bundled_codex_path()),
+                        "-c",
+                        'sandbox_mode="workspace-write"',
+                        "-c",
+                        'approval_policy="on-request"',
+                        "-c",
+                        'approvals_reviewer="auto_review"',
+                        "sandbox",
+                        "--",
+                        "/bin/sh",
+                        "-ec",
+                        'for tool in git gh uv nix; do command -v "$tool"; "$tool" --version >/dev/null; done',
+                    ],
+                    cwd=directory,
+                    env={**os.environ, "CODEX_HOME": str(settings.state_dir / "codex")},
+                    timeout=30,
+                    check=True,
+                )
         print("Codex thread startup check passed")
 
     asyncio.run(main())
@@ -40,20 +68,13 @@ let
       bash
       coreutils
       git
+      gh
+      uv
+      nix
       ripgrep
       python313
       bubblewrap
       cacert
-    ];
-  };
-  closure = pkgs.closureInfo {
-    rootPaths = [
-      runtime
-      app
-      threadCheck
-      pkgs.python313
-      pkgs.glibcLocales
-      pkgs.tzdata
     ];
   };
   nsswitch = pkgs.writeText "qq-codex-nsswitch.conf" "hosts: files dns\n";
@@ -72,19 +93,7 @@ let
     allowed_approvals_reviewers = ["auto_review"]
     allowed_sandbox_modes = ["workspace-write", "read-only"]
     [permissions.filesystem]
-    deny_read = ["${state}", "/etc/qq-codex-agent/napcat-token", "/etc/qq-codex-agent/allowlist.toml"]
-  '';
-  generator = pkgs.writeShellScript "qq-codex-mounts" ''
-    set -eu
-    ${pkgs.coreutils}/bin/mkdir -p "$1/qq-codex-agent.service.d" "$1/qq-codex-login.service.d"
-    for unit in qq-codex-agent qq-codex-login; do
-      {
-        echo '[Service]'
-        while IFS= read -r storePath; do
-          printf 'BindReadOnlyPaths=%s\n' "$storePath"
-        done < ${closure}/store-paths
-      } > "$1/$unit.service.d/runtime.conf"
-    done
+    deny_read = ["${state}", "/etc/qq-codex-agent/napcat-token", "/etc/qq-codex-agent/allowlist.toml", "${config.age.secrets.qqCodexGhToken.path}"]
   '';
   serviceConfig = {
     Type = "exec";
@@ -100,9 +109,12 @@ let
     StateDirectoryMode = "0700";
     UMask = "0077";
     BindReadOnlyPaths = [
+      "/nix/store"
+      "/nix/var/nix/daemon-socket"
       "${state}/codex/tmp/arg0"
       "${configFile}:/etc/qq-codex-agent/config.toml"
       "${config.age.secrets.qqCodexAllowlist.path}:/etc/qq-codex-agent/allowlist.toml"
+      config.age.secrets.qqCodexGhToken.path
       "${cfg.agentsFile}:/etc/qq-codex-agent/AGENTS.md"
       "${cfg.agentsFile}:${state}/codex/AGENTS.md"
       "${requirements}:/etc/codex/requirements.toml"
@@ -136,6 +148,8 @@ let
   environment = {
     HOME = state;
     PATH = lib.mkForce "${runtime}/bin";
+    NIX_REMOTE = "daemon";
+    NIX_CONFIG = "experimental-features = nix-command flakes";
     SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
     http_proxy = "http://127.0.0.1:1081";
     https_proxy = "http://127.0.0.1:1081";
@@ -161,6 +175,12 @@ in
       group = user;
       mode = "0400";
     };
+    age.secrets.qqCodexGhToken = {
+      file = ../secrets/qq-codex-gh-token.age;
+      owner = user;
+      group = user;
+      mode = "0400";
+    };
     users.groups.${user} = { };
     users.users.${user} = {
       isSystemUser = true;
@@ -176,7 +196,6 @@ in
       "d /etc/qq-codex-agent 0750 root ${user} -"
       "C /etc/qq-codex-agent/AGENTS.md 0640 root ${user} - ${app}/share/qq-codex-agent/AGENTS.md"
     ];
-    systemd.generators.qq-codex-mounts = generator;
     systemd.services.qq-codex-auth = {
       description = "QQ Codex NapCat credentials";
       restartTriggers = [ config.age.secrets.qqRelayEnv.file ];
@@ -211,6 +230,7 @@ in
       restartTriggers = [
         config.age.secrets.qqRelayEnv.file
         config.age.secrets.qqCodexAllowlist.file
+        config.age.secrets.qqCodexGhToken.file
       ];
       wants = [ "network-online.target" ];
       inherit environment;
@@ -219,7 +239,7 @@ in
           "${app}/bin/qq-codex-check"
           "${app}/bin/qq-codex-python ${threadCheck}"
         ];
-        ExecStart = "${app}/bin/qq-codex-agent";
+        ExecStart = "${launcher}";
         BindReadOnlyPaths = serviceConfig.BindReadOnlyPaths ++ [
           "/run/qq-codex-auth/token:/etc/qq-codex-agent/napcat-token"
         ];
