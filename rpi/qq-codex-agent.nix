@@ -149,6 +149,8 @@ let
   environment = {
     HOME = state;
     PATH = lib.mkForce "${runtime}/bin";
+    XDG_CONFIG_HOME = "/tmp/qq-codex-config";
+    XDG_CACHE_HOME = "/tmp/qq-codex-cache";
     NIX_REMOTE = "daemon";
     NIX_CONFIG = "experimental-features = nix-command flakes";
     SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
