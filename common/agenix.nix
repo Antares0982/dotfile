@@ -21,12 +21,6 @@ in
       serverPassword = {
         file = ../secrets/serverPassword.age;
       };
-      superUserAuthorizedKey = {
-        file = ../secrets/superUserAuthorizedKey.age;
-      };
-      gitAuthorizedKey = {
-        file = ../secrets/gitAuthorizedKey.age;
-      };
     }
     # ---- PC only ----
     // lib.optionalAttrs isPc {
@@ -48,12 +42,6 @@ in
         group = "users";
         mode = "440";
       };
-      deepseekAPIKey = {
-        file = ../secrets/deepseek-apikey.age;
-        owner = "antares";
-        group = "users";
-        mode = "440";
-      };
     }
     # ---- RPi only ----
     // lib.optionalAttrs isRpi {
@@ -66,12 +54,6 @@ in
       rabbitClientCfgAntaresRpi = {
         file = ../secrets/rabbit-client-cfg-antares-rpi.age;
         owner = "antares";
-        group = "users";
-        mode = "440";
-      };
-      rabbitClientCfgActionrunner = {
-        file = ../secrets/rabbit-client-cfg-actionrunner.age;
-        owner = "actionrunner";
         group = "users";
         mode = "440";
       };

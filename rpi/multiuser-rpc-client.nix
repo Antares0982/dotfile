@@ -43,18 +43,5 @@ in
         # SystemCallFilter (breaks arbitrary tools), MemoryDenyWriteExecute (breaks JITs).
       };
     };
-    # "rpc-client-actionrunner" = {
-    #   description = "Antares RPC Client Service";
-    #   after = [ "network-online.target" ];
-    #   wants = [ "network-online.target" ];
-    #   wantedBy = [ "multi-user.target" ];
-    #   script = ''
-    #     export PATH=$PATH:${shellenv.sysBin}
-    #     ${antares-rpc-client}/bin/antares-rpc-client ${config.age.secrets.rabbitClientCfgActionrunner.path}
-    #   '';
-    #   serviceConfig = {
-    #     User = "actionrunner";
-    #   };
-    # };
   };
 }

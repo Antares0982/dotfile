@@ -112,7 +112,7 @@ All NixOS modules receive `currentDevice` as a `specialArg`. Use `currentDevice.
 
 ### Secrets
 
-Secrets are managed with [agenix](https://github.com/ryantm/agenix). The identity key is at `~/.ssh/agenix`. Available secrets: `password`, `serverPassword`, `superUserAuthorizedKey`, `gitAuthorizedKey`. Access via `config.age.secrets.<name>.path` in modules.
+Secrets are managed with [agenix](https://github.com/ryantm/agenix). The identity key is at `~/.ssh/agenix`. Available secrets: `password`, `serverPassword`. Access via `config.age.secrets.<name>.path` in modules.
 
 ### Custom Packages
 
