@@ -27,6 +27,8 @@ pkgs.runCommand "qq-codex-agent" { nativeBuildInputs = [ pkgs.makeWrapper ]; } '
     --add-flags ${source}/check_sandbox.py
   makeWrapper ${env}/bin/python "$out/bin/qq-codex-python"
   cp ${source}/AGENTS.runtime.md "$out/share/qq-codex-agent/AGENTS.md"
+  cp ${source}/AGENTS.private.runtime.md "$out/share/qq-codex-agent/AGENTS.private.md"
+  cp ${source}/AGENTS.group.runtime.md "$out/share/qq-codex-agent/AGENTS.group.md"
   "$out/bin/qq-codex-agent" --help >/dev/null
   ${env}/bin/python -m unittest discover -s ${source}
 ''

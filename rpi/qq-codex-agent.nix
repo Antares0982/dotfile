@@ -101,6 +101,8 @@ let
     state_dir = state;
     workspace_dir = work;
     agents_file = "/etc/qq-codex-agent/AGENTS.md";
+    private_agents_file = "/etc/qq-codex-agent/AGENTS.private.md";
+    group_agents_file = "/etc/qq-codex-agent/AGENTS.group.md";
     queue_limit = 8;
     task_timeout = 900;
   };
@@ -134,6 +136,8 @@ let
       "${config.age.secrets.qqCodexGhToken.path}:${ghToken}"
       "${cfg.agentsFile}:/etc/qq-codex-agent/AGENTS.md"
       "${cfg.agentsFile}:${state}/codex/AGENTS.md"
+      "/etc/qq-codex-agent/AGENTS.private.md:/etc/qq-codex-agent/AGENTS.private.md"
+      "/etc/qq-codex-agent/AGENTS.group.md:/etc/qq-codex-agent/AGENTS.group.md"
       "${codexConfig}:${state}/codex/config.toml"
       "${requirements}:/etc/codex/requirements.toml"
       "${pkgs.bash}/bin/bash:/bin/sh"
@@ -220,6 +224,8 @@ in
       "d ${work}/.uv 0700 ${user} ${user} -"
       "d /etc/qq-codex-agent 0750 root ${user} -"
       "C /etc/qq-codex-agent/AGENTS.md 0640 root ${user} - ${app}/share/qq-codex-agent/AGENTS.md"
+      "C /etc/qq-codex-agent/AGENTS.private.md 0640 root ${user} - ${app}/share/qq-codex-agent/AGENTS.private.md"
+      "C /etc/qq-codex-agent/AGENTS.group.md 0640 root ${user} - ${app}/share/qq-codex-agent/AGENTS.group.md"
     ];
     systemd.services.qq-codex-auth = {
       description = "QQ Codex NapCat credentials";
