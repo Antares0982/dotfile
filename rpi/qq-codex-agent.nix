@@ -10,6 +10,7 @@ let
   user = "qq-codex-agent";
   state = "/var/lib/qq-codex-agent";
   work = "/var/lib/qq-codex-work";
+  home = "${work}/.home";
   app = qq-codex-agent;
   ghToken = "/etc/qq-codex-agent/gh-token";
   launcher = pkgs.writeShellScript "qq-codex-launch" ''
@@ -22,6 +23,7 @@ let
     import os
     import subprocess
     import tempfile
+    from pathlib import Path
 
     from codex_cli_bin import bundled_codex_path
     from openai_codex import ApprovalMode, AsyncCodex, Sandbox
@@ -31,6 +33,12 @@ let
         settings = Settings.load("/etc/qq-codex-agent/config.toml")
         async with asyncio.timeout(30):
             with tempfile.TemporaryDirectory(dir=settings.workspace_dir) as directory:
+                Path(directory, "flake.nix").write_text(
+                    '{ outputs = { self }: { apps.${pkgs.stdenv.hostPlatform.system}.hello = '
+                    '{ type = "app"; program = "${pkgs.hello}/bin/hello"; }; }; }'
+                )
+                subprocess.run(["git", "init", "-q", directory], check=True)
+                subprocess.run(["git", "-C", directory, "add", "flake.nix"], check=True)
                 async with AsyncCodex(config=codex_config(settings)) as codex:
                     await codex.thread_start(
                         cwd=directory,
@@ -52,7 +60,9 @@ let
                         "--",
                         "/bin/sh",
                         "-ec",
-                        'test ! -r ${ghToken}; for tool in git gh uv nix; do command -v "$tool"; "$tool" --version >/dev/null; done',
+                        'test ! -r ${ghToken}; '
+                        'for tool in git gh uv nix; do command -v "$tool"; "$tool" --version >/dev/null; done; '
+                        'test "$(nix run --offline "git+file://$PWD#hello")" = "Hello, world!"',
                     ],
                     cwd=directory,
                     env={**os.environ, "CODEX_HOME": str(settings.state_dir / "codex")},
@@ -81,7 +91,7 @@ let
   codexConfig = pkgs.writeText "qq-codex-codex-config.toml" ''
     [sandbox_workspace_write]
     network_access = true
-    writable_roots = ["${work}/.uv"]
+    writable_roots = ["${work}/.uv", "${home}"]
   '';
   nsswitch = pkgs.writeText "qq-codex-nsswitch.conf" "hosts: files dns\n";
   configFile = (pkgs.formats.toml { }).generate "qq-codex-config.toml" {
@@ -154,7 +164,7 @@ let
     KillMode = "control-group";
   };
   environment = {
-    HOME = state;
+    HOME = home;
     PATH = lib.mkForce "${work}/.uv/bin:${runtime}/bin";
     XDG_CONFIG_HOME = "/tmp/qq-codex-config";
     XDG_CACHE_HOME = "/tmp/qq-codex-cache";
@@ -206,6 +216,7 @@ in
       "d ${state}/codex 0700 ${user} ${user} -"
       "d ${state}/codex/tmp/arg0 0700 ${user} ${user} -"
       "d ${work} 0700 ${user} ${user} -"
+      "d ${home} 0700 ${user} ${user} -"
       "d ${work}/.uv 0700 ${user} ${user} -"
       "d /etc/qq-codex-agent 0750 root ${user} -"
       "C /etc/qq-codex-agent/AGENTS.md 0640 root ${user} - ${app}/share/qq-codex-agent/AGENTS.md"
