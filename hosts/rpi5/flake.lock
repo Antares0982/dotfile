@@ -374,11 +374,11 @@
     "qq-codex-agent": {
       "flake": false,
       "locked": {
-        "lastModified": 1790092131,
-        "narHash": "sha256-oIi/EA448qvB4oMu8y+CEYDkQbKLn7AJO9uiQG3Lp+Q=",
+        "lastModified": 1790175689,
+        "narHash": "sha256-Hq6g6ng0OeCoL7XfaCY5szZirCXsQaOV0JNi61v7+/o=",
         "owner": "Antares0982",
         "repo": "qq-codex-agent",
-        "rev": "936fde2c23d1cfb2cec6722d24d430cc71cdfe3d",
+        "rev": "42b3e5104bf6a2e6d757f838d95a3863a19fa63b",
         "type": "github"
       },
       "original": {
