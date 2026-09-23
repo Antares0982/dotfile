@@ -12,7 +12,7 @@
     ./configuration.nix
     ./gitsync.nix
     ./monitor.nix
-    ./multiuser-rpc-client.nix
+    ./rpc-client.nix
     ./nix.nix
     ./packages.nix
     ./runner.nix
