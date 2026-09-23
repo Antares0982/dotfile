@@ -89,6 +89,15 @@ let
     ];
   };
   codexConfig = pkgs.writeText "qq-codex-codex-config.toml" ''
+    model_provider = "openai-http"
+
+    [model_providers.openai-http]
+    name = "OpenAI"
+    base_url = "https://chatgpt.com/backend-api/codex"
+    wire_api = "responses"
+    requires_openai_auth = true
+    supports_websockets = false
+
     [sandbox_workspace_write]
     network_access = true
     writable_roots = ["${work}/.uv", "${home}"]
