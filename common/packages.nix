@@ -34,6 +34,7 @@ in
     statix
     tree
     tree-sitter
+    uv
     zsh
     zsh-powerlevel10k
   ];
