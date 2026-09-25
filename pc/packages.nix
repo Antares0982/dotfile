@@ -13,6 +13,7 @@
     android-tools
     aria2
     blender
+    (callPackage ./blender-mcp.nix { })
     cheat
     clang-tools
     cmake
