@@ -41,6 +41,12 @@ elif tool == "curl":
     assert args[args.index("--noproxy") + 1] == ""
     assert args[args.index("--max-time") + 1] == "10"
     assert args[args.index("--connect-timeout") + 1] == "5"
+    if args[args.index("--url") + 1].startswith("https://speed.cloudflare.com/"):
+        if "--referer" not in args or args[args.index("--referer") + 1] != "https://speed.cloudflare.com/":
+            print("403 0 1 1.3 1.2", end="")
+            sys.exit(0)
+    else:
+        assert "--referer" not in args
     port = args[args.index("--socks5-hostname") + 1].split(":")[1]
     sample = json.loads((root / port).read_text())
     if sample.get("slow"):
@@ -159,8 +165,10 @@ def check():
         node("Japan short.json", status=28, metrics="200 1000000 1 0.5 0.2")
         node("Japan empty.json", metrics="200 0 0 2 0.1")
         node("Japan http.json", metrics="503 1000000 100 2 0.1")
+        node("Japan forbidden.json", metrics="403 0 1 1.3 1.2")
         node("Japan broken.json", status=56)
-        run()
+        result = run()
+        assert "HTTP 403, bytes 1, curl 0" in result.stderr
         assert [r["file"] for r in json.loads(cache.read_text())["results"]] == [
             "Japan timeout.json"
         ]

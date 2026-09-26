@@ -102,6 +102,7 @@ port_open() {
 
 probe() {
 	local file=$1 port=$2 conf=$3 attempt ready=0 status=0
+	local curl_args=()
 	if port_open "$port"; then
 		echo "xs: skipping $file: port $port is occupied" >&2
 		return
@@ -122,10 +123,13 @@ probe() {
 		return
 	fi
 
+	if [[ "$TEST_URL" == https://speed.cloudflare.com/* ]]; then
+		curl_args+=(--referer 'https://speed.cloudflare.com/')
+	fi
 	curl -q -s -o /dev/null --connect-timeout 5 --max-time "$TIMEOUT" \
 		--noproxy '' --socks5-hostname "127.0.0.1:$port" \
 		-w '%{http_code} %{speed_download} %{size_download} %{time_total} %{time_starttransfer}' \
-		--url "$TEST_URL" >"$tmp/metrics" &
+		"${curl_args[@]}" --url "$TEST_URL" >"$tmp/metrics" &
 	curl_pid=$!
 	wait "$curl_pid" || status=$?
 	curl_pid=""
@@ -136,7 +140,9 @@ probe() {
       ($status == 0 or ($status == 28 and ($m[3] - $m[4]) >= 1))) |
     {file: $file, bytes_per_second: $m[1], bytes: $m[2], seconds: $m[3]}
   ' <"$tmp/metrics"; then
-		echo "xs: skipping $file: no valid download sample (curl $status)" >&2
+		local http bytes
+		read -r http _ bytes _ <"$tmp/metrics" || true
+		echo "xs: skipping $file: no valid download sample (HTTP ${http:-000}, bytes ${bytes:-0}, curl $status)" >&2
 	fi
 }
 
