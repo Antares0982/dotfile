@@ -101,6 +101,11 @@ in
       # the retired hermes bridge's values, reused wholesale. Its own file
       # rather than a second owner on hermes-env.age, which carries a good deal
       # more than these five lines.
+      agentFilesRelayEnv = {
+        file = ../secrets/agent-files-relay-env.age;
+        owner = "agent-relay";
+        mode = "400";
+      };
       agentRelayEnv = {
         file = ../secrets/agent-relay-env.age;
         owner = "agent-relay";
@@ -140,6 +145,11 @@ in
     }
     # ---- HK server only ----
     // lib.optionalAttrs isHkServer {
+      agentFilesHtpasswd = {
+        file = ../secrets/agent-files-htpasswd.age;
+        owner = "nginx";
+        mode = "400";
+      };
       telegramBotApiEnv = {
         file = ../secrets/telegram-bot-api-env.age;
         owner = "root";

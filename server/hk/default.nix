@@ -11,5 +11,6 @@
     ./mail.nix
     ./matrix-appservice.nix
     ./telegram-bot-api.nix
+    ./agent-files.nix
   ];
 }

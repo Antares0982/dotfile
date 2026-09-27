@@ -2,6 +2,7 @@
 let
   domainDNSMatch = {
     "alyr.dev" = "cloudflare";
+    "tg.alyr.dev" = "cloudflare";
     "mail.alyr.dev" = "cloudflare";
     "chr.fan" = "cloudflare";
     "blog.chr.fan" = "cloudflare";
@@ -15,6 +16,7 @@ in
   validDomains = lib.optionals currentDevice.server.hk [
     "chr.fan"
     "alyr.dev"
+    "tg.alyr.dev"
     "mail.alyr.dev"
     "blog.chr.fan"
     "en.chr.fan"

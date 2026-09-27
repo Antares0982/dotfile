@@ -443,6 +443,8 @@ in
 
     environment = {
       ANTARES_API_SOCKET = socketPath;
+      ANTARES_FILE_URL = "https://tg.alyr.dev";
+      ANTARES_RELAY_STATE = "/var/lib/antares-agent-relay";
       # Host, port, vhost and credentials all come from the EnvironmentFile
       # below -- they are the retired hermes bridge's, reused wholesale, and
       # guessing any one of them here would only mean a value that looks
@@ -467,7 +469,12 @@ in
       ExecStart = "${relayLauncher}/bin/antares-agent-relay-launch";
       Restart = "always";
       RestartSec = "10s";
-      EnvironmentFile = config.age.secrets.agentRelayEnv.path;
+      StateDirectory = "antares-agent-relay";
+      StateDirectoryMode = "0700";
+      EnvironmentFile = [
+        config.age.secrets.agentRelayEnv.path
+        config.age.secrets.agentFilesRelayEnv.path
+      ];
 
       # No bwrap here, so none of F12's exemptions are needed -- this is a
       # plain python process that talks to one socket and one broker.
