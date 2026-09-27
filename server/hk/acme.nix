@@ -13,6 +13,7 @@ in
   security.acme = {
     acceptTerms = true;
     defaults.email = "antares0982@gmail.com";
+    defaults.dnsResolver = "1.1.1.1:53";
     # certs = lib.attrsets.mapAttrs'
     #   (name: value: value)
     #   (lib.genAttrs domainSettings.validDomains (x: {
