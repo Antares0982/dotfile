@@ -140,6 +140,18 @@ in
     }
     # ---- HK server only ----
     // lib.optionalAttrs isHkServer {
+      telegramBotApiEnv = {
+        file = ../secrets/telegram-bot-api-env.age;
+        owner = "root";
+        group = "root";
+        mode = "400";
+      };
+      aliceTelegramWebhookSecret = {
+        file = ../secrets/alice-telegram-webhook-secret.age;
+        owner = "alice";
+        group = "users";
+        mode = "400";
+      };
       cloudflareEnv = {
         file = ../secrets/cloudflare-env.age;
         owner = "acme";

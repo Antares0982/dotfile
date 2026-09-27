@@ -10,5 +10,6 @@
     ./monitor.nix
     ./mail.nix
     ./matrix-appservice.nix
+    ./telegram-bot-api.nix
   ];
 }
