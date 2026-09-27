@@ -116,6 +116,13 @@ in
       group = user;
       mode = "0400";
     };
+    system.activationScripts.qqCodexRestart = {
+      deps = [ "agenix" ];
+      text = ''
+        mkdir -p /run/nixos
+        echo qq-codex-agent.service >> /run/nixos/activation-restart-list
+      '';
+    };
     systemd.services.qq-codex-auth = {
       description = "QQ Codex NapCat credentials";
       restartTriggers = [ config.age.secrets.qqRelayEnv.file ];
