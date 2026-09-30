@@ -1,6 +1,6 @@
 { config, pkgs, ... }:
 let
-  nix-zshell = pkgs.callPackage ./../common/_nix-zshell.nix { };
+  nix-zshell = pkgs.callPackage ../packages/nix-zshell.nix { };
 in
 {
   environment.variables = {

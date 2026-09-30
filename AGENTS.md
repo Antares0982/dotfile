@@ -96,6 +96,7 @@ Always imports `./common/cachix.nix` regardless of device type.
 ### Directory Layout
 
 - `hosts/<name>/` — per-machine flake (`flake.nix` + independent `flake.lock`); the flake entry point for each device
+- `packages/` — standalone custom package definitions, imported by the host and shared modules
 - `common/` — shared modules included by multiple device types (nix settings, zsh, agenix, gnupg, ssh, time, rabbitmq, packages)
 - `pc/` — desktop-specific config (KDE, NVIDIA, audio, bluetooth, fcitx5, steam, etc.)
 - `server/` — server config; `server/hk/` and `server/gz/` for region-specific services
@@ -116,4 +117,8 @@ Secrets are managed with [agenix](https://github.com/ryantm/agenix). The identit
 
 ### Custom Packages
 
-`pc/_switch.nix` builds `_switch` — a Python (pydotool) + shell script for KDE desktop switching. It patches the script shebangs at build time with `substituteInPlace`.
+Standalone custom package definitions live in `packages/`: `nix-zshell.nix`,
+`git-ssh-sign.nix`, `find-nix-gc-roots.nix`, `xs.nix`, `blender-mcp.nix`, and
+`vtune.nix`. Modules import or `callPackage` these files using paths relative to
+the module. Wrapper scripts remain under `common/`, and `xs.sh` remains under
+`resource/`.

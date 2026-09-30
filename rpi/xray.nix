@@ -9,7 +9,7 @@
 let
   xrayDir = "/var/lib/xray";
   subsDir = "${xrayDir}/subscriptions";
-  xs = import ../common/xs.nix {
+  xs = import ../packages/xs.nix {
     inherit pkgs myXray;
     inherit xrayDir;
     configPath = "${subsDir}/active.json";

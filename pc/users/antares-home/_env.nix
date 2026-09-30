@@ -4,7 +4,7 @@ let
   localFileDef = import ../../../common/localFileDef.nix {
     username = "antares";
   };
-  nix-zshell = pkgs.callPackage ./../../../common/_nix-zshell.nix { };
+  nix-zshell = pkgs.callPackage ../../../packages/nix-zshell.nix { };
   genNixFunc = alias: packageName: ''
     ${alias}() { nix run nixpkgs#${packageName} -- "$@"; }
   '';

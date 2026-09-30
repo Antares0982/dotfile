@@ -6,7 +6,7 @@ stdenvNoCC.mkDerivation {
   pname = "_find-nix-gc-roots";
   name = "_find-nix-gc-roots";
 
-  src = ./find-nix-gc-roots-script;
+  src = ../common/find-nix-gc-roots-script;
 
   phases = [ "installPhase" ];
 

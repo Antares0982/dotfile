@@ -13,7 +13,7 @@
     android-tools
     aria2
     blender
-    (callPackage ./blender-mcp.nix { })
+    (callPackage ../packages/blender-mcp.nix { })
     cheat
     clang-tools
     cmake
@@ -25,7 +25,7 @@
     google-chrome
     haruna
     imagemagick
-    (callPackage ./vtune.nix { })
+    (callPackage ../packages/vtune.nix { })
     # kdePackages.dolphin
     kdePackages.gwenview
     kdePackages.kolourpaint
