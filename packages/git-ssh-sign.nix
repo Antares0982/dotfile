@@ -8,7 +8,7 @@
 stdenvNoCC.mkDerivation {
   pname = "git-ssh-sign";
   name = "git-ssh-sign";
-  script = replaceVars ./git-ssh-sign-wrapper {
+  script = replaceVars ../common/git-ssh-sign-wrapper {
     inherit bashInteractive openssh;
   };
 

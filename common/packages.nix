@@ -6,7 +6,7 @@
   ...
 }:
 let
-  find-nix-gc-roots = pkgs.callPackage ./_find-nix-gc-roots.nix { };
+  find-nix-gc-roots = pkgs.callPackage ../packages/find-nix-gc-roots.nix { };
 in
 {
   nixpkgs.config.allowUnfree = true;

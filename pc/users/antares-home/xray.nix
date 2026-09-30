@@ -1,6 +1,6 @@
 { pkgs, myXray, ... }:
 let
-  xs = import ../../../common/xs.nix {
+  xs = import ../../../packages/xs.nix {
     inherit pkgs myXray;
   };
 in

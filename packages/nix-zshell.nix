@@ -9,7 +9,7 @@
 stdenvNoCC.mkDerivation {
   pname = "nix-zshell";
   name = "nix-zshell";
-  script = replaceVars ./nix-zshell-wrapper {
+  script = replaceVars ../common/nix-zshell-wrapper {
     inherit zsh bashInteractive;
   };
 

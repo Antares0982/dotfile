@@ -1,6 +1,6 @@
 { pkgs, ... }:
 let
-  git-ssh-sign = pkgs.callPackage ./_git-ssh-sign.nix { };
+  git-ssh-sign = pkgs.callPackage ../packages/git-ssh-sign.nix { };
 in
 {
   environment.systemPackages = [
