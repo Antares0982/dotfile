@@ -9,7 +9,7 @@ let
   userenvs = import ./_userenv.nix;
 in
 {
-  config = lib.mkIf (osConfig.antares.trilug.enable) {
+  config = lib.mkIf (osConfig.antares.messaging.enable && osConfig.antares.trilug.enable) {
 
   systemd.user.services.trilug = {
     Unit = {

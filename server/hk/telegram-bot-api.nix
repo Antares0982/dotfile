@@ -1,7 +1,7 @@
 { lib, config, pkgs, ... }:
 {
   options.services.telegram-bot-api.enable = lib.mkEnableOption "Telegram Bot API";
-  config = lib.mkIf (config.services.telegram-bot-api.enable) {
+  config = lib.mkIf (config.antares.messaging.enable && config.services.telegram-bot-api.enable) {
 
   systemd.services.telegram-bot-api = {
     description = "Telegram Bot API";

@@ -24,6 +24,7 @@
       users.users.acme.extraGroups = lib.mkIf (config.security.acme.certs != { }) [ "nginx" ];
     })
     (lib.mkIf (config.antares.acme.enable && config.security.acme.certs != { }) {
+      users.groups.nginx = { };
       age.secrets.cloudflareEnv = {
         file = ../../secrets/cloudflare-env.age;
         owner = "acme";

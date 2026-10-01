@@ -4,6 +4,7 @@
     ./users
   ]
   ++ [
+    ./messaging.nix
     ./alice.nix
     ./web.nix
     ./acme.nix

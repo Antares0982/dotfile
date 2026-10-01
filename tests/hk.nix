@@ -129,4 +129,36 @@
     check = c: true;
     valid = false;
   }
+  {
+    name = "messaging-off";
+    module = { lib, ... }: { antares.messaging.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.home-manager.users.alice.systemd.user.services ? alice)
+      && !(c.home-manager.users.alice.systemd.user.services ? trilug)
+      && !(c.systemd.services ? telegram-bot-api)
+      && !(c.services.nginx.virtualHosts ? "tg.alyr.dev")
+      && !(c.age.secrets ? aliceTelegramWebhookSecret)
+      && !(c.age.secrets ? telegramBotApiEnv)
+      && !(c.users.groups ? agent-files)
+      && c.users.users ? alice
+      && c.home-manager.users.alice.systemd.user.services ? rpc-client
+      && c.services.telegram-output-monitor-bot.enable;
+  }
+  {
+    name = "web-off-mail-on";
+    module = { lib, ... }: {
+      antares.messaging.enable = lib.mkForce false;
+      antares.blog.enable = lib.mkForce false;
+      services.nginx.enable = lib.mkForce false;
+    };
+    check =
+      c:
+      !(c.systemd.services ? nginx)
+      && c.mailserver.enable
+      && c.security.acme.certs ? "chr.fan"
+      && c.users.groups ? nginx
+      && !(lib.elem 80 c.networking.firewall.allowedTCPPorts)
+      && !(lib.elem 443 c.networking.firewall.allowedTCPPorts);
+  }
 ]

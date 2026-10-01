@@ -6,7 +6,8 @@ let
 in
 {
   options.antares.trilug.enable = lib.mkEnableOption "Tri-LUG bridge and reverse proxy";
-  config = lib.mkIf (config.antares.trilug.enable) {
+  config = lib.mkIf (config.antares.messaging.enable && config.antares.trilug.enable) {
+    assertions = [ { assertion = config.services.nginx.enable; message = "Tri-LUG requires services.nginx.enable."; } ];
 
   # Reverse proxy tri-lug.chr.fan (443) to the local Matrix appservice
   # listener so li7g.com's Synapse can POST HS->AS transactions.

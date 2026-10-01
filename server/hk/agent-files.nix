@@ -4,7 +4,8 @@ let
 in
 {
   options.antares.agentFiles.enable = lib.mkEnableOption "agent file exchange";
-  config = lib.mkIf (config.antares.agentFiles.enable) {
+  config = lib.mkIf (config.antares.messaging.enable && config.antares.agentFiles.enable) {
+    assertions = [ { assertion = config.services.nginx.enable; message = "Agent files requires services.nginx.enable."; } ];
 
   users.groups.agent-files = { };
   users.users.nginx.extraGroups = [ "agent-files" ];

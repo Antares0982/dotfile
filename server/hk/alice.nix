@@ -1,7 +1,7 @@
 { config, lib, ... }:
 {
   options.antares.alice.enable = lib.mkEnableOption "Alice bot";
-  config = lib.mkIf config.antares.alice.enable {
+  config = lib.mkIf (config.antares.messaging.enable && config.antares.alice.enable) {
     assertions = [
       {
         assertion = config.antares.agentFiles.enable;

@@ -19,4 +19,5 @@
   antares.trilug.enable = true;
   services.telegram-bot-api.enable = true;
   antares.agentFiles.enable = true;
+  antares.messaging.enable = true;
 }

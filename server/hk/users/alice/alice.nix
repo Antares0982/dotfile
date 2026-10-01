@@ -9,7 +9,7 @@ let
   userenvs = import ./_userenv.nix;
 in
 {
-  config = lib.mkIf (osConfig.antares.alice.enable) {
+  config = lib.mkIf (osConfig.antares.messaging.enable && osConfig.antares.alice.enable) {
 
   systemd.user.services.alice = {
     Unit = {

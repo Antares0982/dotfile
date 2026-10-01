@@ -11,6 +11,7 @@ in
 {
   options.antares.blog.enable = lib.mkEnableOption "blog and metrics";
   config = lib.mkIf (config.antares.blog.enable) {
+    assertions = [ { assertion = config.services.nginx.enable; message = "Blog requires services.nginx.enable."; } ];
 
 
 
