@@ -16,4 +16,5 @@
   antares.blog.metrics.enable = true;
   mailserver.enable = true;
   antares.alice.enable = true;
+  antares.trilug.enable = true;
 }

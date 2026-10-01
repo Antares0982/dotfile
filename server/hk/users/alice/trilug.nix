@@ -1,5 +1,6 @@
 {
   config,
+  osConfig,
   pkgs,
   lib,
   ...
@@ -8,6 +9,8 @@ let
   userenvs = import ./_userenv.nix;
 in
 {
+  config = lib.mkIf (osConfig.antares.trilug.enable) {
+
   systemd.user.services.trilug = {
     Unit = {
       Description = "Tri-LUG";
@@ -32,5 +35,7 @@ in
     Install = {
       WantedBy = [ "default.target" ];
     };
+  };
+
   };
 }

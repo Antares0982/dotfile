@@ -1,10 +1,13 @@
-{ config, ... }:
+{ lib, config, ... }:
 let
   # mautrix-python appservice listener (appservice.port).
   # Must match the bridge config and the registration file's `url:`.
   asPort = 29328;
 in
 {
+  options.antares.trilug.enable = lib.mkEnableOption "Tri-LUG bridge and reverse proxy";
+  config = lib.mkIf (config.antares.trilug.enable) {
+
   # Reverse proxy tri-lug.chr.fan (443) to the local Matrix appservice
   # listener so li7g.com's Synapse can POST HS->AS transactions.
   # TLS cert is issued via DNS-01 (cloudflare); see ./acme.nix and
@@ -25,5 +28,7 @@ in
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
       proxy_set_header X-Forwarded-Proto $scheme;
     '';
+  };
+
   };
 }

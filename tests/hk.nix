@@ -84,4 +84,15 @@
       && c.users.users ? alice
       && c.home-manager.users.alice.systemd.user.services ? trilug;
   }
+  {
+    name = "trilug-off";
+    module = { lib, ... }: { antares.trilug.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.home-manager.users.alice.systemd.user.services ? trilug)
+      && !(c.services.nginx.virtualHosts ? "tri-lug.chr.fan")
+      && !(c.security.acme.certs ? "tri-lug.chr.fan")
+      && c.users.users ? alice
+      && c.home-manager.users.alice.systemd.user.services ? alice;
+  }
 ]
