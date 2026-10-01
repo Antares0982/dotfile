@@ -88,18 +88,6 @@ let
     } > "$dir/mounts.conf"
   '';
 
-  commitMsgHook = pkgs.writeShellScript "antares-agent-commit-msg" ''
-    set -eu
-
-    msg="$1"
-    sed -E \
-      -e '/^co-authored-by:.*(claude|anthropic\.com)/Id' \
-      -e '/^🤖 Generated with \[Claude Code\]/d' \
-      "$msg" |
-      ${pkgs.git}/bin/git stripspace > "$msg.declaude"
-    mv "$msg.declaude" "$msg"
-  '';
-
   codexConfig = (pkgs.formats.toml { }).generate "antares-codex-config.toml" {
     model_provider = "openai-http";
     model_providers.openai-http = {
@@ -122,7 +110,7 @@ let
     permissions.filesystem.deny_read = [
       stateDir
       "/run/codex-auth"
-      "/run/agenix"
+      "/run/agenix.d"
       "${home}/.ssh"
       "${home}/.gnupg"
       "${home}/.config/gh"
@@ -164,8 +152,6 @@ in
     };
 
     systemd.generators.antares-agent-mounts = mountGenerator;
-
-    environment.etc."antares-agent/hooks/commit-msg".source = commitMsgHook;
 
     systemd.tmpfiles.rules = [
       "d ${workspace} 0750 ${user} ${group} - -"
@@ -258,7 +244,7 @@ in
         ProtectControlGroups = true;
         RestrictSUIDSGID = true;
         RestrictRealtime = true;
-        MemoryDenyWriteExecute = true;
+        MemoryDenyWriteExecute = false;
 
         RestrictNamespaces = "user mnt pid net ipc uts cgroup";
         SystemCallFilter = "@system-service @mount";
