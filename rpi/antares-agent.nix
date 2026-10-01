@@ -113,7 +113,6 @@ let
       "/run/agenix.d"
       "${home}/.ssh"
       "${home}/.gnupg"
-      "${home}/.config/gh"
     ];
   };
 
