@@ -46,6 +46,9 @@
     check =
       c:
       !c.programs.niri.enable
+      && !(c.systemd.services ? git-sign-unlock)
+      && !(c.home-manager.users.antares.systemd.user.services ? git-sign-unlock)
+      && !(c.age.secrets ? gitSignPassphrase)
       && !c.services.greetd.enable
       && !c.programs.kdeconnect.enable
       && !c.home-manager.users.antares.xdg.mimeApps.enable
@@ -138,6 +141,48 @@
       && !(lib.hasInfix "export GH_TOKEN=" c.home-manager.users.antares.programs.zsh.initContent);
   }
   {
+    name = "git-sign-unlock-on";
+    module = { };
+    check =
+      c:
+      let
+        secret = c.age.secrets.gitSignPassphrase;
+        service = c.systemd.services.git-sign-unlock;
+        trigger = c.home-manager.users.antares.systemd.user.services.git-sign-unlock;
+      in
+      secret.owner == "root"
+      && secret.group == "root"
+      && secret.mode == "0400"
+      && service.serviceConfig.User == "root"
+      && service.environment.SSH_AUTH_SOCK == "/run/user/${toString c.users.users.antares.uid}/ssh-agent"
+      && service.environment.SSH_ASKPASS_REQUIRE == "force"
+      && service.wantedBy == [ ]
+      &&
+        trigger.Unit.After == [
+          "niri.service"
+          "ssh-agent.service"
+        ]
+      && trigger.Unit.Requires == [ "ssh-agent.service" ]
+      && trigger.Unit.PartOf == [ "niri.service" ]
+      && trigger.Install.WantedBy == [ "niri.service" ];
+  }
+  {
+    name = "git-sign-unlock-off";
+    module = { lib, ... }: { antares.gitSignUnlock.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.systemd.services ? git-sign-unlock)
+      && !(c.home-manager.users.antares.systemd.user.services ? git-sign-unlock)
+      && !(c.age.secrets ? gitSignPassphrase)
+      && c.programs.ssh.startAgent;
+  }
+  {
+    name = "git-sign-unlock-dependency";
+    module = { lib, ... }: { programs.ssh.startAgent = lib.mkForce false; };
+    check = c: true;
+    valid = false;
+  }
+  {
     name = "all-features-off";
     module = { lib, ... }: {
       antares = {
@@ -147,6 +192,7 @@
         autostart.enable = lib.mkForce false;
         waitOnline.enable = lib.mkForce false;
         githubAuth.enable = lib.mkForce false;
+        gitSignUnlock.enable = lib.mkForce false;
         rust.enable = lib.mkForce false;
       };
       services.pipewire.enable = lib.mkForce false;
@@ -164,6 +210,8 @@
       c:
       c.users.users ? antares
       && !(c.age.secrets ? ghToken)
+      && !(c.age.secrets ? gitSignPassphrase)
+      && !(c.systemd.services ? git-sign-unlock)
       && builtins.attrNames c.home-manager.users.antares.systemd.user.services == [ "nix-gc" ];
   }
 ]

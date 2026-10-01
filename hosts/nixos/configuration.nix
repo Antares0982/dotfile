@@ -26,6 +26,7 @@ in
   services.mcp-nixos.enable = true;
   antares.waitOnline.enable = true;
   antares.githubAuth.enable = true;
+  antares.gitSignUnlock.enable = true;
   imports = [ ../../pc ];
   _module.args = {
     myXray = inputs.myXray.packages.${system}.default;
