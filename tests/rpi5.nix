@@ -35,4 +35,22 @@
       && !(c.systemd.services ? ssrjson-runner-2)
       && lib.hasInfix "/home/ssrjsonrunner/runner-1" c.systemd.services.ssrjson-runner-1.script;
   }
+  {
+    name = "nixdev-off";
+    module = { lib, ... }: { services.antares-runners.instances.nixdev.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.users.users ? ssrjsonnixdev)
+      && !(c.systemd.services ? ssrjson-nixdev-runner)
+      && !(c.systemd.timers ? restart-ssrjson-nixdev-runner)
+      && c.systemd.services ? github-runner;
+  }
+  {
+    name = "runner-collision";
+    module = { lib, ... }: {
+      services.antares-runners.instances.nixdev.user = lib.mkForce "actionrunner";
+    };
+    check = c: true;
+    valid = false;
+  }
 ]

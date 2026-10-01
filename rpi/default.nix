@@ -17,7 +17,6 @@
     ./packages.nix
     ../modules/nixos/runners.nix
     ./ssh-probe.nix
-    ./ssrjson-nixdev-runner.nix
     ./user.nix
     ./xray.nix
     ./napcat.nix
