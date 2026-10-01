@@ -14,7 +14,6 @@ let
   '';
 in
 {
-  services.nginx.enable = true;
 
   services.nginx.commonHttpConfig = ''
     log_format siteviews escape=none

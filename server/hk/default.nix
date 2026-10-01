@@ -4,6 +4,7 @@
     ./users
   ]
   ++ [
+    ./web.nix
     ./acme.nix
     ./blog.nix
     ./site-metrics.nix

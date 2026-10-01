@@ -24,9 +24,6 @@ in
       linger = true;
     };
 
-    acme = {
-      extraGroups = [ "nginx" ];
-    };
   };
   # home manager
   home-manager = {

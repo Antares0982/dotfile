@@ -19,4 +19,16 @@
     module = { lib, ... }: { services.xray.enable = lib.mkForce false; };
     check = c: !(c.systemd.services ? xray) && c.users.users ? alice;
   }
+  {
+    name = "web-dependency";
+    module = { lib, ... }: { services.nginx.enable = lib.mkForce false; };
+    check = c: true;
+    valid = false;
+  }
+  {
+    name = "acme-dependency";
+    module = { lib, ... }: { antares.acme.enable = lib.mkForce false; };
+    check = c: true;
+    valid = false;
+  }
 ]

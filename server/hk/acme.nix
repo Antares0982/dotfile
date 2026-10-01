@@ -1,49 +1,34 @@
+{ config, lib, ... }:
 {
-  config,
-  lib,
-  pkgs,
-  currentDevice,
-  ...
-}:
-let
-  domainSettings = pkgs.callPackage ../_domains.nix { inherit currentDevice; };
-  inherit (domainSettings) domainDNSProvider;
-in
-{
-  security.acme = {
-    acceptTerms = true;
-    defaults.email = "antares0982@gmail.com";
-    defaults.dnsResolver = "1.1.1.1:53";
-    # certs = lib.attrsets.mapAttrs'
-    #   (name: value: value)
-    #   (lib.genAttrs domainSettings.validDomains (x: {
-    #     dnsProvider = domainSettings.domainDNSProvider x;
-    #   }));
-    # certs = lib.attrsets.mapAttrs'
-    #   (name: value: { name = "${name}"; value = value; })
-    #   (lib.genAttrs domainSettings.validDomains (domain: {
-    #     dnsProvider = domainSettings.domainDNSProvider domain;
-    #     environmentFile = "/var/cloudflare-env";
-    #   }));
-    certs = lib.genAttrs domainSettings.validDomains (domain: {
-      dnsProvider = domainDNSProvider domain;
-      environmentFile = config.age.secrets.cloudflareEnv.path;
-      webroot = null;
-    });
-    # certs."alyr.dev" = {
-    #   dnsProvider = "cloudflare";
-    #   environmentFile = "/var/cloudflare-env";
-    # };
-    # certs."mail.alyr.dev" = {
-    #   dnsProvider = "cloudflare";
-    #   environmentFile = "/var/cloudflare-env";
-    # };
-    # Supplying password files like this will make your credentials world-readable
-    # in the Nix store. This is for demonstration purpose only, do not use this in production.
-    #   environmentFile = "${pkgs.writeText "inwx-creds" ''
-    #   INWX_USERNAME=xxxxxxxxxx
-    #   INWX_PASSWORD=yyyyyyyyyy
-    # ''}";
-    # };
-  };
+  options.antares.acme.enable = lib.mkEnableOption "Cloudflare ACME certificates";
+  config = lib.mkMerge [
+    {
+      assertions = [
+        {
+          assertion = config.antares.acme.enable || config.security.acme.certs == { };
+          message = "Configured certificates require antares.acme.enable.";
+        }
+      ];
+    }
+    (lib.mkIf config.antares.acme.enable {
+      security.acme = {
+        acceptTerms = true;
+        defaults = {
+          email = "antares0982@gmail.com";
+          dnsResolver = "1.1.1.1:53";
+          dnsProvider = "cloudflare";
+          environmentFile = config.age.secrets.cloudflareEnv.path;
+          webroot = null;
+        };
+      };
+      users.users.acme.extraGroups = lib.mkIf (config.security.acme.certs != { }) [ "nginx" ];
+    })
+    (lib.mkIf (config.antares.acme.enable && config.security.acme.certs != { }) {
+      age.secrets.cloudflareEnv = {
+        file = ../../secrets/cloudflare-env.age;
+        owner = "acme";
+        group = "nginx";
+      };
+    })
+  ];
 }

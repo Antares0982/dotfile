@@ -63,11 +63,6 @@ in
         group = "users";
         mode = "400";
       };
-      cloudflareEnv = {
-        file = ../secrets/cloudflare-env.age;
-        owner = "acme";
-        group = "nginx";
-      };
       mailPasswordAntares = {
         file = ../secrets/mail-password-antares.age;
       };
