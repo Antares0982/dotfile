@@ -1,131 +1,30 @@
-inputs:
+inputs: currentDevice:
 let
-  # Access every flake input lazily through `inputs` so a per-host flake only
-  # needs to declare the inputs that its device actually forces. `inherit`
-  # bindings are thunks: an input omitted by a host errors only if a module
-  # for that host reads it, which by construction it never does.
-  inherit (inputs)
-    nixpkgs
-    nixpkgs-old
-    agenix
-    home-manager
-    myXray
-    wsl
-    vscode-server
-    rust-overlay
-    antares-monitor
-    antares-rpc-client
-    visitor-badge
-    blog
-    pull-all
-    renewal
-    napcat-nix
-    nixos-raspberrypi
-    nixos-mailserver
-    linyinfeng-nur
-    ;
-  # Root flake still passes `lib` explicitly; per-host flakes let us derive it.
-  lib = inputs.lib or nixpkgs.lib;
-  xray = myXray;
-  _antares-monitor = antares-monitor;
-  _antares-rpc-client = antares-rpc-client;
-  _visitor-badge = visitor-badge;
-  _pull-all = pull-all;
-  _renewal = renewal;
-  rpi-system = nixos-raspberrypi.lib.nixosSystem;
-  nixosSystem = nixpkgs.lib.nixosSystem;
+  lib = inputs.lib or inputs.nixpkgs.lib;
+  builder =
+    if currentDevice.rpi then
+      inputs.nixos-raspberrypi.lib.nixosSystem
+    else
+      inputs.nixpkgs.lib.nixosSystem;
 in
-
-currentDevice:
-let
+builder {
   inherit (currentDevice) system;
-  curNixosSystem = if currentDevice.rpi then rpi-system else nixosSystem;
-  nixpkgsToPkgs =
-    _nixpkgs:
-    (import _nixpkgs {
-      inherit system;
-      config = {
-        allowUnfree = true;
-      };
-    }).pkgs;
-  myXray = xray.packages.${system}.default;
-  xray-sub = xray.packages.${system}.xray_sub;
-  # Pass the flake itself (not a package): the monitor services import its
-  # `nixosModules.default` and enable `services.telegram-output-monitor-bot`.
-  antares-monitor = _antares-monitor;
-  antares-rpc-client = _antares-rpc-client.packages.${system}.default;
-  visitor-badge = _visitor-badge.packages.${system}.default;
-  pull-all = _pull-all.packages.${system}.default;
-  napcat = napcat-nix.packages.${system}.default;
-  renewal = _renewal.packages.${system}.default;
-  needVSCodeServer = currentDevice.rpi or false;
-  pkgs-old = nixpkgsToPkgs nixpkgs-old;
-  pkgs-new = nixpkgsToPkgs nixpkgs;
-  linyinfeng-nur-packages = linyinfeng-nur.packages.${system};
-in
-curNixosSystem {
-  inherit system;
   specialArgs = {
-    inherit
-      agenix
-      currentDevice
-      myXray
-      xray-sub
-      antares-monitor
-      antares-rpc-client
-      visitor-badge
-      blog
-      pull-all
-      renewal
-      pkgs-old
-      pkgs-new
-      linyinfeng-nur-packages
-      nixos-mailserver
-      ;
-  }
-  // lib.attrsets.optionalAttrs currentDevice.pc {
-    rust-overlay = rust-overlay.overlays.default;
-  }
-  // lib.attrsets.optionalAttrs currentDevice.rpi {
-    inherit nixos-raspberrypi napcat;
-    qq-codex-source = inputs.qq-codex-agent;
+    inherit inputs currentDevice;
+    agenix = inputs.agenix;
   };
   modules = [
     ./common/cachix.nix
-    agenix.nixosModules.default
+    inputs.agenix.nixosModules.default
   ]
-  ++ lib.optionals currentDevice.rpi [
-    {
-      services.qq-codex-agent.package = import (inputs.qq-codex-agent + "/nix/package.nix") {
-        inherit inputs system;
-      };
-    }
-  ]
-  ++ lib.optionals currentDevice.withHm [
-    home-manager.nixosModules.home-manager
-  ]
-  ++ lib.optionals (currentDevice.wsl or false) [
+  ++ lib.optionals currentDevice.withHm [ inputs.home-manager.nixosModules.home-manager ]
+  ++ lib.optionals currentDevice.wsl [
     ./configuration.nix
-    wsl.nixosModules.wsl
-  ]
-  ++ lib.optionals needVSCodeServer [
-    vscode-server.nixosModules.default
-    (
-      { config, pkgs, ... }:
-      {
-        services.vscode-server.enableFHS = true;
-      }
-    )
+    inputs.wsl.nixosModules.wsl
   ]
   ++ lib.optionals currentDevice.rpi [
-    (
-      { ... }:
-      {
-        imports = with nixos-raspberrypi.nixosModules; [
-          raspberry-pi-5.base
-          raspberry-pi-5.bluetooth
-        ];
-      }
-    )
+    inputs.vscode-server.nixosModules.default
+    inputs.nixos-raspberrypi.nixosModules.raspberry-pi-5.base
+    inputs.nixos-raspberrypi.nixosModules.raspberry-pi-5.bluetooth
   ];
 }

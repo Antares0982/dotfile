@@ -1,11 +1,11 @@
 {
   config,
   lib,
-  antares-monitor,
+  inputs,
   ...
 }:
 {
-  imports = [ antares-monitor.nixosModules.default ];
+  imports = [ inputs.antares-monitor.nixosModules.default ];
   options.antares.monitor.proxy = lib.mkOption {
     type = lib.types.nullOr lib.types.str;
     default = null;

@@ -1,9 +1,23 @@
-{ config, pkgs-new, ... }: {
+{
+  config,
+  inputs,
+  pkgs,
+  ...
+}:
+let
+  system = pkgs.stdenv.hostPlatform.system;
+  runnerPackage =
+    (import inputs.nixpkgs {
+      system = "aarch64-linux";
+      config.allowUnfree = true;
+    }).github-runner;
+in
+{
   services.antares-runners.instances.actionrunner = {
     enable = true;
     user = "actionrunner";
     serviceName = "github-runner";
-    package = pkgs-new.github-runner;
+    package = runnerPackage;
     proxy = if config.antares.proxy.enable then config.antares.proxy.httpUrl else null;
     authorizedKeys = [
       (import ../../common/users.nix { inherit (config.age) secrets; }).commonUserAuthorizedKey
@@ -15,7 +29,7 @@
     serviceName = "ssrjson-runner";
     count = 10;
     indexed = true;
-    package = pkgs-new.github-runner;
+    package = runnerPackage;
     proxy = if config.antares.proxy.enable then config.antares.proxy.httpUrl else null;
     authorizedKeys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDOMS7+EqU5j6TmQrQyg/9TG4oPfnR1J13B6jvmnqdI0 antares@alyr.dev"
@@ -25,7 +39,7 @@
     enable = true;
     user = "ssrjsonnixdev";
     serviceName = "ssrjson-nixdev-runner";
-    package = pkgs-new.github-runner;
+    package = runnerPackage;
     proxy = if config.antares.proxy.enable then config.antares.proxy.httpUrl else null;
     authorizedKeys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDOMS7+EqU5j6TmQrQyg/9TG4oPfnR1J13B6jvmnqdI0 antares@alyr.dev"
@@ -46,4 +60,11 @@
   antares.gitServer.enable = true;
   imports = [ ../../rpi ];
   environment.etc."zsh/p10k.zsh".source = ../../resource/rpi-p10k.zsh;
+  _module.args = {
+    myXray = inputs.myXray.packages.${system}.default;
+    xray-sub = inputs.myXray.packages.${system}.xray_sub;
+    antares-rpc-client = inputs.antares-rpc-client.packages.${system}.default;
+    napcat = inputs.napcat-nix.packages.${system}.default;
+  };
+  services.vscode-server.enableFHS = true;
 }

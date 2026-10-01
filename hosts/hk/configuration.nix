@@ -1,4 +1,13 @@
-{ config, ... }: {
+{
+  config,
+  inputs,
+  pkgs,
+  ...
+}:
+let
+  system = pkgs.stdenv.hostPlatform.system;
+in
+{
   services.telegram-output-monitor-bot.enable = true;
   services.antares-rpc-client.enable = true;
   services.xray.enable = true;
@@ -41,4 +50,10 @@
     singleTransaction = true;
   };
   environment.etc."zsh/p10k.zsh".source = ../../resource/hk-p10k.zsh;
+  _module.args = {
+    myXray = inputs.myXray.packages.${system}.default;
+    antares-rpc-client = inputs.antares-rpc-client.packages.${system}.default;
+    visitor-badge = inputs.visitor-badge.packages.${system}.default;
+    blog = inputs.blog;
+  };
 }

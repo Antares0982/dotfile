@@ -19,31 +19,19 @@
     };
   };
 
-  # The mac config is built directly with nix-darwin (it bypasses systemMap.nix),
-  # so this output mirrors the darwinConfigurations block of the old root flake.
   outputs =
-    inputs@{
-      nix-darwin,
-      myXray,
-      renewal,
-      ...
-    }:
+    inputs:
     let
       currentDevice = import ../../mac.nix;
-      mac-system = currentDevice.system;
     in
     {
-      darwinConfigurations.macbook = nix-darwin.lib.darwinSystem {
-        system = mac-system;
+      darwinConfigurations.macbook = inputs.nix-darwin.lib.darwinSystem {
+        system = currentDevice.system;
         specialArgs = {
+          inherit inputs currentDevice;
           inherit (inputs) self;
-          inherit currentDevice;
-          myXray = myXray.packages.${mac-system}.default;
-          renewal = renewal.packages.${mac-system}.default;
         };
-        modules = [
-          ./configuration.nix
-        ];
+        modules = [ ./configuration.nix ];
       };
     };
 }

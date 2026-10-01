@@ -2,7 +2,6 @@
   config,
   pkgs,
   lib,
-  antares-monitor,
   antares-rpc-client,
   ...
 }:

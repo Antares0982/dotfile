@@ -2,7 +2,7 @@
   config,
   lib,
   pkgs,
-  qq-codex-source,
+  inputs,
   ...
 }:
 let
@@ -83,10 +83,14 @@ let
   ];
 in
 {
-  imports = [ (qq-codex-source + "/nix/module.nix") ];
+  imports = [ (inputs.qq-codex-agent + "/nix/module.nix") ];
   config = lib.mkIf config.services.qq-codex-agent.enable {
     assertions = [ { assertion = config.services.napcat.enable; message = "QQ Codex requires services.napcat.enable."; } ];
     services.qq-codex-agent = {
+      package = import (inputs.qq-codex-agent + "/nix/package.nix") {
+        inherit inputs;
+        system = pkgs.stdenv.hostPlatform.system;
+      };
       allowlistFile = config.age.secrets.qqCodexAllowlist.path;
       tokenFile = "/run/qq-codex-auth/token";
       extraPackages = [

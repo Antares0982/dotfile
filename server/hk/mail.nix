@@ -1,11 +1,11 @@
 { lib,
   config,
   pkgs,
-  nixos-mailserver,
+  inputs,
   ...
 }:
 {
-  imports = [ nixos-mailserver.nixosModules.default ];
+  imports = [ inputs.nixos-mailserver.nixosModules.default ];
   config = lib.mkIf (config.mailserver.enable) {
 
 
