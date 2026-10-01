@@ -111,4 +111,32 @@
       && c.systemd.services ? qq-codex-agent
       && c.users.users ? napcat;
   }
+  {
+    name = "qq-off";
+    module = { lib, ... }: { antares.qq.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.users.users ? napcat)
+      && !(c.systemd.services ? napcat)
+      && !(c.systemd.services ? qq-napcat-relay)
+      && !(c.systemd.services ? qq-codex-agent)
+      && !(c.systemd.services ? qq-codex-auth)
+      && !(c.systemd.services ? qq-codex-login)
+      && !(c.system.activationScripts ? qqCodexRestart)
+      && !(c.age.secrets ? qqRelayEnv)
+      && !(c.age.secrets ? qqCodexGhToken)
+      && !(c.age.secrets ? napcatEnv);
+  }
+  {
+    name = "qq-codex-off";
+    module = { lib, ... }: { antares.qq.codex.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.systemd.services ? qq-codex-agent)
+      && !(c.systemd.services ? qq-codex-auth)
+      && !(c.systemd.services ? qq-codex-login)
+      && !(c.age.secrets ? qqCodexGhToken)
+      && c.age.secrets ? qqRelayEnv
+      && c.systemd.services ? qq-napcat-relay;
+  }
 ]

@@ -35,6 +35,8 @@
   antares.monitor.proxy = "http://127.0.0.1:1081";
   services.antares-rpc-client.enable = true;
   antares.agent.enable = true;
-  services.napcat.enable = true;
-  services.qq-napcat-relay.enable = true;
+  antares.qq.napcat.enable = true;
+  antares.qq.relay.enable = true;
+  antares.qq.enable = true;
+  antares.qq.codex.enable = true;
 }

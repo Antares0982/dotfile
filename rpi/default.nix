@@ -6,7 +6,6 @@
 }:
 {
   nixpkgs.config.allowUnfree = true;
-  services.qq-codex-agent.enable = true;
   imports = [
     ./antares-agent.nix
     ./configuration.nix
@@ -20,6 +19,7 @@
     ./user.nix
     ./xray.nix
     ./napcat.nix
+    ./qq.nix
     ./qq-credentials.nix
     ./qq-relay.nix
     ./qq-codex-agent.nix
