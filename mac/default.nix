@@ -10,6 +10,7 @@
   imports = [
     ./env.nix
     ./packages.nix
+    ../modules/proxy.nix
     ./proxy.nix
     ./stdenv.nix
     ./xray.nix
