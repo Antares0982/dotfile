@@ -7,11 +7,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1790555459,
-        "narHash": "sha256-ftyJcr21FzMLq4hnzg3COo7gITOkJ4j+ey0miWCTU3U=",
+        "lastModified": 1790734419,
+        "narHash": "sha256-n7wew722m1OTBT9DOIMxNX/NF4zfsSUABAO5eW3wikE=",
         "owner": "ryantm",
         "repo": "agenix",
-        "rev": "b485690a7c97b3793a41dd57edfb05ac84343813",
+        "rev": "3daa710894355fa2fad8243380af373a2b4046ef",
         "type": "github"
       },
       "original": {
@@ -145,11 +145,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1790521439,
-        "narHash": "sha256-08CkQ7UGT8Cw8+6KtdKZ4ccQyLX2lhNE+cTN8QUAyVs=",
+        "lastModified": 1790785243,
+        "narHash": "sha256-3xNNMZ5DjYigJYG37C/U4fzRn9kUWcW1YDFzh+DZ4d8=",
         "owner": "Antares0982",
         "repo": "rules-dat-xray-flake",
-        "rev": "450ff27e1f35791924088e9e7bbd3e7ffb8c2e4c",
+        "rev": "28f9653840bf1b1e29317703ced6f11df8c0d8cf",
         "type": "github"
       },
       "original": {
@@ -249,11 +249,11 @@
     },
     "nixpkgs-old": {
       "locked": {
-        "lastModified": 1790533781,
-        "narHash": "sha256-F+b8u43BVF5DlM0pz7JQSbtbwKy5PrHIT5zQUekXsD0=",
+        "lastModified": 1790750587,
+        "narHash": "sha256-VfjaoJ1Uyb7JZTrBgE5Jf2nhjtQPmD9KOd19HJwmZwM=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "cf5e76507c6e23b59f7e0ffcc7baa2a39ddd8442",
+        "rev": "78e9c786dc08cd4f3420c2395cd977206a9b1da2",
         "type": "github"
       },
       "original": {
@@ -265,11 +265,11 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1790578696,
-        "narHash": "sha256-ZoxIApko70jCdbH3l20HWXOBaT2HZd87orzd2yJ9dVE=",
+        "lastModified": 1790689126,
+        "narHash": "sha256-ilerN1WLSvF+HMjziC/Wv99J5y02maDH+6hZPwsORKg=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "7a0f122f5090cf4c2ade2a13a0e229d4e19ba71f",
+        "rev": "b4fd65b198c599cbe814fcb9f42d25d021595ec9",
         "type": "github"
       },
       "original": {
@@ -328,11 +328,11 @@
     "qq-codex-agent": {
       "flake": false,
       "locked": {
-        "lastModified": 1790776763,
-        "narHash": "sha256-udjXHLZIz7pgvt9QRlZjGqHXR45V7ex0kA9WKKj4k2g=",
+        "lastModified": 1790790846,
+        "narHash": "sha256-P4/d1QFU3xJekuPLK+xImBxzv36u+bsRwmKjtV8j1sw=",
         "owner": "Antares0982",
         "repo": "qq-codex-agent",
-        "rev": "af58d7f0a50a225b112af227913209e4f3ac0604",
+        "rev": "5ac7642782b1f9e74adabb00bf686b05de1c4607",
         "type": "github"
       },
       "original": {
