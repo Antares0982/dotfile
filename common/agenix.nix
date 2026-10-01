@@ -39,34 +39,10 @@ in
       # the agent's. F19: the sandbox blocks writes outside cwd but not reads,
       # so anything the agent uid can read, the model can read. Same
       # certificate the (now retired) hermes bridge used.
-      qqRelayEnv = {
-        file = ../secrets/qq-relay-env.age;
-        owner = "napcat";
-        group = "users";
-        mode = "400";
-      };
       # Host, port, vhost and credentials for the relay's broker connection --
       # the retired hermes bridge's values, reused wholesale. Its own file
       # rather than a second owner on hermes-env.age, which carries a good deal
       # more than these five lines.
-      qqRelayRabbitCa = {
-        file = ../secrets/hermes-rabbit-ca.age;
-        owner = "napcat";
-        group = "users";
-        mode = "400";
-      };
-      qqRelayRabbitCert = {
-        file = ../secrets/hermes-rabbit-cert.age;
-        owner = "napcat";
-        group = "users";
-        mode = "400";
-      };
-      qqRelayRabbitKey = {
-        file = ../secrets/hermes-rabbit-key.age;
-        owner = "napcat";
-        group = "users";
-        mode = "400";
-      };
       xraySubUrl = {
         file = ../secrets/xraysub.age;
         owner = "antares";

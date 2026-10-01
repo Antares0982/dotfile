@@ -28,6 +28,9 @@ let
   };
 in
 {
+  options.services.qq-napcat-relay.enable = lib.mkEnableOption "QQ RabbitMQ relay";
+  config = lib.mkIf (config.services.qq-napcat-relay.enable) {
+
   assertions = [ { assertion = config.services.napcat.enable; message = "QQ relay requires services.napcat.enable."; } ];
   systemd.services.qq-napcat-relay = {
     description = "QQ-NapCat RabbitMQ Relay";
@@ -72,5 +75,25 @@ in
       OnCalendar = "*-*-* 05:00:00";
       Persistent = true;
     };
+  };
+
+      age.secrets.qqRelayRabbitCa = {
+        file = ../secrets/hermes-rabbit-ca.age;
+        owner = "napcat";
+        group = "users";
+        mode = "400";
+      };
+      age.secrets.qqRelayRabbitCert = {
+        file = ../secrets/hermes-rabbit-cert.age;
+        owner = "napcat";
+        group = "users";
+        mode = "400";
+      };
+      age.secrets.qqRelayRabbitKey = {
+        file = ../secrets/hermes-rabbit-key.age;
+        owner = "napcat";
+        group = "users";
+        mode = "400";
+      };
   };
 }

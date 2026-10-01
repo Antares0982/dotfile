@@ -98,4 +98,17 @@
       && !(c.age.secrets ? napcatEnv);
     valid = false;
   }
+  {
+    name = "qq-relay-off";
+    module = { lib, ... }: { services.qq-napcat-relay.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.systemd.services ? qq-napcat-relay)
+      && !(c.systemd.services ? qq-napcat-relay-restart)
+      && !(c.systemd.timers ? qq-napcat-relay-restart)
+      && !(c.age.secrets ? qqRelayRabbitKey)
+      && c.age.secrets ? qqRelayEnv
+      && c.systemd.services ? qq-codex-agent
+      && c.users.users ? napcat;
+  }
 ]

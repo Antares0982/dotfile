@@ -20,6 +20,7 @@
     ./user.nix
     ./xray.nix
     ./napcat.nix
+    ./qq-credentials.nix
     ./qq-relay.nix
     ./qq-codex-agent.nix
   ]
