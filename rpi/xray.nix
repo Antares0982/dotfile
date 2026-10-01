@@ -36,6 +36,7 @@ in
   systemd.tmpfiles.rules = [
     "d ${xrayDir} 0775 root xray - -"
     "d ${subsDir} 0775 root xray - -"
+  ] ++ lib.optionals config.antares.agent.enable [
     "d ${triggerDir} 0700 agent agent - -"
   ];
 
@@ -70,7 +71,7 @@ in
   };
 
   # ── agent-triggered xray actions (bypasses sandbox sudo restriction) ──
-  systemd.services.xray-helper = {
+  systemd.services.xray-helper = lib.mkIf config.antares.agent.enable {
     description = "Xray Action Helper (triggered by antares-agent)";
     serviceConfig.Type = "oneshot";
     script = ''
@@ -102,7 +103,7 @@ in
     '';
   };
 
-  systemd.paths.xray-helper = {
+  systemd.paths.xray-helper = lib.mkIf config.antares.agent.enable {
     description = "Watch for xray trigger files";
     wantedBy = [ "paths.target" ];
     pathConfig = {

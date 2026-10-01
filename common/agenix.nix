@@ -35,32 +35,10 @@ in
     // lib.optionalAttrs isRpi {
       # Stays root-owned. systemd reads EnvironmentFile= before dropping
       # privileges, so the agent uid never gets read access to the file.
-      antaresAgentEnv = {
-        file = ../secrets/antares-agent-env.age;
-        mode = "400";
-      };
       # The relay's broker credentials, owned by the relay's uid rather than
       # the agent's. F19: the sandbox blocks writes outside cwd but not reads,
       # so anything the agent uid can read, the model can read. Same
       # certificate the (now retired) hermes bridge used.
-      agentRelayRabbitCa = {
-        file = ../secrets/hermes-rabbit-ca.age;
-        owner = "agent-relay";
-        group = "users";
-        mode = "400";
-      };
-      agentRelayRabbitCert = {
-        file = ../secrets/hermes-rabbit-cert.age;
-        owner = "agent-relay";
-        group = "users";
-        mode = "400";
-      };
-      agentRelayRabbitKey = {
-        file = ../secrets/hermes-rabbit-key.age;
-        owner = "agent-relay";
-        group = "users";
-        mode = "400";
-      };
       napcatEnv = {
         file = ../secrets/napcat-env.age;
         owner = "napcat";
@@ -77,17 +55,6 @@ in
       # the retired hermes bridge's values, reused wholesale. Its own file
       # rather than a second owner on hermes-env.age, which carries a good deal
       # more than these five lines.
-      agentFilesRelayEnv = {
-        file = ../secrets/agent-files-relay-env.age;
-        owner = "agent-relay";
-        mode = "400";
-      };
-      agentRelayEnv = {
-        file = ../secrets/agent-relay-env.age;
-        owner = "agent-relay";
-        group = "users";
-        mode = "400";
-      };
       qqRelayRabbitCa = {
         file = ../secrets/hermes-rabbit-ca.age;
         owner = "napcat";

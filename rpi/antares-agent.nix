@@ -195,6 +195,9 @@ let
   };
 in
 {
+  options.antares.agent.enable = lib.mkEnableOption "Antares agent and relay";
+  config = lib.mkIf (config.antares.agent.enable) {
+
   # The bundled `claude` is a generic-linux aarch64 ELF asking for
   # /lib/ld-linux-aarch64.so.1, which does not exist on NixOS. nix-ld supplies
   # it. The alternative measured in F13 -- patchelf --set-interpreter -- works
@@ -505,5 +508,40 @@ in
 
       BindReadOnlyPaths = [ appDir ];
     };
+  };
+
+      age.secrets.antaresAgentEnv = {
+        file = ../secrets/antares-agent-env.age;
+        mode = "400";
+      };
+      age.secrets.agentRelayRabbitCa = {
+        file = ../secrets/hermes-rabbit-ca.age;
+        owner = "agent-relay";
+        group = "users";
+        mode = "400";
+      };
+      age.secrets.agentRelayRabbitCert = {
+        file = ../secrets/hermes-rabbit-cert.age;
+        owner = "agent-relay";
+        group = "users";
+        mode = "400";
+      };
+      age.secrets.agentRelayRabbitKey = {
+        file = ../secrets/hermes-rabbit-key.age;
+        owner = "agent-relay";
+        group = "users";
+        mode = "400";
+      };
+      age.secrets.agentFilesRelayEnv = {
+        file = ../secrets/agent-files-relay-env.age;
+        owner = "agent-relay";
+        mode = "400";
+      };
+      age.secrets.agentRelayEnv = {
+        file = ../secrets/agent-relay-env.age;
+        owner = "agent-relay";
+        group = "users";
+        mode = "400";
+      };
   };
 }

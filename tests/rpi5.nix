@@ -68,4 +68,22 @@
       && !(c.age.secrets ? rabbitClientCfgAntaresRpi)
       && c.users.users ? antares;
   }
+  {
+    name = "agent-off";
+    module = { lib, ... }: { antares.agent.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.users.users ? agent)
+      && !(c.users.users ? agent-relay)
+      && !(c.systemd.services ? antares-agent)
+      && !(c.systemd.services ? antares-agent-relay)
+      && !(c.systemd.services ? antares-agent-update)
+      && !(c.systemd.services ? xray-helper)
+      && !(c.systemd.paths ? xray-helper)
+      && !(c.systemd.generators ? antares-agent-mounts)
+      && !(c.age.secrets ? antaresAgentEnv)
+      && !(c.age.secrets ? agentRelayRabbitKey)
+      && lib.all (r: !(lib.hasInfix "agent_work" r)) c.systemd.tmpfiles.rules
+      && c.systemd.services ? xray;
+  }
 ]
