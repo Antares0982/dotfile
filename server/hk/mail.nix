@@ -1,18 +1,17 @@
-{
+{ lib,
   config,
   pkgs,
   nixos-mailserver,
   ...
 }:
 {
-  imports = [
-    nixos-mailserver.nixosModules.default
-  ];
+  imports = [ nixos-mailserver.nixosModules.default ];
+  config = lib.mkIf (config.mailserver.enable) {
+
 
   security.acme.certs."chr.fan" = { };
 
   mailserver = {
-    enable = true;
     enablePop3 = true;
     enableSubmission = true;
     fqdn = "mail.alyr.dev";
@@ -36,5 +35,32 @@
     };
 
     stateVersion = 3;
+  };
+
+      age.secrets.mailPasswordAntares = {
+        file = ../../secrets/mail-password-antares.age;
+      };
+      age.secrets.mailPasswordAlyr = {
+        file = ../../secrets/mail-password-alyr.age;
+      };
+  services.fail2ban.jails = {
+      postfix-sasl = ''
+        enabled = true
+        filter = postfix[mode=auth]
+        logpath = /var/log/mail.log
+        maxretry = 3
+        bantime = 3600
+        findtime = 600
+      '';
+      dovecot = ''
+        enabled = true
+        filter = dovecot
+        logpath = /var/log/mail.log
+        maxretry = 3
+        bantime = 3600
+        findtime = 600
+      '';
+    };
+  security.acme.certs."mail.alyr.dev" = { };
   };
 }

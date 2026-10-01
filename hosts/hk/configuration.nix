@@ -10,9 +10,9 @@
     443
   ];
   security.acme.certs = {
-    "mail.alyr.dev" = { };
     "couch.chr.fan" = { };
   };
   antares.blog.enable = true;
   antares.blog.metrics.enable = true;
+  mailserver.enable = true;
 }

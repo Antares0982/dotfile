@@ -59,4 +59,19 @@
       && c.services.mysqlBackup.enable
       && c.services.nginx.virtualHosts ? "chr.fan";
   }
+  {
+    name = "mail-off";
+    module = { lib, ... }: { mailserver.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.systemd.services ? postfix)
+      && !(c.systemd.services ? dovecot2)
+      && !(c.services.fail2ban.jails ? postfix-sasl)
+      && !(c.services.fail2ban.jails ? dovecot)
+      && !(c.age.secrets ? mailPasswordAntares)
+      && !(c.age.secrets ? mailPasswordAlyr)
+      && !(c.security.acme.certs ? "mail.alyr.dev")
+      && c.security.acme.certs ? "chr.fan"
+      && c.services.fail2ban.enable;
+  }
 ]

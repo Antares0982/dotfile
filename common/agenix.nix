@@ -63,12 +63,6 @@ in
         group = "users";
         mode = "400";
       };
-      mailPasswordAntares = {
-        file = ../secrets/mail-password-antares.age;
-      };
-      mailPasswordAlyr = {
-        file = ../secrets/mail-password-alyr.age;
-      };
       rabbitmqDefinitions = {
         file = ../secrets/rabbitmq-definitions.age;
         owner = "rabbitmq";

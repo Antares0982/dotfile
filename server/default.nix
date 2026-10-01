@@ -27,24 +27,7 @@ in
   ];
   services.fail2ban = {
     enable = true;
-    jails = {
-      postfix-sasl = ''
-        enabled = true
-        filter = postfix[mode=auth]
-        logpath = /var/log/mail.log
-        maxretry = 3
-        bantime = 3600
-        findtime = 600
-      '';
-      dovecot = ''
-        enabled = true
-        filter = dovecot
-        logpath = /var/log/mail.log
-        maxretry = 3
-        bantime = 3600
-        findtime = 600
-      '';
-    };
+
   };
   environment.variables = {
     NIX_DOT_FILES = "/home/antares/Nix";
