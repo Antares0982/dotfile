@@ -51,11 +51,6 @@ in
       ];
       inherit (userCommonSettings) hashedPasswordFile;
     };
-    users.ssrjsonrunner = (mkRunnerUser "ssrjsonrunner") // {
-      openssh.authorizedKeys.keys = [
-        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDOMS7+EqU5j6TmQrQyg/9TG4oPfnR1J13B6jvmnqdI0 antares@alyr.dev"
-      ];
-    };
     users.ssrjsonnixdev = (mkRunnerUser "ssrjsonnixdev") // {
       openssh.authorizedKeys.keys = [
         "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDOMS7+EqU5j6TmQrQyg/9TG4oPfnR1J13B6jvmnqdI0 antares@alyr.dev"
