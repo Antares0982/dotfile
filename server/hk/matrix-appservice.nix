@@ -9,6 +9,7 @@ in
 
   services.nginx.virtualHosts."tri-lug.chr.fan" = {
     enableACME = true;
+    acmeRoot = null;
     forceSSL = true;
 
     extraConfig = ''

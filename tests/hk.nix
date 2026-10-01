@@ -215,4 +215,13 @@
         ]
       && builtins.attrNames c.home-manager.users.alice.systemd.user.services == [ "nix-gc" ];
   }
+  {
+    name = "acme-dns";
+    module = { lib, ... }: { };
+    check =
+      c:
+      lib.all (cert: cert.dnsProvider == "cloudflare" && cert.webroot == null) (
+        builtins.attrValues c.security.acme.certs
+      );
+  }
 ]

@@ -35,6 +35,7 @@ in
   services.nginx.virtualHosts."tg.alyr.dev" = {
     forceSSL = true;
     enableACME = true;
+    acmeRoot = null;
     inherit root;
     basicAuthFile = config.age.secrets.agentFilesHtpasswd.path;
     extraConfig = ''

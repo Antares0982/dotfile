@@ -19,6 +19,7 @@ in
   services.nginx.virtualHosts."chr.fan" = {
     addSSL = true;
     enableACME = true;
+    acmeRoot = null;
     root = "${site}";
 
     extraConfig = ''
@@ -89,18 +90,21 @@ in
   services.nginx.virtualHosts."blog.chr.fan" = {
     addSSL = true;
     enableACME = true;
+    acmeRoot = null;
     locations."/".return = "301 https://chr.fan$request_uri";
   };
 
   services.nginx.virtualHosts."alyr.dev" = {
     addSSL = true;
     enableACME = true;
+    acmeRoot = null;
     locations."/".return = "301 https://chr.fan$request_uri";
   };
 
   services.nginx.virtualHosts."en.chr.fan" = {
     addSSL = true;
     enableACME = true;
+    acmeRoot = null;
     locations = {
       "= /2026/01/07/python-json".return = "301 https://chr.fan/en/python-json/$is_args$args";
       "= /2026/01/07/python-json/".return = "301 https://chr.fan/en/python-json/$is_args$args";
