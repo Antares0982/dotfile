@@ -30,12 +30,6 @@ in
         group = "users";
         mode = "400";
       };
-      monitorCfgAntaresPc = {
-        file = ../secrets/monitor-cfg-antares-pc.age;
-        owner = "antares";
-        group = "users";
-        mode = "440";
-      };
       rabbitClientCfgAntaresPc = {
         file = ../secrets/rabbit-client-cfg-antares-pc.age;
         owner = "antares";
@@ -45,12 +39,6 @@ in
     }
     # ---- RPi only ----
     // lib.optionalAttrs isRpi {
-      monitorCfgAntaresRpi = {
-        file = ../secrets/monitor-cfg-antares-rpi.age;
-        owner = "antares";
-        group = "users";
-        mode = "440";
-      };
       rabbitClientCfgAntaresRpi = {
         file = ../secrets/rabbit-client-cfg-antares-rpi.age;
         owner = "antares";
@@ -166,12 +154,6 @@ in
         file = ../secrets/cloudflare-env.age;
         owner = "acme";
         group = "nginx";
-      };
-      monitorCfgAlice = {
-        file = ../secrets/monitor-cfg-alice.age;
-        owner = "alice";
-        group = "users";
-        mode = "440";
       };
       rabbitClientCfgAlice = {
         file = ../secrets/rabbit-client-cfg-alice.age;

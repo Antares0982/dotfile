@@ -31,4 +31,6 @@
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDOMS7+EqU5j6TmQrQyg/9TG4oPfnR1J13B6jvmnqdI0 antares@alyr.dev"
     ];
   };
+  services.telegram-output-monitor-bot.enable = true;
+  antares.monitor.proxy = "http://127.0.0.1:1081";
 }
