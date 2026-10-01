@@ -36,6 +36,9 @@ in
       eval "$(direnv hook zsh)"
       export PATH=$PATH:${envs.envs.SCRIPT_DIR}:${envs.envs.SCRIPT_DIR}/linux
     ''
-    + envs.shellInitExtra;
+    + envs.shellInitExtra
+    + lib.optionalString osConfig.antares.githubAuth.enable ''
+      export GH_TOKEN=$(cat ${osConfig.age.secrets.ghToken.path})
+    '';
   };
 }

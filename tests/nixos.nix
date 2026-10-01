@@ -129,4 +129,12 @@
       !(c.home-manager.users.antares.systemd.user.services ? autostart)
       && c.home-manager.users.antares.systemd.user.services ? xray;
   }
+  {
+    name = "github-auth-off";
+    module = { lib, ... }: { antares.githubAuth.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.age.secrets ? ghToken)
+      && !(lib.hasInfix "export GH_TOKEN=" c.home-manager.users.antares.programs.zsh.initContent);
+  }
 ]

@@ -16,6 +16,7 @@
     ./configuration.nix
     ./display.nix
     ./fcitx5.nix
+    ./github-auth.nix
     ./fonts.nix
     ./mcp-nixos.nix
     ./rpc-client.nix

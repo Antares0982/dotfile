@@ -91,7 +91,6 @@ rec {
       fi
     }
 
-    export GH_TOKEN=$(cat /run/agenix/ghToken)
 
     unzip7zwithpass() {
       nix run nixpkgs#p7zip -- x "$1" -p$2
