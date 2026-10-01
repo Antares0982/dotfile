@@ -9,9 +9,10 @@ let
   hkServer = currentDevice.server.hk or false;
 in
 {
+  config = lib.mkIf (config.services.rabbitmq.enable) {
+
   services.rabbitmq = lib.mkMerge [
     {
-      enable = true;
       listenAddress = if hkServer then "0.0.0.0" else "127.0.0.1";
       managementPlugin.enable = true;
     }
@@ -28,4 +29,12 @@ in
     })
   ];
   networking.firewall.allowedTCPPorts = lib.optionals hkServer [ 5671 ];
+
+      age.secrets.rabbitmqDefinitions = lib.mkIf hkServer {
+        file = ../secrets/rabbitmq-definitions.age;
+        owner = "rabbitmq";
+        group = "rabbitmq";
+        mode = "400";
+      };
+  };
 }

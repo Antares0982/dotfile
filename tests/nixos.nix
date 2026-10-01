@@ -35,4 +35,9 @@
     check = c: true;
     valid = false;
   }
+  {
+    name = "rabbitmq-off";
+    module = { lib, ... }: { services.rabbitmq.enable = lib.mkForce false; };
+    check = c: !(c.systemd.services ? rabbitmq) && !(c.users.users ? rabbitmq);
+  }
 ]

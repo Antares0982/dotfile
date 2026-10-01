@@ -20,4 +20,5 @@
   services.telegram-bot-api.enable = true;
   antares.agentFiles.enable = true;
   antares.messaging.enable = true;
+  services.rabbitmq.enable = true;
 }

@@ -161,4 +161,14 @@
       && !(lib.elem 80 c.networking.firewall.allowedTCPPorts)
       && !(lib.elem 443 c.networking.firewall.allowedTCPPorts);
   }
+  {
+    name = "rabbitmq-off";
+    module = { lib, ... }: { services.rabbitmq.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.systemd.services ? rabbitmq)
+      && !(c.users.users ? rabbitmq)
+      && !(c.age.secrets ? rabbitmqDefinitions)
+      && !(lib.elem 5671 c.networking.firewall.allowedTCPPorts);
+  }
 ]

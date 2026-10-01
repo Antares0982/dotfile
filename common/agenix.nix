@@ -46,12 +46,6 @@ in
     }
     # ---- HK server only ----
     // lib.optionalAttrs isHkServer {
-      rabbitmqDefinitions = {
-        file = ../secrets/rabbitmq-definitions.age;
-        owner = "rabbitmq";
-        group = "rabbitmq";
-        mode = "400";
-      };
     };
     identityPaths = [ "/etc/ssh/agenix" ];
   };

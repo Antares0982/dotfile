@@ -38,8 +38,7 @@ in
       "network.target"
       "network-online.target"
       "napcat.service"
-      "rabbitmq.service"
-    ];
+    ] ++ lib.optional config.services.rabbitmq.enable "rabbitmq.service";
     wants = [ "network-online.target" ];
     wantedBy = [ "multi-user.target" ];
     serviceConfig = {
