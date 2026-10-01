@@ -85,7 +85,12 @@ in
 {
   imports = [ (inputs.qq-codex-agent + "/nix/module.nix") ];
   config = lib.mkIf config.services.qq-codex-agent.enable {
-    assertions = [ { assertion = config.services.napcat.enable; message = "QQ Codex requires services.napcat.enable."; } ];
+    assertions = [
+      {
+        assertion = config.services.napcat.enable;
+        message = "QQ Codex requires services.napcat.enable.";
+      }
+    ];
     services.qq-codex-agent = {
       package = import (inputs.qq-codex-agent + "/nix/package.nix") {
         inherit inputs;
@@ -153,7 +158,8 @@ in
       after = [
         "napcat.service"
         "qq-codex-auth.service"
-      ] ++ lib.optional config.antares.xray.enable "xray.service";
+      ]
+      ++ lib.optional config.antares.xray.enable "xray.service";
       requires = [ "qq-codex-auth.service" ];
       restartTriggers = [
         config.age.secrets.qqRelayEnv.file

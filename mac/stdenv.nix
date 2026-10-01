@@ -1,4 +1,5 @@
-{ lib,
+{
+  lib,
   config,
   pkgs,
   ...
@@ -25,9 +26,9 @@ in
   options.antares.systemCompiler.enable = lib.mkEnableOption "Apple compiler shims";
   config = lib.mkIf (config.antares.systemCompiler.enable) {
 
-  environment.extraInit = ''
-    export PATH="${system-cc-shims}/bin:$PATH"
-  '';
+    environment.extraInit = ''
+      export PATH="${system-cc-shims}/bin:$PATH"
+    '';
 
   };
 }

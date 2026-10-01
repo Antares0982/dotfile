@@ -31,68 +31,74 @@ in
   options.services.qq-napcat-relay.enable = lib.mkEnableOption "QQ RabbitMQ relay";
   config = lib.mkIf (config.services.qq-napcat-relay.enable) {
 
-  assertions = [ { assertion = config.services.napcat.enable; message = "QQ relay requires services.napcat.enable."; } ];
-  systemd.services.qq-napcat-relay = {
-    description = "QQ-NapCat RabbitMQ Relay";
-    after = [
-      "network.target"
-      "network-online.target"
-      "napcat.service"
-    ] ++ lib.optional config.services.rabbitmq.enable "rabbitmq.service";
-    wants = [ "network-online.target" ];
-    wantedBy = [ "multi-user.target" ];
-    serviceConfig = {
-      User = "napcat";
-      ExecStart = "${qqRelay}/bin/qq-napcat-relay";
-      Restart = "always";
-      RestartSec = "10s";
-      EnvironmentFile = config.age.secrets.qqRelayEnv.path;
-      # Image byte cache; systemd creates /var/cache/qq-napcat-relay owned by the
-      # service user. The relay sweeps files >3h old hourly.
-      CacheDirectory = "qq-napcat-relay";
-    };
-    environment = {
-      RMQ_CAFILE = config.age.secrets.qqRelayRabbitCa.path;
-      RMQ_CERTFILE = config.age.secrets.qqRelayRabbitCert.path;
-      RMQ_KEYFILE = config.age.secrets.qqRelayRabbitKey.path;
-      CACHE_DIR = "/var/cache/qq-napcat-relay";
-    };
-  };
-
-  systemd.services.qq-napcat-relay-restart = {
-    description = "Restart QQ-NapCat RabbitMQ Relay";
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${pkgs.systemd}/bin/systemctl restart qq-napcat-relay.service";
-    };
-  };
-
-  systemd.timers.qq-napcat-relay-restart = {
-    description = "Daily 05:00 restart of QQ-NapCat RabbitMQ Relay";
-    wantedBy = [ "timers.target" ];
-    timerConfig = {
-      OnCalendar = "*-*-* 05:00:00";
-      Persistent = true;
-    };
-  };
-
-      age.secrets.qqRelayRabbitCa = {
-        file = ../secrets/hermes-rabbit-ca.age;
-        owner = "napcat";
-        group = "users";
-        mode = "400";
+    assertions = [
+      {
+        assertion = config.services.napcat.enable;
+        message = "QQ relay requires services.napcat.enable.";
+      }
+    ];
+    systemd.services.qq-napcat-relay = {
+      description = "QQ-NapCat RabbitMQ Relay";
+      after = [
+        "network.target"
+        "network-online.target"
+        "napcat.service"
+      ]
+      ++ lib.optional config.services.rabbitmq.enable "rabbitmq.service";
+      wants = [ "network-online.target" ];
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig = {
+        User = "napcat";
+        ExecStart = "${qqRelay}/bin/qq-napcat-relay";
+        Restart = "always";
+        RestartSec = "10s";
+        EnvironmentFile = config.age.secrets.qqRelayEnv.path;
+        # Image byte cache; systemd creates /var/cache/qq-napcat-relay owned by the
+        # service user. The relay sweeps files >3h old hourly.
+        CacheDirectory = "qq-napcat-relay";
       };
-      age.secrets.qqRelayRabbitCert = {
-        file = ../secrets/hermes-rabbit-cert.age;
-        owner = "napcat";
-        group = "users";
-        mode = "400";
+      environment = {
+        RMQ_CAFILE = config.age.secrets.qqRelayRabbitCa.path;
+        RMQ_CERTFILE = config.age.secrets.qqRelayRabbitCert.path;
+        RMQ_KEYFILE = config.age.secrets.qqRelayRabbitKey.path;
+        CACHE_DIR = "/var/cache/qq-napcat-relay";
       };
-      age.secrets.qqRelayRabbitKey = {
-        file = ../secrets/hermes-rabbit-key.age;
-        owner = "napcat";
-        group = "users";
-        mode = "400";
+    };
+
+    systemd.services.qq-napcat-relay-restart = {
+      description = "Restart QQ-NapCat RabbitMQ Relay";
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = "${pkgs.systemd}/bin/systemctl restart qq-napcat-relay.service";
       };
+    };
+
+    systemd.timers.qq-napcat-relay-restart = {
+      description = "Daily 05:00 restart of QQ-NapCat RabbitMQ Relay";
+      wantedBy = [ "timers.target" ];
+      timerConfig = {
+        OnCalendar = "*-*-* 05:00:00";
+        Persistent = true;
+      };
+    };
+
+    age.secrets.qqRelayRabbitCa = {
+      file = ../secrets/hermes-rabbit-ca.age;
+      owner = "napcat";
+      group = "users";
+      mode = "400";
+    };
+    age.secrets.qqRelayRabbitCert = {
+      file = ../secrets/hermes-rabbit-cert.age;
+      owner = "napcat";
+      group = "users";
+      mode = "400";
+    };
+    age.secrets.qqRelayRabbitKey = {
+      file = ../secrets/hermes-rabbit-key.age;
+      owner = "napcat";
+      group = "users";
+      mode = "400";
+    };
   };
 }

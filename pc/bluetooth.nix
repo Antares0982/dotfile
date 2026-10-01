@@ -1,10 +1,15 @@
-{ lib, config, pkgs, ... }:
+{
+  lib,
+  config,
+  pkgs,
+  ...
+}:
 {
   config = lib.mkIf (config.hardware.bluetooth.enable) {
 
-  hardware.bluetooth = {
-    powerOnBoot = true;
-  };
+    hardware.bluetooth = {
+      powerOnBoot = true;
+    };
 
   };
 }

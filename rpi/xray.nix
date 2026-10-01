@@ -25,132 +25,133 @@ in
   options.antares.xray.enable = lib.mkEnableOption "Xray proxy and subscriptions";
   config = lib.mkIf (config.antares.xray.enable) {
 
-  environment.systemPackages = [ xs ];
+    environment.systemPackages = [ xs ];
 
-  # ── shared group for xray management ──
-  users.groups.xray = {
-    members = [
-      "antares"
+    # ── shared group for xray management ──
+    users.groups.xray = {
+      members = [
+        "antares"
+      ];
+    };
+
+    # ── directories ──
+    systemd.tmpfiles.rules = [
+      "d ${xrayDir} 0775 root xray - -"
+      "d ${subsDir} 0775 root xray - -"
+    ]
+    ++ lib.optionals config.antares.agent.enable [
+      "d ${triggerDir} 0700 agent agent - -"
     ];
-  };
 
-  # ── directories ──
-  systemd.tmpfiles.rules = [
-    "d ${xrayDir} 0775 root xray - -"
-    "d ${subsDir} 0775 root xray - -"
-  ] ++ lib.optionals config.antares.agent.enable [
-    "d ${triggerDir} 0700 agent agent - -"
-  ];
-
-  # ── subscription updater (oneshot + daily timer) ──
-  systemd.services.xray-sub = {
-    description = "Xray Subscription Updater";
-    after = [ "network-online.target" ];
-    wants = [ "network-online.target" ];
-    serviceConfig = {
-      Type = "oneshot";
-      User = "antares";
-      Group = "xray";
+    # ── subscription updater (oneshot + daily timer) ──
+    systemd.services.xray-sub = {
+      description = "Xray Subscription Updater";
+      after = [ "network-online.target" ];
+      wants = [ "network-online.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+        User = "antares";
+        Group = "xray";
+      };
+      script = ''
+        set -euo pipefail
+        ln -sf "${config.age.secrets.xraySubUrl.path}" "${xrayDir}/sub_url.txt"
+        ln -sf "${config.age.secrets.xrayTemplateJson.path}" "${xrayDir}/template.json"
+        trap 'rm -f "${xrayDir}/sub_url.txt" "${xrayDir}/template.json"' EXIT
+        export XRAY_CONF_DIR="${xrayDir}"
+        export XRAY_TEMPLATE="${xrayDir}/template.json"
+        ${xray-sub}/bin/xray_sub --headless
+      '';
     };
-    script = ''
-      set -euo pipefail
-      ln -sf "${config.age.secrets.xraySubUrl.path}" "${xrayDir}/sub_url.txt"
-      ln -sf "${config.age.secrets.xrayTemplateJson.path}" "${xrayDir}/template.json"
-      trap 'rm -f "${xrayDir}/sub_url.txt" "${xrayDir}/template.json"' EXIT
-      export XRAY_CONF_DIR="${xrayDir}"
-      export XRAY_TEMPLATE="${xrayDir}/template.json"
-      ${xray-sub}/bin/xray_sub --headless
-    '';
-  };
 
-  systemd.timers.xray-sub = {
-    description = "Daily Xray Subscription Update";
-    wantedBy = [ "timers.target" ];
-    timerConfig = {
-      OnCalendar = "daily";
-      Persistent = true;
+    systemd.timers.xray-sub = {
+      description = "Daily Xray Subscription Update";
+      wantedBy = [ "timers.target" ];
+      timerConfig = {
+        OnCalendar = "daily";
+        Persistent = true;
+      };
     };
-  };
 
-  # ── agent-triggered xray actions (bypasses sandbox sudo restriction) ──
-  systemd.services.xray-helper = lib.mkIf config.antares.agent.enable {
-    description = "Xray Action Helper (triggered by antares-agent)";
-    serviceConfig.Type = "oneshot";
-    script = ''
-      shopt -s nullglob
-      for f in "${triggerDir}"/*; do
-        action=$(basename "$f")
-        case "$action" in
-          restart)
-            ${pkgs.systemd}/bin/systemctl restart xray
-            ;;
-          update)
-            ${pkgs.systemd}/bin/systemctl start xray-sub
-            ;;
-          switch:*)
-            node="''${action#switch:}"
-            # Resolve relative paths to subsDir
-            [[ "$node" != /* ]] && node="${subsDir}/$node"
-            # Only allow real paths under subsDir, no traversal or self-reference
-            if [[ "$node" == *..* ]] || [[ "$node" != "${subsDir}/"* ]] || \
-               [[ "$(basename "$node")" == "active.json" ]]; then
-              rm -f "$f"; continue
+    # ── agent-triggered xray actions (bypasses sandbox sudo restriction) ──
+    systemd.services.xray-helper = lib.mkIf config.antares.agent.enable {
+      description = "Xray Action Helper (triggered by antares-agent)";
+      serviceConfig.Type = "oneshot";
+      script = ''
+        shopt -s nullglob
+        for f in "${triggerDir}"/*; do
+          action=$(basename "$f")
+          case "$action" in
+            restart)
+              ${pkgs.systemd}/bin/systemctl restart xray
+              ;;
+            update)
+              ${pkgs.systemd}/bin/systemctl start xray-sub
+              ;;
+            switch:*)
+              node="''${action#switch:}"
+              # Resolve relative paths to subsDir
+              [[ "$node" != /* ]] && node="${subsDir}/$node"
+              # Only allow real paths under subsDir, no traversal or self-reference
+              if [[ "$node" == *..* ]] || [[ "$node" != "${subsDir}/"* ]] || \
+                 [[ "$(basename "$node")" == "active.json" ]]; then
+                rm -f "$f"; continue
+              fi
+              ln -sf "$node" "${subsDir}/active.json"
+              ${pkgs.systemd}/bin/systemctl restart xray
+              ;;
+          esac
+          rm -f "$f"
+        done
+      '';
+    };
+
+    systemd.paths.xray-helper = lib.mkIf config.antares.agent.enable {
+      description = "Watch for xray trigger files";
+      wantedBy = [ "paths.target" ];
+      pathConfig = {
+        DirectoryNotEmpty = triggerDir;
+      };
+    };
+
+    # ── xray proxy service ──
+    systemd.services.xray = {
+      description = "Xray Proxy Service";
+      after = [ "network.target" ];
+      wantedBy = [ "default.target" ];
+      serviceConfig = {
+        ExecStartPre = toString (
+          pkgs.writeShellScript "xray-ensure-config" ''
+            # Bootstrap active.json if missing
+            if [ ! -e "${subsDir}/active.json" ]; then
+              FIRST=$(ls -1 "${subsDir}"/*.json 2>/dev/null | grep -v active.json | head -1)
+              [ -n "$FIRST" ] && ln -sf "$FIRST" "${subsDir}/active.json"
             fi
-            ln -sf "$node" "${subsDir}/active.json"
-            ${pkgs.systemd}/bin/systemctl restart xray
-            ;;
-        esac
-        rm -f "$f"
-      done
-    '';
-  };
-
-  systemd.paths.xray-helper = lib.mkIf config.antares.agent.enable {
-    description = "Watch for xray trigger files";
-    wantedBy = [ "paths.target" ];
-    pathConfig = {
-      DirectoryNotEmpty = triggerDir;
-    };
-  };
-
-  # ── xray proxy service ──
-  systemd.services.xray = {
-    description = "Xray Proxy Service";
-    after = [ "network.target" ];
-    wantedBy = [ "default.target" ];
-    serviceConfig = {
-      ExecStartPre = toString (
-        pkgs.writeShellScript "xray-ensure-config" ''
-          # Bootstrap active.json if missing
-          if [ ! -e "${subsDir}/active.json" ]; then
-            FIRST=$(ls -1 "${subsDir}"/*.json 2>/dev/null | grep -v active.json | head -1)
-            [ -n "$FIRST" ] && ln -sf "$FIRST" "${subsDir}/active.json"
-          fi
-          # Ensure config.json → active.json symlink
-          if [ ! -e "${xrayDir}/config.json" ] && [ -e "${subsDir}/active.json" ]; then
-            ln -sf "${subsDir}/active.json" "${xrayDir}/config.json"
-          fi
-        ''
-      );
-      ExecStart = "${myXray}/bin/xray -c ${xrayDir}/config.json";
-      User = "antares";
-      Group = "xray";
-      Restart = "on-failure";
-      RestartSec = "5s";
-    };
-  };
-
-      age.secrets.xraySubUrl = {
-        file = ../secrets/xraysub.age;
-        owner = "antares";
-        group = "xray";
-        mode = "440";
+            # Ensure config.json → active.json symlink
+            if [ ! -e "${xrayDir}/config.json" ] && [ -e "${subsDir}/active.json" ]; then
+              ln -sf "${subsDir}/active.json" "${xrayDir}/config.json"
+            fi
+          ''
+        );
+        ExecStart = "${myXray}/bin/xray -c ${xrayDir}/config.json";
+        User = "antares";
+        Group = "xray";
+        Restart = "on-failure";
+        RestartSec = "5s";
       };
-      age.secrets.xrayTemplateJson = {
-        file = ../secrets/xray-template-json.age;
-        owner = "antares";
-        group = "xray";
-        mode = "440";
-      };
+    };
+
+    age.secrets.xraySubUrl = {
+      file = ../secrets/xraysub.age;
+      owner = "antares";
+      group = "xray";
+      mode = "440";
+    };
+    age.secrets.xrayTemplateJson = {
+      file = ../secrets/xray-template-json.age;
+      owner = "antares";
+      group = "xray";
+      mode = "440";
+    };
   };
 }

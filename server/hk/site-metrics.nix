@@ -1,4 +1,5 @@
-{ lib,
+{
+  lib,
   config,
   pkgs,
   visitor-badge,
@@ -25,129 +26,133 @@ in
 {
   options.antares.blog.metrics.enable = lib.mkEnableOption "blog statistics";
   config = lib.mkIf (config.antares.blog.enable && config.antares.blog.metrics.enable) {
-    assertions = [ { assertion = config.services.mysql.enable; message = "Blog metrics require services.mysql.enable."; } ];
-
-  users.users.site-metrics = {
-    isSystemUser = true;
-    group = "site-metrics";
-    description = "Site metrics aggregator";
-  };
-  users.groups.site-metrics = { };
-
-  services.mysql = {
-    ensureDatabases = [ "site_metrics" ];
-    ensureUsers = [
+    assertions = [
       {
-        name = "site-metrics";
-        ensurePermissions."site_metrics.*" = "SELECT, INSERT, UPDATE, DELETE";
+        assertion = config.services.mysql.enable;
+        message = "Blog metrics require services.mysql.enable.";
       }
     ];
-  };
 
-  systemd.tmpfiles.rules = [
-    "d ${metricsDir} 0755 site-metrics site-metrics -"
-  ];
-
-  systemd.services.site-metrics-init = {
-    description = "Initialize site metrics";
-    after = [ "mysql.service" ];
-    requires = [ "mysql.service" ];
-    before = [ "site-metrics.service" ];
-    wantedBy = [ "multi-user.target" ];
-    path = paths;
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      ExecStart = "${command} init";
-      ProtectSystem = "strict";
-      ProtectHome = true;
-      PrivateDevices = true;
-      NoNewPrivileges = true;
-      ReadWritePaths = [ metricsDir ];
+    users.users.site-metrics = {
+      isSystemUser = true;
+      group = "site-metrics";
+      description = "Site metrics aggregator";
     };
-  };
+    users.groups.site-metrics = { };
 
-  systemd.services.site-metrics = {
-    description = "Aggregate nginx site metrics";
-    after = [
-      "mysql.service"
-      "nginx.service"
-      "site-metrics-init.service"
+    services.mysql = {
+      ensureDatabases = [ "site_metrics" ];
+      ensureUsers = [
+        {
+          name = "site-metrics";
+          ensurePermissions."site_metrics.*" = "SELECT, INSERT, UPDATE, DELETE";
+        }
+      ];
+    };
+
+    systemd.tmpfiles.rules = [
+      "d ${metricsDir} 0755 site-metrics site-metrics -"
     ];
-    requires = [
-      "mysql.service"
-      "site-metrics-init.service"
-    ];
-    path = paths;
-    serviceConfig = {
-      Type = "oneshot";
-      User = "site-metrics";
-      Group = "site-metrics";
-      ExecStart = "${command} update";
-      SupplementaryGroups = [ "nginx" ];
-      ProtectSystem = "strict";
-      ProtectHome = true;
-      PrivateDevices = true;
-      NoNewPrivileges = true;
-      ReadOnlyPaths = [ "/var/log/nginx" ];
-      ReadWritePaths = [ metricsDir ];
+
+    systemd.services.site-metrics-init = {
+      description = "Initialize site metrics";
+      after = [ "mysql.service" ];
+      requires = [ "mysql.service" ];
+      before = [ "site-metrics.service" ];
+      wantedBy = [ "multi-user.target" ];
+      path = paths;
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        ExecStart = "${command} init";
+        ProtectSystem = "strict";
+        ProtectHome = true;
+        PrivateDevices = true;
+        NoNewPrivileges = true;
+        ReadWritePaths = [ metricsDir ];
+      };
     };
-  };
 
-  systemd.timers.site-metrics = {
-    description = "Periodically aggregate site metrics";
-    wantedBy = [ "timers.target" ];
-    timerConfig = {
-      OnBootSec = "1m";
-      OnUnitActiveSec = "1m";
-      Persistent = true;
+    systemd.services.site-metrics = {
+      description = "Aggregate nginx site metrics";
+      after = [
+        "mysql.service"
+        "nginx.service"
+        "site-metrics-init.service"
+      ];
+      requires = [
+        "mysql.service"
+        "site-metrics-init.service"
+      ];
+      path = paths;
+      serviceConfig = {
+        Type = "oneshot";
+        User = "site-metrics";
+        Group = "site-metrics";
+        ExecStart = "${command} update";
+        SupplementaryGroups = [ "nginx" ];
+        ProtectSystem = "strict";
+        ProtectHome = true;
+        PrivateDevices = true;
+        NoNewPrivileges = true;
+        ReadOnlyPaths = [ "/var/log/nginx" ];
+        ReadWritePaths = [ metricsDir ];
+      };
     };
-  };
 
+    systemd.timers.site-metrics = {
+      description = "Periodically aggregate site metrics";
+      wantedBy = [ "timers.target" ];
+      timerConfig = {
+        OnBootSec = "1m";
+        OnUnitActiveSec = "1m";
+        Persistent = true;
+      };
+    };
 
-  services.nginx.commonHttpConfig = ''
-    log_format siteviews escape=none
-      '$time_iso8601	$remote_addr	$status	$request_uri	$http_user_agent';
-  '';
-  services.nginx.virtualHosts."chr.fan" = {
-    extraConfig = ''
-      access_log ${viewsLog} siteviews;
+    services.nginx.commonHttpConfig = ''
+      log_format siteviews escape=none
+        '$time_iso8601	$remote_addr	$status	$request_uri	$http_user_agent';
     '';
-    locations = {
-      "= /api/views.json" = {
-        alias = "${metricsDir}/views.json";
-        extraConfig = ''
-          types { }
-          default_type application/json;
-          add_header Cache-Control "public, max-age=300";
-          error_page 404 = @noviews;
-        '';
-      };
-      "@noviews".extraConfig = ''
-        default_type application/json;
-        return 200 '{}';
+    services.nginx.virtualHosts."chr.fan" = {
+      extraConfig = ''
+        access_log ${viewsLog} siteviews;
       '';
-      "= /api/visitor-badge.svg" = {
-        alias = "${metricsDir}/visitor-badge.svg";
-        extraConfig = ''
-          access_log ${badgeLog} siteviews;
-          types { }
-          default_type image/svg+xml;
-          add_header Cache-Control "no-cache, max-age=0, no-store, s-maxage=0, proxy-revalidate";
-          expires -1;
-          error_page 404 =200 /api/visitor-badge-unavailable.svg;
+      locations = {
+        "= /api/views.json" = {
+          alias = "${metricsDir}/views.json";
+          extraConfig = ''
+            types { }
+            default_type application/json;
+            add_header Cache-Control "public, max-age=300";
+            error_page 404 = @noviews;
+          '';
+        };
+        "@noviews".extraConfig = ''
+          default_type application/json;
+          return 200 '{}';
         '';
-      };
-      "= /api/visitor-badge-unavailable.svg" = {
-        alias = badgeFallback;
-        extraConfig = ''
-          internal;
-          access_log off;
-          types { }
-          default_type image/svg+xml;
-        '';
+        "= /api/visitor-badge.svg" = {
+          alias = "${metricsDir}/visitor-badge.svg";
+          extraConfig = ''
+            access_log ${badgeLog} siteviews;
+            types { }
+            default_type image/svg+xml;
+            add_header Cache-Control "no-cache, max-age=0, no-store, s-maxage=0, proxy-revalidate";
+            expires -1;
+            error_page 404 =200 /api/visitor-badge-unavailable.svg;
+          '';
+        };
+        "= /api/visitor-badge-unavailable.svg" = {
+          alias = badgeFallback;
+          extraConfig = ''
+            internal;
+            access_log off;
+            types { }
+            default_type image/svg+xml;
+          '';
+        };
       };
     };
-  };
   };
 }

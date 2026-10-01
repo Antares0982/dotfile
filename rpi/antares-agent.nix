@@ -198,349 +198,350 @@ in
   options.antares.agent.enable = lib.mkEnableOption "Antares agent and relay";
   config = lib.mkIf (config.antares.agent.enable) {
 
-  # The bundled `claude` is a generic-linux aarch64 ELF asking for
-  # /lib/ld-linux-aarch64.so.1, which does not exist on NixOS. nix-ld supplies
-  # it. The alternative measured in F13 -- patchelf --set-interpreter -- works
-  # but bakes in a glibc store path that gets GC'd on the next system upgrade,
-  # and has to be redone after every `uv sync`.
-  #
-  # nixpkgs' own claude-code was the third option and is rejected: this host's
-  # pin carries 2.1.81, roughly 140 releases behind the SDK, and aarch64 has no
-  # cache hit for it (~15 min build).
-  programs.nix-ld.enable = true;
+    # The bundled `claude` is a generic-linux aarch64 ELF asking for
+    # /lib/ld-linux-aarch64.so.1, which does not exist on NixOS. nix-ld supplies
+    # it. The alternative measured in F13 -- patchelf --set-interpreter -- works
+    # but bakes in a glibc store path that gets GC'd on the next system upgrade,
+    # and has to be redone after every `uv sync`.
+    #
+    # nixpkgs' own claude-code was the third option and is rejected: this host's
+    # pin carries 2.1.81, roughly 140 releases behind the SDK, and aarch64 has no
+    # cache hit for it (~15 min build).
+    programs.nix-ld.enable = true;
 
-  # Also system-wide, not only in the unit's `path` below. The CLI runs every
-  # Bash call through the login shell, and /etc/zshenv replaces PATH with the
-  # system PATH before running anything -- so the unit's PATH reaches the
-  # server process and nothing it spawns. Measured: `zsh:1: command not found:
-  # bwrap` on every sandboxed command, while `shutil.which` in the server
-  # found it fine. It fails closed, but the model reads the 127 as a broken
-  # sandbox and starts asking for `dangerouslyDisableSandbox` instead.
-  environment.systemPackages = with pkgs; [
-    bubblewrap
-    socat
-  ];
-
-  users.groups.${group} = { };
-  users.users.${user} = {
-    isNormalUser = true;
-    inherit home group;
-    description = "antares-agent runtime";
-    useDefaultShell = true;
-  };
-
-  users.users.${relayUser} = {
-    isSystemUser = true;
-    group = "users";
-    # Only so it can traverse /run/antares-agent, which is 0750 agent:agent.
-    # The socket itself ends up 0666 -- uvicorn chmods it -- so the directory
-    # is what actually keeps every other uid on this box out of the API.
-    extraGroups = [ group ];
-    description = "antares-agent bus relay";
-  };
-
-  systemd.generators.antares-agent-mounts = mountGenerator;
-
-  # A symlink into the store, so it is read-only for everyone including root.
-  environment.etc."antares-agent/hooks/commit-msg".source = commitMsgHook;
-
-  # BindPaths= below needs each source to exist on the host, so these are
-  # created before the unit runs rather than by the service itself.
-  systemd.tmpfiles.rules = [
-    "d ${workspace} 0750 ${user} ${group} - -"
-    "d ${workspace}/.agent 0750 ${user} ${group} - -"
-    "d ${home}/.claude 0700 ${user} ${group} - -"
-    "d ${appDir} 0755 ${user} ${group} - -"
-    # `f` seeds it once and leaves it alone afterwards, so the header
-    # survives as documentation and edits survive a rebuild.
-    "d /etc/antares-agent 0755 root root - -"
-    "f ${mountsFile} 0644 root root - # 一行一个路径，相对 ${home}；前缀 rw: 表示可写。改完 systemctl daemon-reload && systemctl restart antares-agent\\n"
-  ];
-
-  # `git pull` + `uv sync` before the agent starts. A unit of its own because
-  # the agent's has `BindReadOnlyPaths=${appDir}`, and a mount namespace is not
-  # something an ExecStartPre can step outside of -- see `updater` above.
-  #
-  # `wantedBy`, not `requiredBy`: a deploy that cannot reach the network must
-  # not keep the agent down. `before` still makes the agent wait for it, since
-  # a oneshot counts as activated only once it has exited.
-  systemd.services.antares-agent-update = {
-    description = "antares-agent: pull and sync the app before starting";
-    before = [ "antares-agent.service" ];
-    wantedBy = [ "antares-agent.service" ];
-    after = [ "network-online.target" ];
-    wants = [ "network-online.target" ];
-
-    environment = {
-      HOME = home;
-      http_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
-      https_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
-    };
-
-    serviceConfig = {
-      Type = "oneshot";
-      User = user;
-      Group = group;
-      ExecStart = "${updater}/bin/antares-agent-update";
-      # `uv sync` on this Pi takes minutes on a cold cache.
-      TimeoutStartSec = "15min";
-    };
-  };
-
-  systemd.services.antares-agent = {
-    description = "antares-agent: persistent multi-repo coding agent";
-    after = [
-      "network-online.target"
-    ] ++ lib.optional config.antares.xray.enable "xray.service";
-    wants = [ "network-online.target" ];
-    wantedBy = [ "multi-user.target" ];
-
-    path = runtimePath ++ [ "/run/current-system/sw" ];
-
-    environment = {
-      HOME = home;
-      ANTARES_WORKSPACE = workspace;
-      # A socket rather than a loopback port, and it replaces the port rather
-      # than joining it. The API has no authentication of its own, so on a host
-      # where actionrunner and ssrjsonrunner can also open sockets, a TCP
-      # listener means either of them can drive the agent. Here authorisation
-      # is the mode on /run/antares-agent. (F21 is about ANTHROPIC_BASE_URL not
-      # parsing socket URLs; it does not apply to our own listener.)
-      ANTARES_SOCKET = socketPath;
-      # Kept out of the workspace: everything under cwd is writable by the
-      # agent, and its own event log and thread store should not be.
-      ANTARES_DB_PATH = "${stateDir}/antares.db";
-      ANTARES_PROFILES_DIR = "${stateDir}/profiles";
-
-      # Profiles name a tier (`opus`/`sonnet`), never a provider model id, so
-      # one profile survives a change of endpoint. These are where the tier
-      # becomes concrete -- and they also cover the aliases the CLI resolves
-      # itself for subagents, which never see `profile.model`. Without them a
-      # spawned Explore asks the DeepSeek endpoint for "sonnet".
-      #
-      # F26: v4-flash barely fans out on its own, so the `deep` profile's
-      # orchestration tier has to be pro; `quick` is single-repo edits and
-      # flash is the right price for it.
-      ANTARES_MODEL_OPUS = "deepseek-flash";
-      ANTARES_MODEL_SONNET = "deepseek-flash";
-
-      # The CLI's own model requests go through the local proxy; sandboxed Bash
-      # cannot reach it (F22 measured the asymmetry).
-      http_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
-      https_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
-    };
-
-    serviceConfig = {
-      Type = "exec";
-      User = user;
-      Group = group;
-      WorkingDirectory = workspace;
-      ExecStart = "${launcher}/bin/antares-agent-launch";
-      EnvironmentFile = config.age.secrets.antaresAgentEnv.path;
-
-      StateDirectory = "antares-agent";
-      StateDirectoryMode = "0750";
-
-      RuntimeDirectory = runtimeDir;
-      # 0750, not 0755: only group `agent` -- which is the relay and nothing
-      # else -- can traverse far enough to reach the socket.
-      RuntimeDirectoryMode = "0750";
-
-      # V1: a process that dies with an approval pending leaves a consistent
-      # session -- the CLI synthesises the pending tool into a tool failure and
-      # closes the turn. Restarting is safe; the resumed thread just needs a
-      # nudge to retry.
-      Restart = "on-failure";
-      RestartSec = "10s";
-      TimeoutStopSec = "60s";
-      # KillMode is deliberately left at the default control-group. F1: when
-      # the parent is killed on its own, orphaned `claude` children keep making
-      # model requests, so every restart would otherwise accumulate another
-      # batch of them burning quota.
-
-      # V4: ~218MB PSS for the first live client and ~123MB for each further
-      # one, and this Pi has ~4GB free. The pool is capped at 6 in the
-      # application; this is the backstop for when a session's context grows.
-      MemoryHigh = "2G";
-      MemoryMax = "3G";
-
-      # Measured against bwrap on this machine (F12). Only two of these needed
-      # a special spelling; the rest are free.
-      NoNewPrivileges = true;
-      PrivateTmp = true;
-      ProtectSystem = "strict";
-      # ProtectKernelTunables is deliberately absent, and it is the one setting
-      # here that cannot be turned back on. It bind-mounts /proc/sys and
-      # friends read-only, which makes /proc no longer "fully visible" -- and
-      # the kernel then refuses to let an *unprivileged* user namespace mount a
-      # fresh procfs at all. bwrap dies with "Can't mount proc on
-      # /newroot/proc: Operation not permitted" on every single Bash call.
-      #
-      # F30: that is what actually happened here. The model read the failure as
-      # a broken sandbox, asked for `dangerouslyDisableSandbox`, and 32 of 35
-      # Bash calls in that session ran unconfined with the user approving each
-      # one. Trading tier 2 for this setting is a bad trade twice over: the
-      # service uid is unprivileged with NoNewPrivileges, so it cannot write
-      # kernel tunables regardless (measured -- EPERM without the option).
-      ProtectKernelModules = true;
-      ProtectControlGroups = true;
-      RestrictSUIDSGID = true;
-      RestrictRealtime = true;
-      # `claude` is a Bun binary; probed under this setting it still runs
-      # (2.1.222 reported --version cleanly), so the JIT tolerates W^X.
-      MemoryDenyWriteExecute = true;
-
-      # Not a list, and not "yes": RestrictNamespaces=user reads like "permit
-      # user" but means "permit *only* user", and bwrap --unshare-all needs
-      # every one of these. Dropping mnt alone is enough to break it.
-      RestrictNamespaces = "user mnt pid net ipc uts cgroup";
-      # @system-service excludes mount/pivot_root/umount2, so bwrap dies of
-      # SIGSYS without @mount.
-      SystemCallFilter = "@system-service @mount";
-
-      # tmpfs rather than read-only: read-only would still leave every other
-      # home on this box readable, which is exactly the F19 exposure. The
-      # paths the service actually needs come back explicitly -- and nothing
-      # else does, so a file dropped into /home/agent by hand is invisible to
-      # the service until it is named here. `-` means "skip if absent"; these
-      # are set up out of band and the unit should not refuse to start over
-      # one that has not been created yet.
-      ProtectHome = "tmpfs";
-      BindPaths = [
-        workspace
-        "${home}/.claude"
-        # Writable: gpg updates random_seed and keeps its agent socket here.
-        # Reading it is denied at the CLI layer anyway (`~/.gnupg` is in
-        # ANTARES_SECRET_PATHS), so signing works while `cat`ing the keyring
-        # does not.
-        "-${home}/.gnupg"
-        # Same bargain for gh: it needs to write its own config on a version
-        # migration, and `~/.config/gh` is on the same deny list, so `gh pr
-        # create` works while reading hosts.yml does not.
-        "-${home}/.config/gh"
-      ];
-      BindReadOnlyPaths = [
-        appDir
-        "-${home}/.gitconfig"
-      ];
-    };
-  };
-
-  # The Pi is behind NAT and the bot host is not, so neither can dial the
-  # other; both dial the broker on hk. This is the Pi-side end of that pipe.
-  # It carries the agent's own events rather than Telegram API calls, so it has
-  # no knowledge of either side's semantics -- see docs/design/04-telegram.md.
-  systemd.services.antares-agent-relay = {
-    description = "antares-agent: SSE/AMQP relay";
-    after = [
-      "network-online.target"
-      "antares-agent.service"
+    # Also system-wide, not only in the unit's `path` below. The CLI runs every
+    # Bash call through the login shell, and /etc/zshenv replaces PATH with the
+    # system PATH before running anything -- so the unit's PATH reaches the
+    # server process and nothing it spawns. Measured: `zsh:1: command not found:
+    # bwrap` on every sandboxed command, while `shutil.which` in the server
+    # found it fine. It fails closed, but the model reads the 127 as a broken
+    # sandbox and starts asking for `dangerouslyDisableSandbox` instead.
+    environment.systemPackages = with pkgs; [
+      bubblewrap
+      socat
     ];
-    wants = [ "network-online.target" ];
-    # Bound rather than merely ordered: without the agent there is no socket to
-    # call, and a relay that stays up would keep acknowledging commands it
-    # cannot serve.
-    bindsTo = [ "antares-agent.service" ];
-    wantedBy = [ "multi-user.target" ];
 
-    environment = {
-      ANTARES_API_SOCKET = socketPath;
-      ANTARES_FILE_URL = "https://tg.alyr.dev";
-      ANTARES_RELAY_STATE = "/var/lib/antares-agent-relay";
-      # Host, port, vhost and credentials all come from the EnvironmentFile
-      # below -- they are the retired hermes bridge's, reused wholesale, and
-      # guessing any one of them here would only mean a value that looks
-      # authoritative while being wrong.
-      #
-      # The certificate is not the login: verify_peer gates the TLS layer, but
-      # AMQP still authenticates with PLAIN on top of it, and the plugin that
-      # would map a certificate to a user is not enabled. Only these three
-      # paths stay here, because only Nix knows them.
-      RMQ_CAFILE = config.age.secrets.agentRelayRabbitCa.path;
-      RMQ_CERTFILE = config.age.secrets.agentRelayRabbitCert.path;
-      RMQ_KEYFILE = config.age.secrets.agentRelayRabbitKey.path;
-      # No proxy here on purpose: AMQP over TLS is not HTTP, so the xray proxy
-      # the CLI uses would not apply, and the broker is reachable directly.
+    users.groups.${group} = { };
+    users.users.${user} = {
+      isNormalUser = true;
+      inherit home group;
+      description = "antares-agent runtime";
+      useDefaultShell = true;
     };
 
-    serviceConfig = {
-      Type = "exec";
-      User = relayUser;
-      Group = "users";
-      SupplementaryGroups = [ group ];
-      ExecStart = "${relayLauncher}/bin/antares-agent-relay-launch";
-      Restart = "always";
-      RestartSec = "10s";
-      StateDirectory = "antares-agent-relay";
-      StateDirectoryMode = "0700";
-      EnvironmentFile = [
-        config.age.secrets.agentRelayEnv.path
-        config.age.secrets.agentFilesRelayEnv.path
-      ];
-
-      # No bwrap here, so none of F12's exemptions are needed -- this is a
-      # plain python process that talks to one socket and one broker.
-      NoNewPrivileges = true;
-      PrivateTmp = true;
-      PrivateDevices = true;
-      ProtectSystem = "strict";
-      ProtectHome = "tmpfs";
-      ProtectKernelTunables = true;
-      ProtectKernelModules = true;
-      ProtectControlGroups = true;
-      RestrictSUIDSGID = true;
-      RestrictRealtime = true;
-      RestrictNamespaces = true;
-      LockPersonality = true;
-      SystemCallFilter = "@system-service";
-      SystemCallArchitectures = "native";
-      RestrictAddressFamilies = [
-        "AF_UNIX"
-        "AF_INET"
-        "AF_INET6"
-        # glibc's getaddrinfo opens a netlink socket to enumerate local
-        # addresses for source selection. Without this, resolving the broker's
-        # hostname fails in a way that looks like a network problem.
-        "AF_NETLINK"
-      ];
-      MemoryMax = "256M";
-
-      BindReadOnlyPaths = [ appDir ];
+    users.users.${relayUser} = {
+      isSystemUser = true;
+      group = "users";
+      # Only so it can traverse /run/antares-agent, which is 0750 agent:agent.
+      # The socket itself ends up 0666 -- uvicorn chmods it -- so the directory
+      # is what actually keeps every other uid on this box out of the API.
+      extraGroups = [ group ];
+      description = "antares-agent bus relay";
     };
-  };
 
-      age.secrets.antaresAgentEnv = {
-        file = ../secrets/antares-agent-env.age;
-        mode = "400";
+    systemd.generators.antares-agent-mounts = mountGenerator;
+
+    # A symlink into the store, so it is read-only for everyone including root.
+    environment.etc."antares-agent/hooks/commit-msg".source = commitMsgHook;
+
+    # BindPaths= below needs each source to exist on the host, so these are
+    # created before the unit runs rather than by the service itself.
+    systemd.tmpfiles.rules = [
+      "d ${workspace} 0750 ${user} ${group} - -"
+      "d ${workspace}/.agent 0750 ${user} ${group} - -"
+      "d ${home}/.claude 0700 ${user} ${group} - -"
+      "d ${appDir} 0755 ${user} ${group} - -"
+      # `f` seeds it once and leaves it alone afterwards, so the header
+      # survives as documentation and edits survive a rebuild.
+      "d /etc/antares-agent 0755 root root - -"
+      "f ${mountsFile} 0644 root root - # 一行一个路径，相对 ${home}；前缀 rw: 表示可写。改完 systemctl daemon-reload && systemctl restart antares-agent\\n"
+    ];
+
+    # `git pull` + `uv sync` before the agent starts. A unit of its own because
+    # the agent's has `BindReadOnlyPaths=${appDir}`, and a mount namespace is not
+    # something an ExecStartPre can step outside of -- see `updater` above.
+    #
+    # `wantedBy`, not `requiredBy`: a deploy that cannot reach the network must
+    # not keep the agent down. `before` still makes the agent wait for it, since
+    # a oneshot counts as activated only once it has exited.
+    systemd.services.antares-agent-update = {
+      description = "antares-agent: pull and sync the app before starting";
+      before = [ "antares-agent.service" ];
+      wantedBy = [ "antares-agent.service" ];
+      after = [ "network-online.target" ];
+      wants = [ "network-online.target" ];
+
+      environment = {
+        HOME = home;
+        http_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
+        https_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
       };
-      age.secrets.agentRelayRabbitCa = {
-        file = ../secrets/hermes-rabbit-ca.age;
-        owner = "agent-relay";
-        group = "users";
-        mode = "400";
+
+      serviceConfig = {
+        Type = "oneshot";
+        User = user;
+        Group = group;
+        ExecStart = "${updater}/bin/antares-agent-update";
+        # `uv sync` on this Pi takes minutes on a cold cache.
+        TimeoutStartSec = "15min";
       };
-      age.secrets.agentRelayRabbitCert = {
-        file = ../secrets/hermes-rabbit-cert.age;
-        owner = "agent-relay";
-        group = "users";
-        mode = "400";
+    };
+
+    systemd.services.antares-agent = {
+      description = "antares-agent: persistent multi-repo coding agent";
+      after = [
+        "network-online.target"
+      ]
+      ++ lib.optional config.antares.xray.enable "xray.service";
+      wants = [ "network-online.target" ];
+      wantedBy = [ "multi-user.target" ];
+
+      path = runtimePath ++ [ "/run/current-system/sw" ];
+
+      environment = {
+        HOME = home;
+        ANTARES_WORKSPACE = workspace;
+        # A socket rather than a loopback port, and it replaces the port rather
+        # than joining it. The API has no authentication of its own, so on a host
+        # where actionrunner and ssrjsonrunner can also open sockets, a TCP
+        # listener means either of them can drive the agent. Here authorisation
+        # is the mode on /run/antares-agent. (F21 is about ANTHROPIC_BASE_URL not
+        # parsing socket URLs; it does not apply to our own listener.)
+        ANTARES_SOCKET = socketPath;
+        # Kept out of the workspace: everything under cwd is writable by the
+        # agent, and its own event log and thread store should not be.
+        ANTARES_DB_PATH = "${stateDir}/antares.db";
+        ANTARES_PROFILES_DIR = "${stateDir}/profiles";
+
+        # Profiles name a tier (`opus`/`sonnet`), never a provider model id, so
+        # one profile survives a change of endpoint. These are where the tier
+        # becomes concrete -- and they also cover the aliases the CLI resolves
+        # itself for subagents, which never see `profile.model`. Without them a
+        # spawned Explore asks the DeepSeek endpoint for "sonnet".
+        #
+        # F26: v4-flash barely fans out on its own, so the `deep` profile's
+        # orchestration tier has to be pro; `quick` is single-repo edits and
+        # flash is the right price for it.
+        ANTARES_MODEL_OPUS = "deepseek-flash";
+        ANTARES_MODEL_SONNET = "deepseek-flash";
+
+        # The CLI's own model requests go through the local proxy; sandboxed Bash
+        # cannot reach it (F22 measured the asymmetry).
+        http_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
+        https_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
       };
-      age.secrets.agentRelayRabbitKey = {
-        file = ../secrets/hermes-rabbit-key.age;
-        owner = "agent-relay";
-        group = "users";
-        mode = "400";
+
+      serviceConfig = {
+        Type = "exec";
+        User = user;
+        Group = group;
+        WorkingDirectory = workspace;
+        ExecStart = "${launcher}/bin/antares-agent-launch";
+        EnvironmentFile = config.age.secrets.antaresAgentEnv.path;
+
+        StateDirectory = "antares-agent";
+        StateDirectoryMode = "0750";
+
+        RuntimeDirectory = runtimeDir;
+        # 0750, not 0755: only group `agent` -- which is the relay and nothing
+        # else -- can traverse far enough to reach the socket.
+        RuntimeDirectoryMode = "0750";
+
+        # V1: a process that dies with an approval pending leaves a consistent
+        # session -- the CLI synthesises the pending tool into a tool failure and
+        # closes the turn. Restarting is safe; the resumed thread just needs a
+        # nudge to retry.
+        Restart = "on-failure";
+        RestartSec = "10s";
+        TimeoutStopSec = "60s";
+        # KillMode is deliberately left at the default control-group. F1: when
+        # the parent is killed on its own, orphaned `claude` children keep making
+        # model requests, so every restart would otherwise accumulate another
+        # batch of them burning quota.
+
+        # V4: ~218MB PSS for the first live client and ~123MB for each further
+        # one, and this Pi has ~4GB free. The pool is capped at 6 in the
+        # application; this is the backstop for when a session's context grows.
+        MemoryHigh = "2G";
+        MemoryMax = "3G";
+
+        # Measured against bwrap on this machine (F12). Only two of these needed
+        # a special spelling; the rest are free.
+        NoNewPrivileges = true;
+        PrivateTmp = true;
+        ProtectSystem = "strict";
+        # ProtectKernelTunables is deliberately absent, and it is the one setting
+        # here that cannot be turned back on. It bind-mounts /proc/sys and
+        # friends read-only, which makes /proc no longer "fully visible" -- and
+        # the kernel then refuses to let an *unprivileged* user namespace mount a
+        # fresh procfs at all. bwrap dies with "Can't mount proc on
+        # /newroot/proc: Operation not permitted" on every single Bash call.
+        #
+        # F30: that is what actually happened here. The model read the failure as
+        # a broken sandbox, asked for `dangerouslyDisableSandbox`, and 32 of 35
+        # Bash calls in that session ran unconfined with the user approving each
+        # one. Trading tier 2 for this setting is a bad trade twice over: the
+        # service uid is unprivileged with NoNewPrivileges, so it cannot write
+        # kernel tunables regardless (measured -- EPERM without the option).
+        ProtectKernelModules = true;
+        ProtectControlGroups = true;
+        RestrictSUIDSGID = true;
+        RestrictRealtime = true;
+        # `claude` is a Bun binary; probed under this setting it still runs
+        # (2.1.222 reported --version cleanly), so the JIT tolerates W^X.
+        MemoryDenyWriteExecute = true;
+
+        # Not a list, and not "yes": RestrictNamespaces=user reads like "permit
+        # user" but means "permit *only* user", and bwrap --unshare-all needs
+        # every one of these. Dropping mnt alone is enough to break it.
+        RestrictNamespaces = "user mnt pid net ipc uts cgroup";
+        # @system-service excludes mount/pivot_root/umount2, so bwrap dies of
+        # SIGSYS without @mount.
+        SystemCallFilter = "@system-service @mount";
+
+        # tmpfs rather than read-only: read-only would still leave every other
+        # home on this box readable, which is exactly the F19 exposure. The
+        # paths the service actually needs come back explicitly -- and nothing
+        # else does, so a file dropped into /home/agent by hand is invisible to
+        # the service until it is named here. `-` means "skip if absent"; these
+        # are set up out of band and the unit should not refuse to start over
+        # one that has not been created yet.
+        ProtectHome = "tmpfs";
+        BindPaths = [
+          workspace
+          "${home}/.claude"
+          # Writable: gpg updates random_seed and keeps its agent socket here.
+          # Reading it is denied at the CLI layer anyway (`~/.gnupg` is in
+          # ANTARES_SECRET_PATHS), so signing works while `cat`ing the keyring
+          # does not.
+          "-${home}/.gnupg"
+          # Same bargain for gh: it needs to write its own config on a version
+          # migration, and `~/.config/gh` is on the same deny list, so `gh pr
+          # create` works while reading hosts.yml does not.
+          "-${home}/.config/gh"
+        ];
+        BindReadOnlyPaths = [
+          appDir
+          "-${home}/.gitconfig"
+        ];
       };
-      age.secrets.agentFilesRelayEnv = {
-        file = ../secrets/agent-files-relay-env.age;
-        owner = "agent-relay";
-        mode = "400";
+    };
+
+    # The Pi is behind NAT and the bot host is not, so neither can dial the
+    # other; both dial the broker on hk. This is the Pi-side end of that pipe.
+    # It carries the agent's own events rather than Telegram API calls, so it has
+    # no knowledge of either side's semantics -- see docs/design/04-telegram.md.
+    systemd.services.antares-agent-relay = {
+      description = "antares-agent: SSE/AMQP relay";
+      after = [
+        "network-online.target"
+        "antares-agent.service"
+      ];
+      wants = [ "network-online.target" ];
+      # Bound rather than merely ordered: without the agent there is no socket to
+      # call, and a relay that stays up would keep acknowledging commands it
+      # cannot serve.
+      bindsTo = [ "antares-agent.service" ];
+      wantedBy = [ "multi-user.target" ];
+
+      environment = {
+        ANTARES_API_SOCKET = socketPath;
+        ANTARES_FILE_URL = "https://tg.alyr.dev";
+        ANTARES_RELAY_STATE = "/var/lib/antares-agent-relay";
+        # Host, port, vhost and credentials all come from the EnvironmentFile
+        # below -- they are the retired hermes bridge's, reused wholesale, and
+        # guessing any one of them here would only mean a value that looks
+        # authoritative while being wrong.
+        #
+        # The certificate is not the login: verify_peer gates the TLS layer, but
+        # AMQP still authenticates with PLAIN on top of it, and the plugin that
+        # would map a certificate to a user is not enabled. Only these three
+        # paths stay here, because only Nix knows them.
+        RMQ_CAFILE = config.age.secrets.agentRelayRabbitCa.path;
+        RMQ_CERTFILE = config.age.secrets.agentRelayRabbitCert.path;
+        RMQ_KEYFILE = config.age.secrets.agentRelayRabbitKey.path;
+        # No proxy here on purpose: AMQP over TLS is not HTTP, so the xray proxy
+        # the CLI uses would not apply, and the broker is reachable directly.
       };
-      age.secrets.agentRelayEnv = {
-        file = ../secrets/agent-relay-env.age;
-        owner = "agent-relay";
-        group = "users";
-        mode = "400";
+
+      serviceConfig = {
+        Type = "exec";
+        User = relayUser;
+        Group = "users";
+        SupplementaryGroups = [ group ];
+        ExecStart = "${relayLauncher}/bin/antares-agent-relay-launch";
+        Restart = "always";
+        RestartSec = "10s";
+        StateDirectory = "antares-agent-relay";
+        StateDirectoryMode = "0700";
+        EnvironmentFile = [
+          config.age.secrets.agentRelayEnv.path
+          config.age.secrets.agentFilesRelayEnv.path
+        ];
+
+        # No bwrap here, so none of F12's exemptions are needed -- this is a
+        # plain python process that talks to one socket and one broker.
+        NoNewPrivileges = true;
+        PrivateTmp = true;
+        PrivateDevices = true;
+        ProtectSystem = "strict";
+        ProtectHome = "tmpfs";
+        ProtectKernelTunables = true;
+        ProtectKernelModules = true;
+        ProtectControlGroups = true;
+        RestrictSUIDSGID = true;
+        RestrictRealtime = true;
+        RestrictNamespaces = true;
+        LockPersonality = true;
+        SystemCallFilter = "@system-service";
+        SystemCallArchitectures = "native";
+        RestrictAddressFamilies = [
+          "AF_UNIX"
+          "AF_INET"
+          "AF_INET6"
+          # glibc's getaddrinfo opens a netlink socket to enumerate local
+          # addresses for source selection. Without this, resolving the broker's
+          # hostname fails in a way that looks like a network problem.
+          "AF_NETLINK"
+        ];
+        MemoryMax = "256M";
+
+        BindReadOnlyPaths = [ appDir ];
       };
+    };
+
+    age.secrets.antaresAgentEnv = {
+      file = ../secrets/antares-agent-env.age;
+      mode = "400";
+    };
+    age.secrets.agentRelayRabbitCa = {
+      file = ../secrets/hermes-rabbit-ca.age;
+      owner = "agent-relay";
+      group = "users";
+      mode = "400";
+    };
+    age.secrets.agentRelayRabbitCert = {
+      file = ../secrets/hermes-rabbit-cert.age;
+      owner = "agent-relay";
+      group = "users";
+      mode = "400";
+    };
+    age.secrets.agentRelayRabbitKey = {
+      file = ../secrets/hermes-rabbit-key.age;
+      owner = "agent-relay";
+      group = "users";
+      mode = "400";
+    };
+    age.secrets.agentFilesRelayEnv = {
+      file = ../secrets/agent-files-relay-env.age;
+      owner = "agent-relay";
+      mode = "400";
+    };
+    age.secrets.agentRelayEnv = {
+      file = ../secrets/agent-relay-env.age;
+      owner = "agent-relay";
+      group = "users";
+      mode = "400";
+    };
   };
 }

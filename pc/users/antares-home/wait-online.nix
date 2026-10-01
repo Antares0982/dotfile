@@ -16,47 +16,51 @@ in
 {
   config = lib.mkIf (osConfig.antares.waitOnline.enable) {
 
-  systemd.user.services.waitOnline = {
-    Unit = {
-      Description = "Wait until we're connected to the Internet";
-      After = [ "network.target" ];
+    systemd.user.services.waitOnline = {
+      Unit = {
+        Description = "Wait until we're connected to the Internet";
+        After = [ "network.target" ];
+      };
+
+      Service = {
+        Type = "notify";
+        ExecStart = ''
+          ${pyenv}/bin/python check-online
+        '';
+        TimeoutStartSec = "infinity";
+        WorkingDirectory = "${envs.envs.GITHUB_DIR}/wait-online";
+        Environment = [
+        ]
+        ++ lib.optionals osConfig.antares.proxy.enable [
+          "http_proxy=${osConfig.antares.proxy.httpUrl}"
+          "https_proxy=${osConfig.antares.proxy.httpUrl}"
+        ];
+      };
+
+      Install = {
+        WantedBy = [ "network-online.target" ];
+        Also = "wait-online-onresume.service";
+      };
     };
 
-    Service = {
-      Type = "notify";
-      ExecStart = ''
-        ${pyenv}/bin/python check-online
-      '';
-      TimeoutStartSec = "infinity";
-      WorkingDirectory = "${envs.envs.GITHUB_DIR}/wait-online";
-      Environment = [
-      ] ++ lib.optionals osConfig.antares.proxy.enable [ "http_proxy=${osConfig.antares.proxy.httpUrl}" "https_proxy=${osConfig.antares.proxy.httpUrl}" ];
-    };
+    systemd.user.services.waitOnlineOnresume = {
+      Unit = {
+        Description = "Restart wait-online on resume";
+        Before = [ "sleep.target" ];
+        StopWhenUnneeded = "yes";
+      };
 
-    Install = {
-      WantedBy = [ "network-online.target" ];
-      Also = "wait-online-onresume.service";
-    };
-  };
+      Service = {
+        Type = "oneshot";
+        RemainAfterExit = "yes";
+        ExecStop = "${pkgs.systemd}/bin/systemctl --user try-restart wait-online.service";
+        TimeoutStartSec = "infinity";
+      };
 
-  systemd.user.services.waitOnlineOnresume = {
-    Unit = {
-      Description = "Restart wait-online on resume";
-      Before = [ "sleep.target" ];
-      StopWhenUnneeded = "yes";
+      Install = {
+        WantedBy = [ "sleep.target" ];
+      };
     };
-
-    Service = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStop = "${pkgs.systemd}/bin/systemctl --user try-restart wait-online.service";
-      TimeoutStartSec = "infinity";
-    };
-
-    Install = {
-      WantedBy = [ "sleep.target" ];
-    };
-  };
 
   };
 }
