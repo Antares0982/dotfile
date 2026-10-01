@@ -53,22 +53,5 @@
     xarchiver
     ydotool
 
-    # niri ecosystem
-    fuzzel
-    grim
-    kdePackages.kio-fuse
-    kdePackages.kio-extras
-    kitty
-    lxqt.lxqt-policykit
-    mako
-    pavucontrol
-    slurp
-    swaylock
-    swaybg
-    thunar
-    thunar-archive-plugin
-    waybar
-    wl-clipboard
-    xdg-terminal-exec
   ];
 }

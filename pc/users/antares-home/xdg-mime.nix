@@ -1,5 +1,7 @@
-{ config, ... }:
+{ lib, config, osConfig, ... }:
 {
+  config = lib.mkIf (osConfig.antares.desktop.enable) {
+
   xdg = {
     configFile."xdg-terminals.list".text = "kitty.desktop\n";
     mimeApps = {
@@ -43,5 +45,7 @@
         "x-scheme-handler/tonsite" = [ "org.telegram.desktop.desktop" ];
       };
     };
+  };
+
   };
 }

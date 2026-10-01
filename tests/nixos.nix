@@ -40,4 +40,17 @@
     module = { lib, ... }: { services.rabbitmq.enable = lib.mkForce false; };
     check = c: !(c.systemd.services ? rabbitmq) && !(c.users.users ? rabbitmq);
   }
+  {
+    name = "desktop-off";
+    module = { lib, ... }: { antares.desktop.enable = lib.mkForce false; };
+    check =
+      c:
+      !c.programs.niri.enable
+      && !c.services.greetd.enable
+      && !c.programs.kdeconnect.enable
+      && !c.home-manager.users.antares.xdg.mimeApps.enable
+      && !(c.environment.sessionVariables ? NIXOS_OZONE_WL)
+      && !(lib.any (p: p.from == 1714) c.networking.firewall.allowedTCPPortRanges)
+      && c.users.users ? antares;
+  }
 ]

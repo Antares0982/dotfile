@@ -1,5 +1,8 @@
-{ config, pkgs, ... }:
+{ lib, config, pkgs, ... }:
 {
+  options.antares.desktop.enable = lib.mkEnableOption "desktop session and integration";
+  config = lib.mkIf (config.antares.desktop.enable) {
+
   programs = {
     niri.enable = true;
     xwayland.enable = true;
@@ -39,9 +42,31 @@
     systemPackages = with pkgs; [
       gvfs
       xwayland-satellite
+    fuzzel
+    grim
+    kdePackages.kio-fuse
+    kdePackages.kio-extras
+    kitty
+    lxqt.lxqt-policykit
+    mako
+    pavucontrol
+    slurp
+    swaylock
+    swaybg
+    thunar
+    thunar-archive-plugin
+    waybar
+    wl-clipboard
+    xdg-terminal-exec
     ];
     sessionVariables.NIXOS_OZONE_WL = "1";
   };
 
   security.polkit.enable = true;
+
+  networking.firewall = {
+    allowedTCPPortRanges = [ { from = 1714; to = 1764; } ];
+    allowedUDPPortRanges = [ { from = 1714; to = 1764; } ];
+  };
+  };
 }

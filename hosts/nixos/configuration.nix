@@ -6,4 +6,5 @@
   antares.proxy.enable = true;
   antares.autostart.enable = true;
   services.rabbitmq.enable = true;
+  antares.desktop.enable = true;
 }
