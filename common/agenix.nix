@@ -43,18 +43,6 @@ in
       # the retired hermes bridge's values, reused wholesale. Its own file
       # rather than a second owner on hermes-env.age, which carries a good deal
       # more than these five lines.
-      xraySubUrl = {
-        file = ../secrets/xraysub.age;
-        owner = "antares";
-        group = "xray";
-        mode = "440";
-      };
-      xrayTemplateJson = {
-        file = ../secrets/xray-template-json.age;
-        owner = "antares";
-        group = "xray";
-        mode = "440";
-      };
     }
     # ---- HK server only ----
     // lib.optionalAttrs isHkServer {

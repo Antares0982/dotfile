@@ -23,6 +23,9 @@ let
   triggerDir = "/home/agent/agent_work/.agent/xray-trigger";
 in
 {
+  options.antares.xray.enable = lib.mkEnableOption "Xray proxy and subscriptions";
+  config = lib.mkIf (config.antares.xray.enable) {
+
   environment.systemPackages = [ xs ];
 
   # ── shared group for xray management ──
@@ -136,5 +139,19 @@ in
       Restart = "on-failure";
       RestartSec = "5s";
     };
+  };
+
+      age.secrets.xraySubUrl = {
+        file = ../secrets/xraysub.age;
+        owner = "antares";
+        group = "xray";
+        mode = "440";
+      };
+      age.secrets.xrayTemplateJson = {
+        file = ../secrets/xray-template-json.age;
+        owner = "antares";
+        group = "xray";
+        mode = "440";
+      };
   };
 }

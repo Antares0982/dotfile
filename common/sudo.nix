@@ -8,7 +8,7 @@
   security = {
     sudo = {
       wheelNeedsPassword = false;
-      extraConfig = lib.optionalString currentDevice.useProxy ''
+      extraConfig = lib.optionalString (config.antares.proxy.enable or currentDevice.useProxy) ''
         Defaults env_keep += "http_proxy https_proxy"
       '';
     };

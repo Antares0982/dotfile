@@ -10,7 +10,9 @@ let
   lib = system.pkgs.lib;
   cfg = system.config;
   casesFile = ./. + "/${host}.nix";
-  cases = if builtins.pathExists casesFile then import casesFile { inherit lib; } else [ ];
+  allCases = if builtins.pathExists casesFile then import casesFile { inherit lib; } else [ ];
+  pattern = builtins.getEnv "CHECK_CASE";
+  cases = lib.filter (case: pattern == "" || builtins.match pattern case.name != null) allCases;
   drv =
     evaluated:
     if darwin then evaluated.system.drvPath else evaluated.config.system.build.toplevel.drvPath;
@@ -25,6 +27,9 @@ let
     assert lib.assertMsg (valid == (case.valid or true)) "${host}: ${case.name} assertions";
     if case.valid or true then builtins.seq (drv evaluated) true else true;
 in
+assert lib.assertMsg (
+  pattern == "" || cases != [ ]
+) "No matching feature checks for ${host}: ${pattern}";
 if snapshot then
   {
     users = lib.mapAttrs (_: user: {

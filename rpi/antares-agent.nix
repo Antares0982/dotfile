@@ -273,8 +273,8 @@ in
 
     environment = {
       HOME = home;
-      http_proxy = "http://127.0.0.1:1081";
-      https_proxy = "http://127.0.0.1:1081";
+      http_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
+      https_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
     };
 
     serviceConfig = {
@@ -291,8 +291,7 @@ in
     description = "antares-agent: persistent multi-repo coding agent";
     after = [
       "network-online.target"
-      "xray.service"
-    ];
+    ] ++ lib.optional config.antares.xray.enable "xray.service";
     wants = [ "network-online.target" ];
     wantedBy = [ "multi-user.target" ];
 
@@ -327,8 +326,8 @@ in
 
       # The CLI's own model requests go through the local proxy; sandboxed Bash
       # cannot reach it (F22 measured the asymmetry).
-      http_proxy = "http://127.0.0.1:1081";
-      https_proxy = "http://127.0.0.1:1081";
+      http_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
+      https_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
     };
 
     serviceConfig = {

@@ -139,4 +139,28 @@
       && c.age.secrets ? qqRelayEnv
       && c.systemd.services ? qq-napcat-relay;
   }
+  {
+    name = "xray-off";
+    module = { lib, ... }: {
+      antares.xray.enable = lib.mkForce false;
+      antares.proxy.enable = lib.mkForce false;
+    };
+    check =
+      c:
+      !(c.systemd.services ? xray)
+      && !(c.systemd.services ? xray-sub)
+      && !(c.systemd.services ? xray-helper)
+      && !(c.systemd.paths ? xray-helper)
+      && !(c.users.groups ? xray)
+      && !(c.age.secrets ? xraySubUrl)
+      && !(c.environment.variables ? http_proxy)
+      && !(c.systemd.services.antares-agent.environment ? http_proxy)
+      && !(lib.elem "xray.service" c.systemd.services.antares-agent.after);
+  }
+  {
+    name = "xray-dependency";
+    module = { lib, ... }: { antares.xray.enable = lib.mkForce false; };
+    check = c: true;
+    valid = false;
+  }
 ]

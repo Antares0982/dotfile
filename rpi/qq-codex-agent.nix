@@ -70,8 +70,8 @@ let
     asyncio.run(main())
   '';
   environment = {
-    http_proxy = "http://127.0.0.1:1081";
-    https_proxy = "http://127.0.0.1:1081";
+    http_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
+    https_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
     no_proxy = "127.0.0.1,localhost,::1";
     NIX_REMOTE = "daemon";
     NIX_CONFIG = "experimental-features = nix-command flakes";
@@ -148,9 +148,8 @@ in
     systemd.services.qq-codex-agent = {
       after = [
         "napcat.service"
-        "xray.service"
         "qq-codex-auth.service"
-      ];
+      ] ++ lib.optional config.antares.xray.enable "xray.service";
       requires = [ "qq-codex-auth.service" ];
       restartTriggers = [
         config.age.secrets.qqRelayEnv.file

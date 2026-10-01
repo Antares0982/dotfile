@@ -17,6 +17,7 @@
     ../modules/nixos/runners.nix
     ./ssh-probe.nix
     ./user.nix
+    ../modules/proxy.nix
     ./xray.nix
     ./napcat.nix
     ./qq.nix
