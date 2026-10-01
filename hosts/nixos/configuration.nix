@@ -8,4 +8,5 @@
   services.rabbitmq.enable = true;
   antares.desktop.enable = true;
   services.pipewire.enable = true;
+  hardware.bluetooth.enable = true;
 }

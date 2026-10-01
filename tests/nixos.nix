@@ -59,4 +59,9 @@
     check =
       c: !c.security.rtkit.enable && !(c.systemd.services ? rtkit-daemon) && !c.services.pipewire.enable;
   }
+  {
+    name = "bluetooth-off";
+    module = { lib, ... }: { hardware.bluetooth.enable = lib.mkForce false; };
+    check = c: !(c.systemd.services ? bluetooth) && !c.hardware.bluetooth.enable;
+  }
 ]
