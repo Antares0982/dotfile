@@ -1,4 +1,4 @@
-{
+{ lib,
   config,
   pkgs,
   rust-overlay,
@@ -8,6 +8,9 @@ let
   rust-overlay-minimal = pkgs.rust-bin.stable.latest.minimal;
 in
 {
+  options.antares.rust.enable = lib.mkEnableOption "Rust development toolchain";
+  config = lib.mkIf (config.antares.rust.enable) {
+
   nixpkgs.overlays = [
     rust-overlay
   ];
@@ -26,4 +29,6 @@ in
       ];
     })
   ];
+
+  };
 }

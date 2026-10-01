@@ -13,4 +13,5 @@
   services.samba.enable = true;
   programs.steam.enable = true;
   programs.ydotool.enable = true;
+  antares.rust.enable = true;
 }

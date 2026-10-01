@@ -100,4 +100,12 @@
       && !(c.systemd.services ? ydotoold)
       && c.users.users ? antares;
   }
+  {
+    name = "rust-off";
+    module = { lib, ... }: { antares.rust.enable = lib.mkForce false; };
+    check =
+      c:
+      c.nixpkgs.overlays == [ ]
+      && !(lib.any (p: lib.hasPrefix "rust-" (lib.getName p)) c.environment.systemPackages);
+  }
 ]
