@@ -14,4 +14,9 @@
       && !(c.age.secrets ? rabbitClientCfgAlice)
       && c.users.users ? alice;
   }
+  {
+    name = "xray-off";
+    module = { lib, ... }: { services.xray.enable = lib.mkForce false; };
+    check = c: !(c.systemd.services ? xray) && c.users.users ? alice;
+  }
 ]

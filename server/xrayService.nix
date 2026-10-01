@@ -1,13 +1,13 @@
 {
   config,
+  lib,
   pkgs,
   myXray,
   ...
 }:
 {
-  services.xray = {
+  services.xray = lib.mkIf config.services.xray.enable {
     package = myXray;
-    enable = true;
     settingsFile = "/var/xray/config.json";
   };
 }
