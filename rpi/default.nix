@@ -15,7 +15,7 @@
     ./rpc-client.nix
     ./nix.nix
     ./packages.nix
-    ./runner.nix
+    ../modules/nixos/runners.nix
     ./ssh-probe.nix
     ./ssrjson-nixdev-runner.nix
     ./ssrjson-runner.nix
