@@ -3,9 +3,12 @@ let
   root = "/var/lib/agent-files";
 in
 {
+  options.antares.agentFiles.enable = lib.mkEnableOption "agent file exchange";
+  config = lib.mkIf (config.antares.agentFiles.enable) {
+
   users.groups.agent-files = { };
   users.users.nginx.extraGroups = [ "agent-files" ];
-  users.users.alice.extraGroups = [ "agent-files" ];
+  users.users.alice.extraGroups = lib.optionals (config.antares.alice.enable || config.services.telegram-bot-api.enable) [ "agent-files" ];
 
   systemd.tmpfiles.rules = [
     "d ${root} 0750 root agent-files - -"
@@ -52,5 +55,12 @@ in
       try_files $uri =404;
     '';
     locations."/".return = "404";
+  };
+
+      age.secrets.agentFilesHtpasswd = {
+        file = ../../secrets/agent-files-htpasswd.age;
+        owner = "nginx";
+        mode = "400";
+      };
   };
 }

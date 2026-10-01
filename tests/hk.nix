@@ -105,4 +105,28 @@
       && c.users.users ? alice
       && c.services.nginx.virtualHosts ? "tg.alyr.dev";
   }
+  {
+    name = "agent-files-off";
+    module = { lib, ... }: {
+      antares.agentFiles.enable = lib.mkForce false;
+      antares.alice.enable = lib.mkForce false;
+    };
+    check =
+      c:
+      !(c.users.groups ? agent-files)
+      && !(c.age.secrets ? agentFilesHtpasswd)
+      && !(c.services.nginx.virtualHosts ? "tg.alyr.dev")
+      && !(c.security.acme.certs ? "tg.alyr.dev")
+      && !(lib.elem "agent-files" c.users.users.alice.extraGroups)
+      && !(lib.elem "agent-files" (
+        c.systemd.services.telegram-bot-api.serviceConfig.SupplementaryGroups or [ ]
+      ))
+      && c.services.nginx.enable;
+  }
+  {
+    name = "agent-files-dependency";
+    module = { lib, ... }: { antares.agentFiles.enable = lib.mkForce false; };
+    check = c: true;
+    valid = false;
+  }
 ]

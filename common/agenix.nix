@@ -46,11 +46,6 @@ in
     }
     # ---- HK server only ----
     // lib.optionalAttrs isHkServer {
-      agentFilesHtpasswd = {
-        file = ../secrets/agent-files-htpasswd.age;
-        owner = "nginx";
-        mode = "400";
-      };
       rabbitmqDefinitions = {
         file = ../secrets/rabbitmq-definitions.age;
         owner = "rabbitmq";
