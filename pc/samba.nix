@@ -1,7 +1,8 @@
-{ config, ... }:
+{ lib, config, ... }:
 {
+  config = lib.mkIf (config.services.samba.enable) {
+
   services.samba = {
-    enable = true;
     openFirewall = true;
     settings = {
       global = {
@@ -17,5 +18,7 @@
         "read only" = "yes";
       };
     };
+  };
+
   };
 }

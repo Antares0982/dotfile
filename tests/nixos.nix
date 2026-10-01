@@ -72,4 +72,13 @@
       !c.i18n.inputMethod.enable
       && !(lib.any (p: lib.hasPrefix "fcitx5" (lib.getName p)) c.environment.systemPackages);
   }
+  {
+    name = "samba-off";
+    module = { lib, ... }: { services.samba.enable = lib.mkForce false; };
+    check =
+      c:
+      !c.services.samba.openFirewall
+      && !(lib.elem 445 c.networking.firewall.allowedTCPPorts)
+      && !(c.systemd.services ? samba-smbd);
+  }
 ]
