@@ -6,13 +6,13 @@
   ...
 }:
 {
+  config = lib.mkIf (config.services.mysql.enable) {
+
   services.mysql = {
-    enable = true;
     package = pkgs.mariadb;
   };
 
   services.mysqlBackup = lib.mkIf currentDevice.server.hk {
-    enable = true;
     calendar = "03:15:00";
     databases = [
       "site_metrics"
@@ -22,5 +22,7 @@
       "wordpress_en"
     ];
     singleTransaction = true;
+  };
+
   };
 }

@@ -171,4 +171,23 @@
       && !(c.age.secrets ? rabbitmqDefinitions)
       && !(lib.elem 5671 c.networking.firewall.allowedTCPPorts);
   }
+  {
+    name = "mysql-off";
+    module = { lib, ... }: {
+      services.mysql.enable = lib.mkForce false;
+      antares.blog.metrics.enable = lib.mkForce false;
+    };
+    check =
+      c:
+      !(c.systemd.services ? mysql)
+      && !c.services.mysqlBackup.enable
+      && !(c.systemd.services ? mysql-backup)
+      && c.services.nginx.virtualHosts ? "chr.fan";
+  }
+  {
+    name = "mysql-dependency";
+    module = { lib, ... }: { services.mysql.enable = lib.mkForce false; };
+    check = c: true;
+    valid = false;
+  }
 ]

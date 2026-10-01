@@ -1,4 +1,4 @@
-{ ... }: {
+{ config, ... }: {
   services.telegram-output-monitor-bot.enable = true;
   services.antares-rpc-client.enable = true;
   services.xray.enable = true;
@@ -21,4 +21,6 @@
   antares.agentFiles.enable = true;
   antares.messaging.enable = true;
   services.rabbitmq.enable = true;
+  services.mysql.enable = true;
+  services.mysqlBackup.enable = config.services.mysql.enable;
 }

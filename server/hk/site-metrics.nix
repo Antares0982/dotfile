@@ -25,6 +25,7 @@ in
 {
   options.antares.blog.metrics.enable = lib.mkEnableOption "blog statistics";
   config = lib.mkIf (config.antares.blog.enable && config.antares.blog.metrics.enable) {
+    assertions = [ { assertion = config.services.mysql.enable; message = "Blog metrics require services.mysql.enable."; } ];
 
   users.users.site-metrics = {
     isSystemUser = true;
