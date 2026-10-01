@@ -27,6 +27,7 @@ in
   antares.waitOnline.enable = true;
   antares.githubAuth.enable = true;
   antares.gitSignUnlock.enable = true;
+  home-manager.users.antares.programs.yazi.enable = true;
   imports = [ ../../pc ];
   _module.args = {
     myXray = inputs.myXray.packages.${system}.default;

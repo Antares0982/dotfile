@@ -183,6 +183,18 @@
     valid = false;
   }
   {
+    name = "yazi-off";
+    module = { lib, ... }: { home-manager.users.antares.programs.yazi.enable = lib.mkForce false; };
+    check =
+      c:
+      let
+        home = c.home-manager.users.antares;
+      in
+      !(lib.any (p: lib.getName p == "yazi") home.home.packages)
+      && !(lib.any (name: lib.hasPrefix "yazi/" name) (builtins.attrNames home.xdg.configFile))
+      && !(lib.hasInfix "command yazi" home.programs.zsh.initContent);
+  }
+  {
     name = "all-features-off";
     module = { lib, ... }: {
       antares = {
@@ -205,6 +217,7 @@
       services.telegram-output-monitor-bot.enable = lib.mkForce false;
       services.antares-rpc-client.enable = lib.mkForce false;
       services.rabbitmq.enable = lib.mkForce false;
+      home-manager.users.antares.programs.yazi.enable = lib.mkForce false;
     };
     check =
       c:

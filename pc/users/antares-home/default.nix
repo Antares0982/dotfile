@@ -16,6 +16,7 @@ in
     ./wait-online.nix
     ./xdg-mime.nix
     ./xray.nix
+    ./yazi.nix
   ];
   programs.home-manager.enable = true;
   nix.gc = {
