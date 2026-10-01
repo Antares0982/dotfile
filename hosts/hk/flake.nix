@@ -89,6 +89,8 @@
   };
 
   outputs = inputs: {
-    nixosConfigurations.hk = import ../../systemMap.nix inputs (import ../../hk.nix);
+    nixosConfigurations.hk = (import ../../systemMap.nix inputs (import ../../hk.nix)).extendModules {
+      modules = [ ./configuration.nix ];
+    };
   };
 }

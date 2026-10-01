@@ -43,6 +43,7 @@
         };
         modules = [
           ../../mac
+          ./configuration.nix
         ];
       };
     };

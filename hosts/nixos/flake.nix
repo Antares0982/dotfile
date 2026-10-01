@@ -91,6 +91,10 @@
   # as one source path, so `import ../../<file>` reaches it directly — no
   # `shared` path input needed.
   outputs = inputs: {
-    nixosConfigurations.nixos = import ../../systemMap.nix inputs (import ../../pc.nix);
+    nixosConfigurations.nixos =
+      (import ../../systemMap.nix inputs (import ../../pc.nix)).extendModules
+        {
+          modules = [ ./configuration.nix ];
+        };
   };
 }

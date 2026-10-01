@@ -82,6 +82,10 @@
   };
 
   outputs = inputs: {
-    nixosConfigurations.rpi5 = import ../../systemMap.nix inputs (import ../../rpi5.nix);
+    nixosConfigurations.rpi5 =
+      (import ../../systemMap.nix inputs (import ../../rpi5.nix)).extendModules
+        {
+          modules = [ ./configuration.nix ];
+        };
   };
 }
