@@ -11,7 +11,7 @@
 ## Repository Overview
 
 Multi-machine Nix configuration flake managing:
-- `nixos` — desktop PC (x86_64-linux, KDE Plasma, NVIDIA, home-manager)
+- `nixos` — desktop PC (x86_64-linux, niri/Wayland, NVIDIA, home-manager)
 - `hk` — Hong Kong server (x86_64-linux, nginx/mail services)
 - `rpi5` — Raspberry Pi 5 (aarch64-linux)
 - `wsl` — Windows Subsystem for Linux (x86_64-linux)
@@ -60,68 +60,68 @@ agenix -e secrets/<name>.age
 
 ## Architecture
 
-### Device Abstraction
+### Host Composition
 
-`_make-device.nix` is the device descriptor factory. Each machine file (`pc.nix`, `hk.nix`, `wsl.nix`, `rpi5.nix`, `mac.nix`) calls it with flags:
-- `pc`, `mac`, `rpi`, `wsl`, `server` — device type flags
-- `system` — Nix system string (e.g. `"x86_64-linux"`)
-- `useProxy` — injects `http_proxy`/`https_proxy` env vars (127.0.0.1:1081) and configures `nix-daemon` proxy
-- `withHm` — enables home-manager as a NixOS module
+`hosts/{nixos,hk,rpi5,macbook}/configuration.nix` is the feature selection entry
+point. Each host explicitly imports its role modules, selects features, and
+provides host-specific package arguments through `_module.args`.
 
-### System Construction
+`systemMap.nix` constructs NixOS systems and selects the Raspberry Pi builder
+when required. Its `specialArgs` are `inputs`, `currentDevice`, and `agenix`.
+It imports platform modules, Home Manager, and agenix; feature activation and
+business package selection belong to host or feature modules.
 
-`systemMap.nix` is the NixOS system builder. Each `hosts/<name>/flake.nix` calls
-it as `import ../../systemMap.nix inputs (import ../../<device>.nix)`, where
-`inputs` is that host flake's own inputs. It:
-1. Accesses every flake input lazily through `inputs` (e.g. `inputs.wsl`), so a
-   host flake only declares the inputs its device actually forces. An omitted
-   input errors only if a module for that device reads it (which never happens).
-2. Selects `nixpkgs.lib.nixosSystem` or `nixos-raspberrypi.lib.nixosSystem` for RPi
-3. Builds `specialArgs` with all flake packages (myXray, antares-monitor, etc.)
-4. Conditionally adds modules: home-manager, WSL, vscode-server, RPi hardware, openclaw
+The macbook flake uses `nix-darwin.lib.darwinSystem` directly. WSL keeps its
+existing flake and `configuration.nix` dispatch path and is outside this
+refactoring.
 
-The mac configuration bypasses `systemMap.nix` entirely — `hosts/macbook/flake.nix`
-builds it directly with `nix-darwin.lib.darwinSystem`.
+Use `inputs` for upstream module imports. `_module.args` is for ordinary
+package dependencies, never for choosing imports. Imports stay static;
+`mkIf` controls feature configuration.
 
-### Module Dispatch
+### Device Metadata
 
-`configuration.nix` (root NixOS module) routes imports based on `currentDevice` flags:
-- `currentDevice.pc` → `./pc/`
-- `currentDevice.server.*` → `./server/`
-- `currentDevice.rpi` → `./rpi/`
-- `currentDevice.wsl` → `./wsl/`
+`_make-device.nix` and the root device descriptors retain platform metadata and
+legacy compatibility. New business features use module options, not device
+flags. Proxy consumers in migrated hosts read `antares.proxy`; shared modules
+retain the descriptor fallback for the excluded WSL configuration.
 
-Always imports `./common/cachix.nix` regardless of device type.
+`common/localFileDef.nix` derives user directory conventions. Human and shared
+accounts remain in user modules. Dedicated service accounts belong to their
+feature modules.
 
-### Directory Layout
+### Module Ownership
 
-- `hosts/<name>/` — per-machine flake (`flake.nix` + independent `flake.lock`); the flake entry point for each device
-- `packages/` — standalone custom package definitions, imported by the host and shared modules
-- `common/` — shared modules included by multiple device types (nix settings, zsh, agenix, gnupg, ssh, time, rabbitmq, packages)
-- `pc/` — desktop-specific config (KDE, NVIDIA, audio, bluetooth, fcitx5, steam, etc.)
-- `server/` — server config; `server/hk/` and `server/gz/` for region-specific services
-- `wsl/` — WSL-specific network and user config
-- `rpi/` — Raspberry Pi 5 config (xray, monitor, runner services)
-- `mac/` — nix-darwin config (packages, proxy, xray)
-- `secrets/` — agenix-encrypted `.age` files; `secrets/secrets.nix` defines which SSH keys can decrypt each secret
-- `resource/` — static assets (fonts, jars, scripts for build tooling)
-- `common/cachix/` — auto-generated cachix substituter configs (overwritten by `cachix use`)
+- `hosts/<name>/`: independent flake, lock file, and host choices.
+- `modules/`: reusable feature implementations and shared option definitions.
+- `common/`: shared base configuration and service policy.
+- `pc/`, `rpi/`, `server/`, `mac/`: platform configuration and feature integrations.
+- `packages/`: package construction without activation or account configuration.
+- `secrets/`: encrypted sources and recipient authorization.
+- `resource/`: scripts and static assets.
 
-### `currentDevice` in Modules
+Features own their dedicated services, accounts, groups, secret deployments,
+timers, paths, generators, activation hooks, packages, and firewall contributions.
+Cross-feature integration exists only while its consumers are enabled. Shared
+infrastructure and shared accounts remain independent.
 
-All NixOS modules receive `currentDevice` as a `specialArg`. Use `currentDevice.pc`, `currentDevice.server.hk`, etc. for conditional configuration. The `common/localFileDef.nix` utility derives standard path conventions (home, Documents, GitHub dirs) from a username.
+## Secrets
 
-### Secrets
+Secrets use agenix. Edit encrypted sources with `agenix -e`; recipient keys
+remain in `secrets/secrets.nix`. Feature modules declare their own
+`age.secrets` entries and consume `config.age.secrets.<name>.path`.
 
-Secrets are managed with [agenix](https://github.com/ryantm/agenix). The identity key is at `~/.ssh/agenix`. Available secrets: `password`, `serverPassword`. Access via `config.age.secrets.<name>.path` in modules.
+`common/agenix.nix` owns agenix tooling, identity paths, and base account password
+secrets. QQ relay and QQ Codex share the deployment in `rpi/qq-credentials.nix`;
+it remains while either consumer is enabled.
 
-### Custom Packages
+## Custom Packages
 
-Standalone custom package definitions live in `packages/`: `nix-zshell.nix`,
-`git-ssh-sign.nix`, `find-nix-gc-roots.nix`, `xs.nix`, `blender-mcp.nix`, and
-`vtune.nix`. Modules import or `callPackage` these files using paths relative to
-the module. Wrapper scripts remain under `common/`, and `xs.sh` remains under
-`resource/`.
+`packages/default.nix` is the explicit package entry point. Import it with
+`{ inherit pkgs; }`, adding `myXray` when selecting `xs`. Configure `xs` variants
+with `.override`. Package selection stays lazy so platform-specific packages
+are evaluated only by their consumers. Do not add directory discovery or a
+second package registry.
 
 ## Feature Refactoring
 
@@ -137,3 +137,62 @@ dedicated account declarations, secret deployments, timers, permissions, and
 network contributions. Shared accounts and infrastructure remain independent.
 Disabling a feature never deletes persistent data or encrypted secret sources.
 Commit and validate one feature migration before starting the next.
+
+### Feature Controls
+
+Edit the relevant host configuration; disabling a feature does not require
+removing its imports. Native service options control their repository-specific
+integration as well as the upstream service.
+
+| Host | Controls |
+|---|---|
+| nixos, hk, rpi5 | `services.telegram-output-monitor-bot.enable`, `services.antares-rpc-client.enable`, `services.rabbitmq.enable` |
+| nixos, rpi5, macbook | `antares.xray.enable`, `antares.proxy.enable` |
+| rpi5 | `services.antares-runners.instances.<name>.enable`, `antares.agent.enable`, `antares.qq.enable`, `antares.gitServer.enable`, `services.ssh-probe.enable` |
+| hk | `antares.blog.enable`, `antares.blog.metrics.enable`, `antares.messaging.enable`, `mailserver.enable`, `services.mysql.enable`, `services.nginx.enable`, `antares.acme.enable`, `services.xray.enable` |
+| nixos | `antares.desktop.enable`, `antares.rust.enable`, `antares.autostart.enable`, `antares.waitOnline.enable`, `antares.githubAuth.enable`, `services.mcp-nixos.enable` |
+| nixos | `services.pipewire.enable`, `hardware.bluetooth.enable`, `i18n.inputMethod.enable`, `services.samba.enable`, `programs.steam.enable`, `programs.ydotool.enable` |
+| macbook | `antares.nixShell.enable`, `antares.systemCompiler.enable` |
+
+QQ components use `antares.qq.{napcat,relay,codex}.enable`. HK messaging components
+use `antares.alice.enable`, `antares.trilug.enable`,
+`services.telegram-bot-api.enable`, and `antares.agentFiles.enable`.
+A stack's master switch dominates component selections. Blog metrics also
+require the blog master switch.
+
+### Dependencies and State
+
+- QQ relay and QQ Codex require NapCat. Alice requires agent file exchange.
+- Web features require nginx; configured certificates require ACME.
+- Blog metrics require MySQL. The host ties MySQL backup activation to MySQL.
+- The local proxy environment requires Xray. Desktop autostart also requires
+  Xray because its external script invokes Xray tools.
+- Agent-triggered Xray actions require both agent and Xray to be enabled.
+- Remote broker endpoints and external application scripts remain external
+  runtime dependencies; local service ordering does not establish ownership.
+
+Missing required components produce evaluation assertions. Disable the whole
+stack with its master switch, or explicitly disable its consumers first.
+Disabling a feature removes declarations, not persistent data. Keep the existing
+user-management policy; do not add `userdel`, recursive removals, database drops,
+or automatic secret-source deletion. Shared `antares` and `alice` accounts stay.
+
+HK retains the explicit `couch.chr.fan` certificate and legacy UDP ports in its
+host configuration. Mail owns its certificates independently of the blog.
+Nginx virtual hosts use `acmeRoot = null` to retain Cloudflare DNS challenges.
+Historical database backups remain when blog metrics are disabled.
+
+RPi runners use the host flake's nixpkgs, independently of the Raspberry Pi
+system nixpkgs. Preserve existing unit names, users, homes, registration data,
+and package sources. Keep `indexed = true` for SSRJSON even when reducing its
+instance count to one.
+
+### Validation
+
+`bash scripts/check-configs.sh` evaluates all four scoped hosts. To check one
+feature while editing, use e.g.
+`CHECK_CASE='blog-off|metrics-off' bash scripts/check-configs.sh hk`.
+Checks cover individual shutdown, shared resources, invalid dependencies, and
+complete business-feature shutdown. They do not decrypt secrets or activate
+configurations. Continue to build only on matching platforms or explicitly
+configured remote builders.
