@@ -59,4 +59,13 @@
     check =
       c: !(c.systemd.services ? telegram-output-monitor-bot) && !(c.age.secrets ? monitorCfgAntaresRpi);
   }
+  {
+    name = "rpc-off";
+    module = { lib, ... }: { services.antares-rpc-client.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.systemd.services ? rpc-client-antares)
+      && !(c.age.secrets ? rabbitClientCfgAntaresRpi)
+      && c.users.users ? antares;
+  }
 ]

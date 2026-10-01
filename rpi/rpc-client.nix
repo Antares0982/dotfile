@@ -10,6 +10,9 @@ let
   shellenv = import ../common/shellEnv.nix;
 in
 {
+  options.services.antares-rpc-client.enable = lib.mkEnableOption "services.antares-rpc-client";
+  config = lib.mkIf (config.services.antares-rpc-client.enable) {
+
   systemd.services = {
     "rpc-client-antares" = {
       description = "Antares RPC Client Service";
@@ -43,5 +46,13 @@ in
         # SystemCallFilter (breaks arbitrary tools), MemoryDenyWriteExecute (breaks JITs).
       };
     };
+  };
+
+      age.secrets.rabbitClientCfgAntaresRpi = {
+        file = ../secrets/rabbit-client-cfg-antares-rpi.age;
+        owner = "antares";
+        group = "users";
+        mode = "440";
+      };
   };
 }

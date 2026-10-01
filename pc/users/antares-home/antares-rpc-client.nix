@@ -1,4 +1,5 @@
 {
+  osConfig,
   config,
   pkgs,
   lib,
@@ -10,6 +11,8 @@ let
   nix = "${pkgs.nix}/bin/nix";
 in
 {
+  config = lib.mkIf (osConfig.services.antares-rpc-client.enable) {
+
   systemd.user.services.rpc-client = {
     Unit = {
       Description = "${envs.usernameCap} RPC Client Service";
@@ -50,5 +53,7 @@ in
     Install = {
       WantedBy = [ "default.target" ];
     };
+  };
+
   };
 }

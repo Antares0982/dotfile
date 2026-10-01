@@ -4,11 +4,13 @@
 
 {
   config,
+  lib,
+  osConfig,
   antares-rpc-client,
   ...
 }:
 {
-  systemd.user.services.rpc-client = {
+  systemd.user.services.rpc-client = lib.mkIf osConfig.services.antares-rpc-client.enable {
     Unit = {
       Description = "Antares RPC Client Service";
       After = [ "network-online.target" ];

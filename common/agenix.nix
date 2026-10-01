@@ -30,21 +30,9 @@ in
         group = "users";
         mode = "400";
       };
-      rabbitClientCfgAntaresPc = {
-        file = ../secrets/rabbit-client-cfg-antares-pc.age;
-        owner = "antares";
-        group = "users";
-        mode = "440";
-      };
     }
     # ---- RPi only ----
     // lib.optionalAttrs isRpi {
-      rabbitClientCfgAntaresRpi = {
-        file = ../secrets/rabbit-client-cfg-antares-rpi.age;
-        owner = "antares";
-        group = "users";
-        mode = "440";
-      };
       # Stays root-owned. systemd reads EnvironmentFile= before dropping
       # privileges, so the agent uid never gets read access to the file.
       antaresAgentEnv = {
@@ -154,12 +142,6 @@ in
         file = ../secrets/cloudflare-env.age;
         owner = "acme";
         group = "nginx";
-      };
-      rabbitClientCfgAlice = {
-        file = ../secrets/rabbit-client-cfg-alice.age;
-        owner = "alice";
-        group = "users";
-        mode = "440";
       };
       mailPasswordAntares = {
         file = ../secrets/mail-password-antares.age;
