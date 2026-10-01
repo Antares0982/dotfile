@@ -16,6 +16,7 @@
     ./packages.nix
     ../modules/nixos/runners.nix
     ./ssh-probe.nix
+    ./git-server.nix
     ./user.nix
     ../modules/proxy.nix
     ./xray.nix

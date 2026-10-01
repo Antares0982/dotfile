@@ -173,4 +173,9 @@
     module = { lib, ... }: { services.ssh-probe.enable = lib.mkForce false; };
     check = c: !(c.systemd.services ? ssh-probe) && c.services.openssh.enable;
   }
+  {
+    name = "git-server-off";
+    module = { lib, ... }: { antares.gitServer.enable = lib.mkForce false; };
+    check = c: !(c.users.users ? git) && c.users.users ? antares && c.services.openssh.enable;
+  }
 ]
