@@ -122,3 +122,18 @@ Standalone custom package definitions live in `packages/`: `nix-zshell.nix`,
 `vtune.nix`. Modules import or `callPackage` these files using paths relative to
 the module. Wrapper scripts remain under `common/`, and `xs.sh` remains under
 `resource/`.
+
+## Feature Refactoring
+
+The refactoring covers `nixos`, `hk`, `rpi5`, and `macbook`. WSL is excluded;
+keep its existing entry points and shared-module interfaces compatible.
+
+Run `bash scripts/check-configs.sh` for all four hosts, or pass host names.
+The check evaluates locked configurations and feature scenarios without switching.
+Stage new Nix files before evaluating Git-backed flakes.
+
+Host configurations select features. Feature modules own their services,
+dedicated account declarations, secret deployments, timers, permissions, and
+network contributions. Shared accounts and infrastructure remain independent.
+Disabling a feature never deletes persistent data or encrypted secret sources.
+Commit and validate one feature migration before starting the next.
