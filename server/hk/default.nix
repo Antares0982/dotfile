@@ -6,6 +6,7 @@
   ++ [
     ./messaging.nix
     ./alice.nix
+    ./rabbitmq.nix
     ./web.nix
     ./acme.nix
     ./blog.nix

@@ -29,4 +29,16 @@
   ];
   networking.hostName = "hk";
   networking.domain = "chr.fan";
+  services.mysqlBackup = {
+    calendar = "03:15:00";
+    databases = [
+      "site_metrics"
+      "test"
+      "wordpress"
+      "wordpress-en"
+      "wordpress_en"
+    ];
+    singleTransaction = true;
+  };
+  environment.etc."zsh/p10k.zsh".source = ../../resource/hk-p10k.zsh;
 }

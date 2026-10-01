@@ -45,4 +45,5 @@
   services.ssh-probe.enable = true;
   antares.gitServer.enable = true;
   imports = [ ../../rpi ];
+  environment.etc."zsh/p10k.zsh".source = ../../resource/rpi-p10k.zsh;
 }
