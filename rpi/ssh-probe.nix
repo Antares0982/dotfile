@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ lib, config, pkgs, ... }:
 let
   # SSH target to probe. Adjust if you reach hk via a different host/IP.
   target = "hk.chr.fan";
@@ -7,6 +7,9 @@ let
   interval = "15"; # seconds between probes
 in
 {
+  options.services.ssh-probe.enable = lib.mkEnableOption "SSH reachability probe";
+  config = lib.mkIf (config.services.ssh-probe.enable) {
+
   # External layered reachability probe for the hk server.
   #
   # Runs on the (always-on) rpi5 and logs one line per cycle to journald.
@@ -39,5 +42,7 @@ in
         sleep ${interval}
       done
     '';
+  };
+
   };
 }

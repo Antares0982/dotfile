@@ -42,4 +42,5 @@
   antares.xray.enable = true;
   antares.proxy.enable = true;
   services.rabbitmq.enable = true;
+  services.ssh-probe.enable = true;
 }

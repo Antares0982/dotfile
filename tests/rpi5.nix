@@ -168,4 +168,9 @@
     module = { lib, ... }: { services.rabbitmq.enable = lib.mkForce false; };
     check = c: !(c.systemd.services ? rabbitmq) && !(c.users.users ? rabbitmq);
   }
+  {
+    name = "ssh-probe-off";
+    module = { lib, ... }: { services.ssh-probe.enable = lib.mkForce false; };
+    check = c: !(c.systemd.services ? ssh-probe) && c.services.openssh.enable;
+  }
 ]
