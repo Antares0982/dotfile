@@ -14,4 +14,5 @@
   programs.steam.enable = true;
   programs.ydotool.enable = true;
   antares.rust.enable = true;
+  services.mcp-nixos.enable = true;
 }

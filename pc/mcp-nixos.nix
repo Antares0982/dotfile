@@ -1,5 +1,8 @@
 { config, lib, pkgs, ... }:
 {
+  options.services.mcp-nixos.enable = lib.mkEnableOption "NixOS MCP server";
+  config = lib.mkIf (config.services.mcp-nixos.enable) {
+
   systemd.services.mcp-nixos = {
     description = "MCP NixOS server (HTTP)";
     after = [ "network-online.target" ];
@@ -35,5 +38,7 @@
         "AF_INET6"
       ];
     };
+  };
+
   };
 }

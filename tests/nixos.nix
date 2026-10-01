@@ -108,4 +108,9 @@
       c.nixpkgs.overlays == [ ]
       && !(lib.any (p: lib.hasPrefix "rust-" (lib.getName p)) c.environment.systemPackages);
   }
+  {
+    name = "mcp-off";
+    module = { lib, ... }: { services.mcp-nixos.enable = lib.mkForce false; };
+    check = c: !(c.systemd.services ? mcp-nixos);
+  }
 ]
