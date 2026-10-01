@@ -11,4 +11,5 @@
   hardware.bluetooth.enable = true;
   i18n.inputMethod.enable = true;
   services.samba.enable = true;
+  programs.steam.enable = true;
 }

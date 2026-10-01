@@ -81,4 +81,13 @@
       && !(lib.elem 445 c.networking.firewall.allowedTCPPorts)
       && !(c.systemd.services ? samba-smbd);
   }
+  {
+    name = "steam-off";
+    module = { lib, ... }: { programs.steam.enable = lib.mkForce false; };
+    check =
+      c:
+      !c.programs.steam.remotePlay.openFirewall
+      && !c.programs.steam.dedicatedServer.openFirewall
+      && !(lib.any (p: lib.getName p == "steamcmd") c.environment.systemPackages);
+  }
 ]

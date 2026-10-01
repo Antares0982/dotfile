@@ -42,8 +42,6 @@
     qbittorrent
     ruff
     shfmt
-    steamcmd
-    steam-run
     telegram-desktop
     thunderbird
     tor-browser
