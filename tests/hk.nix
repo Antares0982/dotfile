@@ -45,4 +45,18 @@
       && c.services.mysql.enable
       && c.services.nginx.virtualHosts ? "tg.alyr.dev";
   }
+  {
+    name = "metrics-off";
+    module = { lib, ... }: { antares.blog.metrics.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.users.users ? site-metrics)
+      && !(c.systemd.services ? site-metrics-init)
+      && !(c.systemd.services ? site-metrics)
+      && !(c.systemd.timers ? site-metrics)
+      && !(c.services.nginx.virtualHosts."chr.fan".locations ? "= /api/views.json")
+      && !(lib.elem "site_metrics" c.services.mysql.ensureDatabases)
+      && c.services.mysqlBackup.enable
+      && c.services.nginx.virtualHosts ? "chr.fan";
+  }
 ]

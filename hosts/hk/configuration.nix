@@ -14,4 +14,5 @@
     "couch.chr.fan" = { };
   };
   antares.blog.enable = true;
+  antares.blog.metrics.enable = true;
 }

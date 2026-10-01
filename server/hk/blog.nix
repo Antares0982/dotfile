@@ -6,22 +6,14 @@
 }:
 let
   site = blog.packages.${pkgs.stdenv.hostPlatform.system}.blog;
-  metricsDir = "/var/lib/site-metrics";
-  viewsLog = "/var/log/nginx/blog-views.log";
-  badgeLog = "/var/log/nginx/visitor-badge.log";
-  badgeFallback = pkgs.writeText "visitor-badge-unavailable.svg" ''
-    <svg xmlns="http://www.w3.org/2000/svg" width="164" height="20" role="img" aria-label="visitors: unavailable"><title>visitors: unavailable</title><linearGradient id="s" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><clipPath id="r"><rect width="164" height="20" rx="3" fill="#fff"/></clipPath><g clip-path="url(#r)"><rect width="57" height="20" fill="#595959"/><rect x="57" width="107" height="20" fill="#1283c3"/><rect width="164" height="20" fill="url(#s)"/></g><g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="11"><text x="28.5" y="15" fill="#010101" fill-opacity=".3">visitors</text><text x="28.5" y="14">visitors</text><text x="109.5" y="15" fill="#010101" fill-opacity=".3">unavailable</text><text x="109.5" y="14">unavailable</text></g></svg>
-  '';
+
 in
 {
   options.antares.blog.enable = lib.mkEnableOption "blog and metrics";
   config = lib.mkIf (config.antares.blog.enable) {
 
 
-  services.nginx.commonHttpConfig = ''
-    log_format siteviews escape=none
-      '$time_iso8601	$remote_addr	$status	$request_uri	$http_user_agent';
-  '';
+
 
   services.nginx.virtualHosts."chr.fan" = {
     addSSL = true;
@@ -29,7 +21,6 @@ in
     root = "${site}";
 
     extraConfig = ''
-      access_log ${viewsLog} siteviews;
 
       # Hugo writes every page as <slug>/index.html, so a missing trailing
       # slash still has to resolve.
@@ -90,42 +81,7 @@ in
         charset utf-8;
       '';
 
-      # Views recorded since the migration. Each page carries its WordPress
-      # total in the HTML and adds this on top.
-      "= /api/views.json" = {
-        alias = "${metricsDir}/views.json";
-        extraConfig = ''
-          types { }
-          default_type application/json;
-          add_header Cache-Control "public, max-age=300";
-          # The file only exists once the timer has run at least once.
-          error_page 404 = @noviews;
-        '';
-      };
-      "@noviews".extraConfig = ''
-        default_type application/json;
-        return 200 '{}';
-      '';
-      "= /api/visitor-badge.svg" = {
-        alias = "${metricsDir}/visitor-badge.svg";
-        extraConfig = ''
-          access_log ${badgeLog} siteviews;
-          types { }
-          default_type image/svg+xml;
-          add_header Cache-Control "no-cache, max-age=0, no-store, s-maxage=0, proxy-revalidate";
-          expires -1;
-          error_page 404 =200 /api/visitor-badge-unavailable.svg;
-        '';
-      };
-      "= /api/visitor-badge-unavailable.svg" = {
-        alias = badgeFallback;
-        extraConfig = ''
-          internal;
-          access_log off;
-          types { }
-          default_type image/svg+xml;
-        '';
-      };
+
     };
   };
 
