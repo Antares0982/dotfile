@@ -25,6 +25,7 @@
     ./network.nix
     ./nix.nix
     ./nvidia.nix
+    ./openlist.nix
     ./packages.nix
     ./qq.nix
     ./rust.nix

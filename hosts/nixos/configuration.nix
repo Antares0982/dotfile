@@ -24,6 +24,7 @@ in
   programs.ydotool.enable = true;
   antares.rust.enable = true;
   services.mcp-nixos.enable = true;
+  services.openlist.enable = true;
   antares.waitOnline.enable = true;
   antares.githubAuth.enable = true;
   antares.gitSignUnlock.enable = true;

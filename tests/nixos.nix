@@ -1,5 +1,20 @@
 { lib }: [
   {
+    name = "openlist-on";
+    module = { };
+    check =
+      c:
+      c.systemd.services.openlist.environment.OPENLIST_ADDR == "127.0.0.1"
+      && c.systemd.services.openlist.serviceConfig.StateDirectoryMode == "0700"
+      && c.systemd.services.openlist.serviceConfig.DynamicUser
+      && !(lib.elem 5244 c.networking.firewall.allowedTCPPorts);
+  }
+  {
+    name = "openlist-off";
+    module = { lib, ... }: { services.openlist.enable = lib.mkForce false; };
+    check = c: !(c.systemd.services ? openlist);
+  }
+  {
     name = "monitor-off";
     module = { lib, ... }: { services.telegram-output-monitor-bot.enable = lib.mkForce false; };
     check =
@@ -214,6 +229,7 @@
       programs.steam.enable = lib.mkForce false;
       programs.ydotool.enable = lib.mkForce false;
       services.mcp-nixos.enable = lib.mkForce false;
+      services.openlist.enable = lib.mkForce false;
       services.telegram-output-monitor-bot.enable = lib.mkForce false;
       services.antares-rpc-client.enable = lib.mkForce false;
       services.rabbitmq.enable = lib.mkForce false;
@@ -222,6 +238,7 @@
     check =
       c:
       c.users.users ? antares
+      && !(c.systemd.services ? openlist)
       && !(c.age.secrets ? ghToken)
       && !(c.age.secrets ? gitSignPassphrase)
       && !(c.systemd.services ? git-sign-unlock)
