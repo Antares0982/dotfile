@@ -13,4 +13,5 @@
     "mail.alyr.dev" = { };
     "couch.chr.fan" = { };
   };
+  antares.blog.enable = true;
 }

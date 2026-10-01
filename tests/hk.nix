@@ -31,4 +31,18 @@
     check = c: true;
     valid = false;
   }
+  {
+    name = "blog-off";
+    module = { lib, ... }: { antares.blog.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.services.nginx.virtualHosts ? "chr.fan")
+      && !(c.services.nginx.virtualHosts ? "blog.chr.fan")
+      && !(c.systemd.services ? site-metrics)
+      && !(c.users.users ? site-metrics)
+      && c.security.acme.certs ? "chr.fan"
+      && c.mailserver.enable
+      && c.services.mysql.enable
+      && c.services.nginx.virtualHosts ? "tg.alyr.dev";
+  }
 ]

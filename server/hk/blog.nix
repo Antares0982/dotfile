@@ -1,4 +1,4 @@
-{
+{ lib,
   config,
   pkgs,
   blog,
@@ -14,6 +14,9 @@ let
   '';
 in
 {
+  options.antares.blog.enable = lib.mkEnableOption "blog and metrics";
+  config = lib.mkIf (config.antares.blog.enable) {
+
 
   services.nginx.commonHttpConfig = ''
     log_format siteviews escape=none
@@ -146,5 +149,7 @@ in
       "= /2026/01/07/python-json/".return = "301 https://chr.fan/en/python-json/$is_args$args";
       "/".return = "301 https://chr.fan/en$request_uri";
     };
+  };
+
   };
 }

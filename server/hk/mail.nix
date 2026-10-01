@@ -9,6 +9,8 @@
     nixos-mailserver.nixosModules.default
   ];
 
+  security.acme.certs."chr.fan" = { };
+
   mailserver = {
     enable = true;
     enablePop3 = true;

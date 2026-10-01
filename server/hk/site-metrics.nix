@@ -1,4 +1,4 @@
-{
+{ lib,
   config,
   pkgs,
   visitor-badge,
@@ -18,6 +18,8 @@ let
   ];
 in
 {
+  config = lib.mkIf (config.antares.blog.enable) {
+
   users.users.site-metrics = {
     isSystemUser = true;
     group = "site-metrics";
@@ -95,4 +97,6 @@ in
     };
   };
 
+
+  };
 }
