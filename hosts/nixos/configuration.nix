@@ -15,4 +15,5 @@
   programs.ydotool.enable = true;
   antares.rust.enable = true;
   services.mcp-nixos.enable = true;
+  antares.waitOnline.enable = true;
 }

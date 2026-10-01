@@ -14,6 +14,8 @@ let
   pyenv = pkgs.python313.withPackages pkgs-def;
 in
 {
+  config = lib.mkIf (osConfig.antares.waitOnline.enable) {
+
   systemd.user.services.waitOnline = {
     Unit = {
       Description = "Wait until we're connected to the Internet";
@@ -54,5 +56,7 @@ in
     Install = {
       WantedBy = [ "sleep.target" ];
     };
+  };
+
   };
 }

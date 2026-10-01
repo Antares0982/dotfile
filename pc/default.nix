@@ -10,6 +10,7 @@
     ../modules/proxy.nix
     ./xray.nix
     ./autostart.nix
+    ./wait-online.nix
     ./audio.nix
     ./bluetooth.nix
     ./configuration.nix

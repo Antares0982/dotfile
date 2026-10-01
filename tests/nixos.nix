@@ -113,4 +113,20 @@
     module = { lib, ... }: { services.mcp-nixos.enable = lib.mkForce false; };
     check = c: !(c.systemd.services ? mcp-nixos);
   }
+  {
+    name = "wait-online-off";
+    module = { lib, ... }: { antares.waitOnline.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.home-manager.users.antares.systemd.user.services ? waitOnline)
+      && !(c.home-manager.users.antares.systemd.user.services ? waitOnlineOnresume);
+  }
+  {
+    name = "autostart-off";
+    module = { lib, ... }: { antares.autostart.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.home-manager.users.antares.systemd.user.services ? autostart)
+      && c.home-manager.users.antares.systemd.user.services ? xray;
+  }
 ]
