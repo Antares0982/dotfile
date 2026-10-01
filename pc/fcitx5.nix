@@ -1,8 +1,9 @@
-{ config, pkgs, ... }:
+{ lib, config, pkgs, ... }:
 {
+  config = lib.mkIf (config.i18n.inputMethod.enable) {
+
   i18n = {
     inputMethod = {
-      enable = true;
       type = "fcitx5";
       fcitx5 = {
         addons = with pkgs; [
@@ -17,5 +18,7 @@
       "en_US.UTF-8/UTF-8"
     ];
     defaultLocale = "en_US.UTF-8";
+  };
+
   };
 }

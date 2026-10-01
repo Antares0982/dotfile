@@ -64,4 +64,12 @@
     module = { lib, ... }: { hardware.bluetooth.enable = lib.mkForce false; };
     check = c: !(c.systemd.services ? bluetooth) && !c.hardware.bluetooth.enable;
   }
+  {
+    name = "input-off";
+    module = { lib, ... }: { i18n.inputMethod.enable = lib.mkForce false; };
+    check =
+      c:
+      !c.i18n.inputMethod.enable
+      && !(lib.any (p: lib.hasPrefix "fcitx5" (lib.getName p)) c.environment.systemPackages);
+  }
 ]
