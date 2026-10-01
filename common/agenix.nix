@@ -57,12 +57,6 @@ in
         group = "root";
         mode = "400";
       };
-      aliceTelegramWebhookSecret = {
-        file = ../secrets/alice-telegram-webhook-secret.age;
-        owner = "alice";
-        group = "users";
-        mode = "400";
-      };
       rabbitmqDefinitions = {
         file = ../secrets/rabbitmq-definitions.age;
         owner = "rabbitmq";

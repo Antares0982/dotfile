@@ -4,6 +4,7 @@
     ./users
   ]
   ++ [
+    ./alice.nix
     ./web.nix
     ./acme.nix
     ./blog.nix

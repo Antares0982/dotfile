@@ -1,5 +1,6 @@
 {
   config,
+  osConfig,
   pkgs,
   lib,
   ...
@@ -8,6 +9,8 @@ let
   userenvs = import ./_userenv.nix;
 in
 {
+  config = lib.mkIf (osConfig.antares.alice.enable) {
+
   systemd.user.services.alice = {
     Unit = {
       Description = "Maid Alice";
@@ -33,5 +36,7 @@ in
     Install = {
       WantedBy = [ "default.target" ];
     };
+  };
+
   };
 }

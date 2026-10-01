@@ -74,4 +74,14 @@
       && c.security.acme.certs ? "chr.fan"
       && c.services.fail2ban.enable;
   }
+  {
+    name = "alice-off";
+    module = { lib, ... }: { antares.alice.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.home-manager.users.alice.systemd.user.services ? alice)
+      && !(c.age.secrets ? aliceTelegramWebhookSecret)
+      && c.users.users ? alice
+      && c.home-manager.users.alice.systemd.user.services ? trilug;
+  }
 ]

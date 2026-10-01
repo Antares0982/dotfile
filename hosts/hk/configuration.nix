@@ -15,4 +15,5 @@
   antares.blog.enable = true;
   antares.blog.metrics.enable = true;
   mailserver.enable = true;
+  antares.alice.enable = true;
 }
