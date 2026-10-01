@@ -12,4 +12,5 @@
   i18n.inputMethod.enable = true;
   services.samba.enable = true;
   programs.steam.enable = true;
+  programs.ydotool.enable = true;
 }

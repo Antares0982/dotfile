@@ -14,7 +14,6 @@
     description = "Antares0982";
     extraGroups = [
       "wheel"
-      "ydotool"
     ];
     uid = 1000;
     useDefaultShell = true;

@@ -90,4 +90,14 @@
       && !c.programs.steam.dedicatedServer.openFirewall
       && !(lib.any (p: lib.getName p == "steamcmd") c.environment.systemPackages);
   }
+  {
+    name = "ydotool-off";
+    module = { lib, ... }: { programs.ydotool.enable = lib.mkForce false; };
+    check =
+      c:
+      !(lib.elem "ydotool" c.users.users.antares.extraGroups)
+      && !(lib.any (p: lib.getName p == "ydotool") c.environment.systemPackages)
+      && !(c.systemd.services ? ydotoold)
+      && c.users.users ? antares;
+  }
 ]

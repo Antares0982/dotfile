@@ -49,7 +49,6 @@
     typora
     unar
     xarchiver
-    ydotool
 
   ];
 }
