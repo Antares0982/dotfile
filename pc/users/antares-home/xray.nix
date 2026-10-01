@@ -1,8 +1,6 @@
 { lib, config, pkgs, myXray, osConfig, ... }:
 let
-  xs = import ../../../packages/xs.nix {
-    inherit pkgs myXray;
-  };
+  xs = (import ../../../packages { inherit pkgs myXray; }).xs;
 in
 {
   config = lib.mkIf (osConfig.antares.xray.enable) {

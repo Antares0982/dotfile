@@ -5,6 +5,9 @@
   linyinfeng-nur-packages,
   ...
 }:
+let
+  localPackages = import ../packages { inherit pkgs; };
+in
 {
   imports = [ ../common/packages.nix ];
   # alphabet order
@@ -13,7 +16,7 @@
     android-tools
     aria2
     blender
-    (callPackage ../packages/blender-mcp.nix { })
+    localPackages.blender-mcp
     cheat
     clang-tools
     cmake
@@ -25,7 +28,7 @@
     google-chrome
     haruna
     imagemagick
-    (callPackage ../packages/vtune.nix { })
+    localPackages.vtune
     # kdePackages.dolphin
     kdePackages.gwenview
     kdePackages.kolourpaint

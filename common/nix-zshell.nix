@@ -1,6 +1,6 @@
 { pkgs, ... }:
 let
-  nix-zshell = pkgs.callPackage ../packages/nix-zshell.nix { };
+  nix-zshell = (import ../packages { inherit pkgs; }).nix-zshell;
 in
 {
   environment.systemPackages = [

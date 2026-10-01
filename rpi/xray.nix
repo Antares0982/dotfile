@@ -9,8 +9,7 @@
 let
   xrayDir = "/var/lib/xray";
   subsDir = "${xrayDir}/subscriptions";
-  xs = import ../packages/xs.nix {
-    inherit pkgs myXray;
+  xs = (import ../packages { inherit pkgs myXray; }).xs.override {
     inherit xrayDir;
     configPath = "${subsDir}/active.json";
     systemdScope = "system";
