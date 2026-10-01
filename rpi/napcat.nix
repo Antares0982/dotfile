@@ -1,4 +1,4 @@
-{
+{ lib,
   config,
   pkgs,
   napcat,
@@ -25,6 +25,9 @@ let
   };
 in
 {
+  options.services.napcat.enable = lib.mkEnableOption "NapCat with watchdog and restart timer";
+  config = lib.mkIf (config.services.napcat.enable) {
+
   users.users.napcat = {
     isNormalUser = true;
     home = "/home/napcat";
@@ -81,5 +84,13 @@ in
       # just came up with the machine, for nothing.
       Persistent = false;
     };
+  };
+
+      age.secrets.napcatEnv = {
+        file = ../secrets/napcat-env.age;
+        owner = "napcat";
+        group = "users";
+        mode = "400";
+      };
   };
 }

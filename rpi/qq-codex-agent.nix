@@ -85,6 +85,7 @@ in
 {
   imports = [ (qq-codex-source + "/nix/module.nix") ];
   config = lib.mkIf config.services.qq-codex-agent.enable {
+    assertions = [ { assertion = config.services.napcat.enable; message = "QQ Codex requires services.napcat.enable."; } ];
     services.qq-codex-agent = {
       allowlistFile = config.age.secrets.qqCodexAllowlist.path;
       tokenFile = "/run/qq-codex-auth/token";

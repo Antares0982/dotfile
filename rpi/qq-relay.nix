@@ -28,6 +28,7 @@ let
   };
 in
 {
+  assertions = [ { assertion = config.services.napcat.enable; message = "QQ relay requires services.napcat.enable."; } ];
   systemd.services.qq-napcat-relay = {
     description = "QQ-NapCat RabbitMQ Relay";
     after = [

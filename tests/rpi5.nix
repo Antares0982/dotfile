@@ -86,4 +86,16 @@
       && lib.all (r: !(lib.hasInfix "agent_work" r)) c.systemd.tmpfiles.rules
       && c.systemd.services ? xray;
   }
+  {
+    name = "napcat-dependency";
+    module = { lib, ... }: { services.napcat.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.users.users ? napcat)
+      && !(c.systemd.services ? napcat)
+      && !(c.systemd.services ? napcat-watchdog)
+      && !(c.systemd.timers ? napcat-restart)
+      && !(c.age.secrets ? napcatEnv);
+    valid = false;
+  }
 ]

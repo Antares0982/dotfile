@@ -39,12 +39,6 @@ in
       # the agent's. F19: the sandbox blocks writes outside cwd but not reads,
       # so anything the agent uid can read, the model can read. Same
       # certificate the (now retired) hermes bridge used.
-      napcatEnv = {
-        file = ../secrets/napcat-env.age;
-        owner = "napcat";
-        group = "users";
-        mode = "400";
-      };
       qqRelayEnv = {
         file = ../secrets/qq-relay-env.age;
         owner = "napcat";
