@@ -51,6 +51,7 @@ in
     tumbler
     typora
     unar
+    vscode.fhs
     xarchiver
 
   ];

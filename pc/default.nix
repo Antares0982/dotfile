@@ -31,7 +31,6 @@
     ./ssh.nix
     ./steam.nix
     ./user.nix
-    ./vscode.nix
     ./ydotool.nix
   ]
   ++ [

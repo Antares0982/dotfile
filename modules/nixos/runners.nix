@@ -69,7 +69,15 @@ in
         message = "Runner instances must have distinct users.";
       }
       {
-        assertion = lib.length (lib.unique (map (unit: unit.name) units)) == lib.length units;
+        assertion =
+          lib.length (
+            lib.unique (
+              lib.concatMap (unit: [
+                unit.name
+                "restart-${unit.name}"
+              ]) units
+            )
+          ) == 2 * lib.length units;
         message = "Runner service names must be unique.";
       }
     ];

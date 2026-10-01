@@ -27,4 +27,14 @@
     module = { lib, ... }: { antares.systemCompiler.enable = lib.mkForce false; };
     check = c: !(lib.hasInfix "system-cc-shims" c.environment.extraInit);
   }
+  {
+    name = "all-features-off";
+    module = { lib, ... }: {
+      antares.xray.enable = lib.mkForce false;
+      antares.proxy.enable = lib.mkForce false;
+      antares.nixShell.enable = lib.mkForce false;
+      antares.systemCompiler.enable = lib.mkForce false;
+    };
+    check = c: !(c.launchd.daemons ? xray) && !(c.environment.variables ? NIX_BUILD_SHELL);
+  }
 ]

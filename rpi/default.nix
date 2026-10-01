@@ -9,7 +9,6 @@
   imports = [
     ./antares-agent.nix
     ./configuration.nix
-    ./gitsync.nix
     ./monitor.nix
     ./rpc-client.nix
     ./nix.nix

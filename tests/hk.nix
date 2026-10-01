@@ -190,4 +190,29 @@
     check = c: true;
     valid = false;
   }
+  {
+    name = "all-features-off";
+    module = { lib, ... }: {
+      antares.blog.enable = lib.mkForce false;
+      antares.messaging.enable = lib.mkForce false;
+      antares.acme.enable = lib.mkForce false;
+      security.acme.certs = lib.mkForce { };
+      mailserver.enable = lib.mkForce false;
+      services.mysql.enable = lib.mkForce false;
+      services.nginx.enable = lib.mkForce false;
+      services.xray.enable = lib.mkForce false;
+      services.rabbitmq.enable = lib.mkForce false;
+      services.telegram-output-monitor-bot.enable = lib.mkForce false;
+      services.antares-rpc-client.enable = lib.mkForce false;
+    };
+    check =
+      c:
+      c.users.users ? alice
+      &&
+        builtins.attrNames c.age.secrets == [
+          "password"
+          "serverPassword"
+        ]
+      && builtins.attrNames c.home-manager.users.alice.systemd.user.services == [ "nix-gc" ];
+  }
 ]

@@ -178,4 +178,41 @@
     module = { lib, ... }: { antares.gitServer.enable = lib.mkForce false; };
     check = c: !(c.users.users ? git) && c.users.users ? antares && c.services.openssh.enable;
   }
+  {
+    name = "runner-unit-collision";
+    module = { lib, ... }: {
+      services.antares-runners.instances.nixdev.serviceName = lib.mkForce "restart-github-runner";
+    };
+    check = c: true;
+    valid = false;
+  }
+  {
+    name = "all-features-off";
+    module = { lib, ... }: {
+      antares = {
+        agent.enable = lib.mkForce false;
+        qq.enable = lib.mkForce false;
+        xray.enable = lib.mkForce false;
+        proxy.enable = lib.mkForce false;
+        gitServer.enable = lib.mkForce false;
+      };
+      services.antares-runners.instances = lib.mkForce { };
+      services.ssh-probe.enable = lib.mkForce false;
+      services.telegram-output-monitor-bot.enable = lib.mkForce false;
+      services.antares-rpc-client.enable = lib.mkForce false;
+      services.rabbitmq.enable = lib.mkForce false;
+    };
+    check =
+      c:
+      c.users.users ? antares
+      && !(c.users.users ? agent)
+      && !(c.users.users ? napcat)
+      && !(c.users.users ? actionrunner)
+      && !(c.users.users ? git)
+      &&
+        builtins.attrNames c.age.secrets == [
+          "password"
+          "serverPassword"
+        ];
+  }
 ]

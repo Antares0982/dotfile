@@ -137,4 +137,33 @@
       !(c.age.secrets ? ghToken)
       && !(lib.hasInfix "export GH_TOKEN=" c.home-manager.users.antares.programs.zsh.initContent);
   }
+  {
+    name = "all-features-off";
+    module = { lib, ... }: {
+      antares = {
+        desktop.enable = lib.mkForce false;
+        xray.enable = lib.mkForce false;
+        proxy.enable = lib.mkForce false;
+        autostart.enable = lib.mkForce false;
+        waitOnline.enable = lib.mkForce false;
+        githubAuth.enable = lib.mkForce false;
+        rust.enable = lib.mkForce false;
+      };
+      services.pipewire.enable = lib.mkForce false;
+      hardware.bluetooth.enable = lib.mkForce false;
+      i18n.inputMethod.enable = lib.mkForce false;
+      services.samba.enable = lib.mkForce false;
+      programs.steam.enable = lib.mkForce false;
+      programs.ydotool.enable = lib.mkForce false;
+      services.mcp-nixos.enable = lib.mkForce false;
+      services.telegram-output-monitor-bot.enable = lib.mkForce false;
+      services.antares-rpc-client.enable = lib.mkForce false;
+      services.rabbitmq.enable = lib.mkForce false;
+    };
+    check =
+      c:
+      c.users.users ? antares
+      && !(c.age.secrets ? ghToken)
+      && builtins.attrNames c.home-manager.users.antares.systemd.user.services == [ "nix-gc" ];
+  }
 ]
