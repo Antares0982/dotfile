@@ -1,5 +1,25 @@
 { lib }: [
   {
+    name = "codex-auth";
+    module = { };
+    check =
+      c:
+      c.systemd.services ? codex-auth
+      && c.systemd.services ? codex-login
+      && builtins.elem "codex-auth-clients" c.users.users.agent.extraGroups
+      && c.systemd.services.antares-agent.environment.ANTARES_AUTH_SOCKET == "/run/codex-auth/auth.sock"
+      && c.services.qq-codex-agent.authSocket == "/run/codex-auth/auth.sock"
+      && !(c.age.secrets ? antaresAgentEnv);
+  }
+  {
+    name = "codex-auth-off";
+    module = { lib, ... }: {
+      antares.agent.enable = lib.mkForce false;
+      antares.qq.enable = lib.mkForce false;
+    };
+    check = c: !(c.systemd.services ? codex-auth) && !(c.users.users ? codex-auth);
+  }
+  {
     name = "actionrunner-off";
     module = { lib, ... }: {
       services.antares-runners.instances.actionrunner.enable = lib.mkForce false;

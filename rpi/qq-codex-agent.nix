@@ -8,7 +8,7 @@
 let
   user = "qq-codex-agent";
   app = config.services.qq-codex-agent.package;
-  ghToken = "/etc/qq-codex-agent/gh-token";
+  ghToken = "/etc/qq-codex-private/gh-token";
   launcher = pkgs.writeShellScript "qq-codex-launch" ''
     set -eu
     export GH_TOKEN="$(${pkgs.coreutils}/bin/cat ${ghToken})"
@@ -98,11 +98,11 @@ in
       };
       allowlistFile = config.age.secrets.qqCodexAllowlist.path;
       tokenFile = "/run/qq-codex-auth/token";
+      authSocket = "/run/codex-auth/auth.sock";
       extraPackages = [
         pkgs.gh
         pkgs.nix
       ];
-      extraDeniedPaths = [ ghToken ];
       codexSettings = {
         model_provider = "openai-http";
         model_providers.openai-http = {
@@ -173,9 +173,6 @@ in
         BindReadOnlyPaths = mounts;
       };
     };
-    systemd.services.qq-codex-login = {
-      inherit environment;
-      serviceConfig.BindReadOnlyPaths = mounts;
-    };
+
   };
 }

@@ -2,9 +2,9 @@
   root,
   host,
   snapshot ? false,
+  flake ? builtins.getFlake "git+file://${root}?dir=hosts/${host}",
 }:
 let
-  flake = builtins.getFlake "git+file://${root}?dir=hosts/${host}";
   darwin = host == "macbook";
   system = if darwin then flake.darwinConfigurations.${host} else flake.nixosConfigurations.${host};
   lib = system.pkgs.lib;

@@ -24,6 +24,7 @@
     ./qq-credentials.nix
     ./qq-relay.nix
     ./qq-codex-agent.nix
+    ./codex-auth.nix
   ]
   ++ [
     ../common/agenix.nix
