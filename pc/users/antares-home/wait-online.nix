@@ -1,5 +1,6 @@
 {
   config,
+  osConfig,
   pkgs,
   lib,
   ...
@@ -27,9 +28,7 @@ in
       TimeoutStartSec = "infinity";
       WorkingDirectory = "${envs.envs.GITHUB_DIR}/wait-online";
       Environment = [
-        "http_proxy=${envs.envs.http_proxy}"
-        "https_proxy=${envs.envs.https_proxy}"
-      ];
+      ] ++ lib.optionals osConfig.antares.proxy.enable [ "http_proxy=${osConfig.antares.proxy.httpUrl}" "https_proxy=${osConfig.antares.proxy.httpUrl}" ];
     };
 
     Install = {

@@ -1,5 +1,8 @@
-{ ... }: {
+{ config, ... }: {
   services.telegram-output-monitor-bot.enable = true;
-  antares.monitor.proxy = "http://127.0.0.1:1081";
+  antares.monitor.proxy = if config.antares.proxy.enable then config.antares.proxy.httpUrl else null;
   services.antares-rpc-client.enable = true;
+  antares.xray.enable = true;
+  antares.proxy.enable = true;
+  antares.autostart.enable = true;
 }

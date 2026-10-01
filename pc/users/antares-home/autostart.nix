@@ -1,5 +1,6 @@
 {
   config,
+  osConfig,
   pkgs,
   lib,
   pull-all,
@@ -11,6 +12,8 @@ let
   nix = "${pkgs.nix}/bin/nix";
 in
 {
+  config = lib.mkIf (osConfig.antares.autostart.enable) {
+
   systemd.user.services.autostart = {
     Unit = {
       Description = "${envs.usernameCap} Auto Start Service";
@@ -31,14 +34,14 @@ in
         "XRAY_TEMPLATE=${envs.envs.XRAY_TEMPLATE}"
         "GITHUB_DIR=${envs.envs.GITHUB_DIR}"
         "GIT_DIRS=${envs.envs.GITHUB_DIR}"
-        "http_proxy=${envs.envs.http_proxy}"
-        "https_proxy=${envs.envs.https_proxy}"
         "XRAY_CONF_DIR=${envs.localFileDef.xrayConfDir}"
-      ];
+      ] ++ lib.optionals osConfig.antares.proxy.enable [ "http_proxy=${osConfig.antares.proxy.httpUrl}" "https_proxy=${osConfig.antares.proxy.httpUrl}" ];
     };
 
     Install = {
       WantedBy = [ "default.target" ];
     };
+  };
+
   };
 }

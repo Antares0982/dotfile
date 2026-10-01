@@ -1,10 +1,12 @@
-{ pkgs, myXray, ... }:
+{ lib, config, pkgs, myXray, osConfig, ... }:
 let
   xs = import ../../../packages/xs.nix {
     inherit pkgs myXray;
   };
 in
 {
+  config = lib.mkIf (osConfig.antares.xray.enable) {
+
   home.packages = [
     myXray
     xs
@@ -23,5 +25,7 @@ in
     Install = {
       WantedBy = [ "default.target" ];
     };
+  };
+
   };
 }

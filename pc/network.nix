@@ -10,10 +10,6 @@
           from = 1714;
           to = 1764;
         } # KDE Connect
-        {
-          from = 1080;
-          to = 1081;
-        } # Xray open port
       ];
       allowedUDPPortRanges = [
         {

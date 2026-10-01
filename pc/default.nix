@@ -7,6 +7,9 @@
 {
   nixpkgs.config.allowUnfree = true;
   imports = [
+    ../modules/proxy.nix
+    ./xray.nix
+    ./autostart.nix
     ./audio.nix
     ./bluetooth.nix
     ./configuration.nix
