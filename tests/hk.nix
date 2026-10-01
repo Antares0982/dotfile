@@ -95,4 +95,14 @@
       && c.users.users ? alice
       && c.home-manager.users.alice.systemd.user.services ? alice;
   }
+  {
+    name = "telegram-api-off";
+    module = { lib, ... }: { services.telegram-bot-api.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.systemd.services ? telegram-bot-api)
+      && !(c.age.secrets ? telegramBotApiEnv)
+      && c.users.users ? alice
+      && c.services.nginx.virtualHosts ? "tg.alyr.dev";
+  }
 ]

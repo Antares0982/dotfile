@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, lib, ... }:
 let
   root = "/var/lib/agent-files";
 in
@@ -21,7 +21,9 @@ in
       "${root}/tmp"
     ];
   };
-  systemd.services.telegram-bot-api.serviceConfig.SupplementaryGroups = [ "agent-files" ];
+  systemd.services.telegram-bot-api = lib.mkIf config.services.telegram-bot-api.enable {
+    serviceConfig.SupplementaryGroups = [ "agent-files" ];
+  };
 
   services.nginx.commonHttpConfig = ''
     limit_conn_zone $server_name zone=agent_files:1m;

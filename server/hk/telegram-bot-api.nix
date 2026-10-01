@@ -1,5 +1,8 @@
-{ config, pkgs, ... }:
+{ lib, config, pkgs, ... }:
 {
+  options.services.telegram-bot-api.enable = lib.mkEnableOption "Telegram Bot API";
+  config = lib.mkIf (config.services.telegram-bot-api.enable) {
+
   systemd.services.telegram-bot-api = {
     description = "Telegram Bot API";
     wantedBy = [ "multi-user.target" ];
@@ -17,5 +20,13 @@
       RestartSec = 5;
       UMask = "0077";
     };
+  };
+
+      age.secrets.telegramBotApiEnv = {
+        file = ../../secrets/telegram-bot-api-env.age;
+        owner = "root";
+        group = "root";
+        mode = "400";
+      };
   };
 }

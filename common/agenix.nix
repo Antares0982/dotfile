@@ -51,12 +51,6 @@ in
         owner = "nginx";
         mode = "400";
       };
-      telegramBotApiEnv = {
-        file = ../secrets/telegram-bot-api-env.age;
-        owner = "root";
-        group = "root";
-        mode = "400";
-      };
       rabbitmqDefinitions = {
         file = ../secrets/rabbitmq-definitions.age;
         owner = "rabbitmq";
