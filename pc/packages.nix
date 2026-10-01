@@ -50,6 +50,7 @@ in
     tor-browser
     tumbler
     typora
+    umu-launcher
     unar
     vscode.fhs
     xarchiver
