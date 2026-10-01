@@ -91,7 +91,7 @@ curNixosSystem {
     qq-codex-source = inputs.qq-codex-agent;
   };
   modules = [
-    ./configuration.nix
+    ./common/cachix.nix
     agenix.nixosModules.default
   ]
   ++ lib.optionals currentDevice.rpi [
@@ -105,6 +105,7 @@ curNixosSystem {
     home-manager.nixosModules.home-manager
   ]
   ++ lib.optionals (currentDevice.wsl or false) [
+    ./configuration.nix
     wsl.nixosModules.wsl
   ]
   ++ lib.optionals needVSCodeServer [

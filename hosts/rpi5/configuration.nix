@@ -44,4 +44,5 @@
   services.rabbitmq.enable = true;
   services.ssh-probe.enable = true;
   antares.gitServer.enable = true;
+  imports = [ ../../rpi ];
 }

@@ -17,4 +17,5 @@
   services.mcp-nixos.enable = true;
   antares.waitOnline.enable = true;
   antares.githubAuth.enable = true;
+  imports = [ ../../pc ];
 }

@@ -23,4 +23,10 @@
   services.rabbitmq.enable = true;
   services.mysql.enable = true;
   services.mysqlBackup.enable = config.services.mysql.enable;
+  imports = [
+    ../../server
+    ../../server/hk
+  ];
+  networking.hostName = "hk";
+  networking.domain = "chr.fan";
 }

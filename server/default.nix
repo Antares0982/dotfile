@@ -1,4 +1,4 @@
-{ currentDevice, ... }:
+{ ... }:
 let
   commonEnvs = import ../common/shellEnv.nix;
 in
@@ -13,9 +13,6 @@ in
     ./sysstat.nix
     ./user.nix
     ./xrayService.nix
-  ]
-  ++ [
-    (if currentDevice.server.hk then ./hk else ./gz)
   ]
   ++ [
     ../common/env.nix
@@ -38,16 +35,5 @@ in
       export PATH=$PATH:$HOME/scripts:$HOME/scripts/linux
     '';
   };
-  networking =
-    if currentDevice.server.hk then
-      {
-        hostName = "hk";
-        domain = "chr.fan";
-      }
-    else
-      {
-        hostName = "gz";
-        domain = "alyr.dev";
-      };
   system.stateVersion = "23.11";
 }

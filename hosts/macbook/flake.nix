@@ -42,7 +42,6 @@
           renewal = renewal.packages.${mac-system}.default;
         };
         modules = [
-          ../../mac
           ./configuration.nix
         ];
       };
