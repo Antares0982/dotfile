@@ -53,4 +53,10 @@
       && !(lib.any (p: p.from == 1714) c.networking.firewall.allowedTCPPortRanges)
       && c.users.users ? antares;
   }
+  {
+    name = "audio-off";
+    module = { lib, ... }: { services.pipewire.enable = lib.mkForce false; };
+    check =
+      c: !c.security.rtkit.enable && !(c.systemd.services ? rtkit-daemon) && !c.services.pipewire.enable;
+  }
 ]
