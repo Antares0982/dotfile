@@ -37,7 +37,6 @@ in
     # libreoffice
     neovim
     nixos-shell
-    obsidian
     opencode
     openssl
     perf

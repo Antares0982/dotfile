@@ -108,15 +108,9 @@ rec {
       fi
 
       local hasShell
-      hasShell=$(nix eval --impure --json --expr '
-        let
-          flake = builtins.getFlake (toString ./.);
-          system = builtins.currentSystem;
-        in
-          flake.outputs ? devShells
-          && builtins.hasAttr system flake.outputs.devShells
-          && builtins.hasAttr "default" (builtins.getAttr system flake.outputs.devShells)
-      ' 2>/dev/null)
+      hasShell=$(nix eval --json --no-write-lock-file '.#.' \
+        --apply 'flake: flake ? devShells.${pkgs.stdenv.hostPlatform.system}.default' \
+        2>/dev/null)
       if [[ $? -eq 0 && "$hasShell" != true ]]; then
         command "$@"
         return

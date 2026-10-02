@@ -17,6 +17,7 @@ in
     eza
     fd
     find-nix-gc-roots
+    fzf
     gcc
     gdb
     gh
