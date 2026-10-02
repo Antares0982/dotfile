@@ -36,7 +36,7 @@ rec {
     XRAY_TEMPLATE = localFileDef.xrayConfTemplatePath;
     GPG_TTY = "$TTY";
     NIX_BUILD_SHELL = "${nix-zshell}/bin/nix-zshell";
-    NIX_DOT_FILES = "${localFileDef.docDir}/Nix";
+    NIX_DOT_FILES = "${localFileDef.githubDir}/Nix";
     EDITOR = "nvim";
   };
   aliases = commonEnv.aliases // {
