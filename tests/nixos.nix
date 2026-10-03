@@ -67,6 +67,8 @@
       && !c.services.greetd.enable
       && !c.programs.kdeconnect.enable
       && !c.home-manager.users.antares.xdg.mimeApps.enable
+      && !(c.home-manager.users.antares.xdg.configFile ? "kitty/kitty.conf")
+      && !(c.home-manager.users.antares.xdg.configFile ? "kitty/fcitx5.py")
       && !(c.environment.sessionVariables ? NIXOS_OZONE_WL)
       && !(lib.any (p: p.from == 1714) c.networking.firewall.allowedTCPPortRanges)
       && c.users.users ? antares;
@@ -83,11 +85,23 @@
     check = c: !(c.systemd.services ? bluetooth) && !c.hardware.bluetooth.enable;
   }
   {
+    name = "kitty-input-on";
+    module = { };
+    check =
+      c:
+      c.home-manager.users.antares.xdg.configFile ? "kitty/fcitx5.py"
+      &&
+        lib.hasInfix "watcher fcitx5.py"
+          c.home-manager.users.antares.xdg.configFile."kitty/kitty.conf".text;
+  }
+  {
     name = "input-off";
     module = { lib, ... }: { i18n.inputMethod.enable = lib.mkForce false; };
     check =
       c:
       !c.i18n.inputMethod.enable
+      && !(c.home-manager.users.antares.xdg.configFile ? "kitty/fcitx5.py")
+      && !(lib.hasInfix "watcher" c.home-manager.users.antares.xdg.configFile."kitty/kitty.conf".text)
       && !(lib.any (p: lib.hasPrefix "fcitx5" (lib.getName p)) c.environment.systemPackages);
   }
   {
