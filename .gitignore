@@ -2,7 +2,7 @@ private.nix
 
 resource/gallary/
 
-secrets/secrets.nix
+secrets/agenix-rules.nix
 
 .mypy_cache/
 
