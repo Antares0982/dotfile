@@ -6,6 +6,10 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixpkgs-old.url = "github:NixOS/nixpkgs/nixos-26.05";
+    we-layerd = {
+      url = "github:Antares0982/we-layerd/c9684450d283b3eca8802668769b2142789815f7";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     # follows helpers, kept only to dedup linyinfeng-nur's transitive inputs
     flake-compat.url = "github:edolstra/flake-compat";

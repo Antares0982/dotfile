@@ -198,7 +198,7 @@ integration as well as the upstream service.
 | nixos, rpi5, macbook | `antares.xray.enable`, `antares.proxy.enable` |
 | rpi5 | `services.antares-runners.instances.<name>.enable`, `antares.agent.enable`, `antares.qq.enable`, `antares.gitServer.enable`, `services.ssh-probe.enable` |
 | hk | `antares.blog.enable`, `antares.blog.metrics.enable`, `antares.messaging.enable`, `mailserver.enable`, `services.mysql.enable`, `services.nginx.enable`, `antares.acme.enable`, `services.xray.enable` |
-| nixos | `antares.desktop.enable`, `antares.rust.enable`, `antares.autostart.enable`, `antares.waitOnline.enable`, `antares.githubAuth.enable`, `services.mcp-nixos.enable` |
+| nixos | `antares.desktop.enable`, `antares.wallpaper.enable`, `antares.rust.enable`, `antares.autostart.enable`, `antares.waitOnline.enable`, `antares.githubAuth.enable`, `services.mcp-nixos.enable` |
 | nixos | `services.pipewire.enable`, `hardware.bluetooth.enable`, `i18n.inputMethod.enable`, `services.samba.enable`, `programs.steam.enable`, `programs.ydotool.enable` |
 | macbook | `antares.nixShell.enable`, `antares.systemCompiler.enable` |
 
@@ -207,6 +207,13 @@ use `antares.alice.enable`, `antares.trilug.enable`,
 `services.telegram-bot-api.enable`, and `antares.agentFiles.enable`.
 A stack's master switch dominates component selections. Blog metrics also
 require the blog master switch.
+
+PC wallpaper configuration lives in `pc/wallpaper.nix` and is gated by the
+desktop switch. Assets and selected workshop directories live outside Nix at
+`/var/lib/we-layerd/{assets,workshop/<ID>}`; provision them separately with read
+access for the desktop user and greeter. HM owns the three period configs and
+user timer. Run `bash scripts/check-wallpaper.sh`; optionally pass the generated
+config directory to also validate TOML using Python 3.11 or newer.
 
 ### Dependencies and State
 

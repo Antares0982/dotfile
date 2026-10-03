@@ -20,7 +20,7 @@
     services = {
       displayManager.regreet = {
         enable = true;
-        extraCss = ''
+        extraCss = lib.mkDefault ''
           window.background {
             background-image: url("file:///boot/background.png");
             background-size: cover;

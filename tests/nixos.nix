@@ -56,11 +56,51 @@
     check = c: !(c.systemd.services ? rabbitmq) && !(c.users.users ? rabbitmq);
   }
   {
+    name = "wallpaper-on";
+    module = { };
+    check =
+      c:
+      let
+        home = c.home-manager.users.antares;
+        service = home.systemd.user.services.we-layerd;
+        timer = home.systemd.user.timers.we-layerd-switch;
+      in
+      service.Unit.PartOf == [ "niri.service" ]
+      && service.Install.WantedBy == [ "niri.service" ]
+      && service.Service.Restart == "on-failure"
+      && timer.Timer.OnCalendar == "*-*-* 00,06,19:00:00"
+      && timer.Timer.Persistent
+      && timer.Timer.OnClockChange
+      && timer.Timer.OnTimezoneChange
+      && home.xdg.configFile ? "we-layerd/config.toml"
+      && home.xdg.configFile ? "we-layerd/evening.toml"
+      && home.xdg.configFile ? "we-layerd/night.toml"
+      && c.environment.etc ? "greetd/we-layerd.toml"
+      && lib.hasInfix "/bin/niri --config" c.services.greetd.settings.default_session.command
+      && !(lib.hasInfix "/home/antares" c.services.greetd.settings.default_session.command);
+  }
+  {
+    name = "wallpaper-off";
+    module = { lib, ... }: { antares.wallpaper.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.home-manager.users.antares.systemd.user.services ? we-layerd)
+      && !(c.home-manager.users.antares.systemd.user.timers ? we-layerd-switch)
+      && !(c.home-manager.users.antares.xdg.configFile ? "we-layerd/config.toml")
+      && !(c.environment.etc ? "greetd/we-layerd.toml")
+      && lib.hasInfix "/bin/cage" c.services.greetd.settings.default_session.command
+      && lib.hasInfix "/boot/background.png" c.services.displayManager.regreet.extraCss;
+  }
+  {
     name = "desktop-off";
     module = { lib, ... }: { antares.desktop.enable = lib.mkForce false; };
     check =
       c:
       !c.programs.niri.enable
+      && !(c.home-manager.users.antares.systemd.user.services ? we-layerd)
+      && !(c.home-manager.users.antares.systemd.user.timers ? we-layerd-switch)
+      && !(c.home-manager.users.antares.xdg.configFile ? "we-layerd/config.toml")
+      && !(c.environment.etc ? "greetd/we-layerd.toml")
       && !(c.systemd.services ? git-sign-unlock)
       && !(c.home-manager.users.antares.systemd.user.services ? git-sign-unlock)
       && !(c.age.secrets ? gitSignPassphrase)

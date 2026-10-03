@@ -16,6 +16,7 @@ in
   antares.autostart.enable = true;
   services.rabbitmq.enable = true;
   antares.desktop.enable = true;
+  antares.wallpaper.enable = true;
   services.pipewire.enable = true;
   hardware.bluetooth.enable = true;
   i18n.inputMethod.enable = true;
@@ -31,6 +32,7 @@ in
   home-manager.users.antares.programs.yazi.enable = true;
   imports = [ ../../pc ];
   _module.args = {
+    we-layerd = inputs.we-layerd.packages.${system}.default;
     myXray = inputs.myXray.packages.${system}.default;
     xray-sub = inputs.myXray.packages.${system}.xray_sub;
     antares-rpc-client = inputs.antares-rpc-client.packages.${system}.default;

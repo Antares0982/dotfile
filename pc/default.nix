@@ -15,6 +15,7 @@
     ./bluetooth.nix
     ./configuration.nix
     ./display.nix
+    ./wallpaper.nix
     ./fcitx5.nix
     ./github-auth.nix
     ./git-sign-unlock.nix
