@@ -13,6 +13,7 @@
 Multi-machine Nix configuration flake managing:
 - `nixos` — desktop PC (x86_64-linux, niri/Wayland, NVIDIA, home-manager)
 - `hk` — Hong Kong server (x86_64-linux, nginx/mail services)
+- `gz`: Guangzhou VPS (x86_64-linux, basic SSH server)
 - `rpi5` — Raspberry Pi 5 (aarch64-linux)
 - `wsl` — Windows Subsystem for Linux (x86_64-linux)
 - `macbook` — macOS (aarch64-darwin, nix-darwin)
@@ -33,12 +34,16 @@ host or an explicitly configured remote builder.
 # Build without switching (dry-run check)
 nixos-rebuild build --flake ./hosts/nixos#nixos
 nixos-rebuild build --flake ./hosts/hk#hk
+nixos-rebuild build --flake ./hosts/gz#gz
 nixos-rebuild build --flake ./hosts/wsl#wsl
 nixos-rebuild build --flake ./hosts/rpi5#rpi5
 
 # Apply configuration
 sudo nixos-rebuild switch --flake ./hosts/nixos#nixos
 sudo nixos-rebuild switch --flake ./hosts/wsl#wsl
+
+# Deploy GZ with its dedicated key
+nixos-rebuild switch --flake ./hosts/gz#gz --target-host gz --sudo
 ```
 
 **macOS** (nix-darwin):
@@ -115,6 +120,15 @@ remain in `secrets/secrets.nix`. Feature modules declare their own
 secrets. QQ relay and QQ Codex share the deployment in `rpi/qq-credentials.nix`;
 it remains while either consumer is enabled.
 
+GZ uses `server/gz` without the broader `server` imports. It deploys only
+`serverPassword` with its dedicated `/etc/ssh/agenix` identity. The local SSH
+alias `gz` uses `antares` and `~/.ssh/gz`; root SSH is disabled. Its disko layout
+targets `/dev/vda` with BIOS GRUB and ext4. Installation erases that disk;
+ordinary rebuilds do not repartition it.
+For `nixos-anywhere --extra-files`, explicitly set the staging directories
+`etc` and `etc/ssh` to mode 0755 and the `agenix` private key to 0600; tar
+preserves these directory permissions on the installed system.
+
 ## Custom Packages
 
 `packages/default.nix` is the explicit package entry point. Import it with
@@ -128,7 +142,7 @@ second package registry.
 The refactoring covers `nixos`, `hk`, `rpi5`, and `macbook`. WSL is excluded;
 keep its existing entry points and shared-module interfaces compatible.
 
-Run `bash scripts/check-configs.sh` for all four hosts, or pass host names.
+Run `bash scripts/check-configs.sh` for all configured checks, or pass host names.
 The check evaluates locked configurations and feature scenarios without switching.
 Stage new Nix files before evaluating Git-backed flakes.
 
@@ -189,7 +203,7 @@ instance count to one.
 
 ### Validation
 
-`bash scripts/check-configs.sh` evaluates all four scoped hosts. To check one
+`bash scripts/check-configs.sh` evaluates the four scoped hosts and GZ. To check one
 feature while editing, use e.g.
 `CHECK_CASE='blog-off|metrics-off' bash scripts/check-configs.sh hk`.
 Checks cover individual shutdown, shared resources, invalid dependencies, and
