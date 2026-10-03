@@ -167,7 +167,7 @@ rec {
     }
 
     ae() {
-      cd $NIX_DOT_FILES
+      cd "''${NIX_DOT_FILES:?NIX_DOT_FILES is not set}/secrets" || exit 1
       if [ "$#" -eq 0 ]; then
         echo "Usage: ae <file>"
         return 1

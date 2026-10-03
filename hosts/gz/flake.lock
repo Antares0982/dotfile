@@ -87,6 +87,26 @@
         "type": "github"
       }
     },
+    "l4d2-plugins": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1791011294,
+        "narHash": "sha256-LXHf4EZANTivKqFEU64iuVhLsm1dPQ3o73QDTRBI4lI=",
+        "owner": "Antares0982",
+        "repo": "l4d2-plugins",
+        "rev": "48e9784b793b6804a3f978517c60fa72a20e5aaf",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Antares0982",
+        "repo": "l4d2-plugins",
+        "type": "github"
+      }
+    },
     "myXray": {
       "inputs": {
         "nixpkgs": [
@@ -144,6 +164,7 @@
         "agenix": "agenix",
         "disko": "disko",
         "home-manager": "home-manager",
+        "l4d2-plugins": "l4d2-plugins",
         "myXray": "myXray",
         "nixpkgs": "nixpkgs",
         "nixpkgs-old": "nixpkgs-old"

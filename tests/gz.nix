@@ -23,6 +23,8 @@
       && !c.security.sudo.wheelNeedsPassword
       &&
         builtins.attrNames c.age.secrets == [
+          "l4d2-private"
+          "l4d2-rcon"
           "serverPassword"
           "xraySubUrl"
           "xrayTemplateJson"
@@ -41,7 +43,7 @@
       && c.services.sysstat.collect-args == "1 1"
       && c.networking.firewall.enable
       && c.networking.firewall.allowedTCPPorts == [ 22 ]
-      && c.networking.firewall.allowedUDPPorts == [ ]
+      && c.networking.firewall.allowedUDPPorts == [ 27015 ]
       && c.networking.firewall.allowedTCPPortRanges == [ ]
       && c.services.xray.enable
       && c.services.xray.settingsFile == "/var/xray/config.json"
@@ -87,10 +89,51 @@
       !(c.systemd.services ? xray)
       && !(c.systemd.services ? xray-sub)
       && !(c.systemd.timers ? xray-sub)
-      && builtins.attrNames c.age.secrets == [ "serverPassword" ]
+      &&
+        builtins.attrNames c.age.secrets == [
+          "l4d2-private"
+          "l4d2-rcon"
+          "serverPassword"
+        ]
       && !(lib.any (p: lib.getName p == "xs") c.environment.systemPackages)
       && !(c.environment.variables ? http_proxy)
       && !(c.systemd.services.nix-daemon.environment ? http_proxy)
+      && c.users.users ? antares;
+  }
+  {
+    name = "l4d2";
+    module = { };
+    check =
+      c:
+      c.antares.l4d2.enable
+      && c.users.users.l4d2.home == "/home/l4d2"
+      && c.users.users.l4d2.hashedPassword == "!"
+      && c.users.users.l4d2.extraGroups == [ ]
+      && builtins.length c.users.users.l4d2.openssh.authorizedKeys.keys == 1
+      && c.age.secrets.l4d2-rcon.owner == "l4d2"
+      && c.age.secrets.l4d2-rcon.mode == "0400"
+      && c.age.secrets.l4d2-private.owner == "l4d2"
+      && c.age.secrets.l4d2-private.mode == "0400"
+      && c.systemd.services.l4d2.serviceConfig.User == "l4d2"
+      && lib.hasInfix "-nomaster" c.systemd.services.l4d2.serviceConfig.ExecStart
+      && c.systemd.timers.l4d2-update.timerConfig.OnCalendar == "*-*-* 05:00:00 Asia/Shanghai"
+      && !c.systemd.timers.l4d2-update.timerConfig.Persistent
+      && c.networking.firewall.allowedTCPPorts == [ 22 ];
+  }
+  {
+    name = "l4d2-off";
+    module = { lib, ... }: { antares.l4d2.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.users.users ? l4d2)
+      && !(c.users.groups ? l4d2)
+      && !(c.age.secrets ? l4d2-rcon)
+      && !(c.age.secrets ? l4d2-private)
+      && !(c.systemd.services ? l4d2)
+      && !(c.systemd.services ? l4d2-install)
+      && !(c.systemd.services ? l4d2-update)
+      && !(c.systemd.timers ? l4d2-update)
+      && c.networking.firewall.allowedUDPPorts == [ ]
       && c.users.users ? antares;
   }
   {

@@ -19,6 +19,10 @@
         home-manager.follows = "home-manager";
       };
     };
+    l4d2-plugins = {
+      url = "github:Antares0982/l4d2-plugins";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
