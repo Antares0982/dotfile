@@ -100,13 +100,30 @@
       && !(c.systemd.services ? samba-smbd);
   }
   {
+    name = "steam-on";
+    module = { };
+    check =
+      c:
+      c.age.secrets.steamApiKey.owner == "antares"
+      && c.age.secrets.steamApiKey.group == "users"
+      && c.age.secrets.steamApiKey.mode == "0400"
+      && lib.any (p: lib.getName p == "steam-workshop-ts") c.environment.systemPackages;
+  }
+  {
     name = "steam-off";
     module = { lib, ... }: { programs.steam.enable = lib.mkForce false; };
     check =
       c:
       !c.programs.steam.remotePlay.openFirewall
       && !c.programs.steam.dedicatedServer.openFirewall
-      && !(lib.any (p: lib.getName p == "steamcmd") c.environment.systemPackages);
+      && !(c.age.secrets ? steamApiKey)
+      && !(lib.any (
+        p:
+        lib.elem (lib.getName p) [
+          "steamcmd"
+          "steam-workshop-ts"
+        ]
+      ) c.environment.systemPackages);
   }
   {
     name = "ydotool-off";
