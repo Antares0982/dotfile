@@ -18,8 +18,6 @@ in
     blender
     localPackages.blender-mcp
     cheat
-    clang-tools
-    cmake
     codex
     direnv
     # discord
@@ -35,7 +33,6 @@ in
     # kdePackages.konsole
     libnotify
     # libreoffice
-    neovim
     nixos-shell
     opencode
     openssl

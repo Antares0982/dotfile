@@ -13,6 +13,8 @@ in
   nixpkgs.config.allowUnfree = true;
   environment.systemPackages = with pkgs; [
     cachix
+    clang-tools
+    cmake
     delta
     eza
     fd
@@ -27,6 +29,7 @@ in
     jq
     kitty.terminfo
     nano
+    neovim
     net-tools
     nixfmt
     nix-prefetch-scripts
@@ -35,6 +38,7 @@ in
     renewal
     ripgrep
     statix
+    stylua
     tree
     tree-sitter
     uv
