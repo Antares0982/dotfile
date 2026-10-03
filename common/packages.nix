@@ -31,6 +31,7 @@ in
     nixfmt
     nix-prefetch-scripts
     oh-my-zsh
+    p7zip
     renewal
     ripgrep
     statix

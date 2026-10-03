@@ -70,30 +70,8 @@ rec {
       man -t $1 | nix shell nixpkgs#ghostscript_headless -c ps2pdf - $1.pdf
     }
 
-    _nix_py_init() {
-      local tmpdir
-      tmpdir=$(mktemp -d) || return 1
-      git clone --depth 1 https://github.com/Antares0982/nix-pyenv "$tmpdir" 2>/dev/null || { rm -rf "$tmpdir"; echo "clone failed"; return 1; }
-      local copied=() skipped=()
-      for f in "$tmpdir"/*.nix; do
-        local name=$(basename "$f")
-        if [[ -e "$name" ]]; then
-          skipped+=("$name")
-        else
-          cp "$f" . && copied+=("$name")
-        fi
-      done
-      rm -rf "$tmpdir"
-      (( ${escapebrace}#copied[@]} )) && echo "copied: ${escapebrace}copied[*]}"
-      (( ${escapebrace}#skipped[@]} )) && echo "skipped (already exists): ${escapebrace}skipped[*]}"
-      if git rev-parse --is-inside-work-tree &>/dev/null && (( ${escapebrace}#copied[@]} )); then
-        git add "${escapebrace}copied[@]}" && echo "git add done"
-      fi
-    }
-
-
     unzip7zwithpass() {
-      nix run nixpkgs#p7zip -- x "$1" -p$2
+      p7zip x "$1" -p$2
     }
 
     _f() {
@@ -186,6 +164,15 @@ rec {
       else
         nix develop $@
       fi
+    }
+
+    ae() {
+      cd $NIX_DOT_FILES
+      if [ "$#" -eq 0 ]; then
+        echo "Usage: ae <file>"
+        return 1
+      fi
+      agenix --identity /etc/ssh/agenix -e "$@"
     }
   ''
   + lib.concatStrings (lib.mapAttrsToList genNixFunc nixFuncAliases);

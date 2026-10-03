@@ -3,6 +3,11 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs-old.url = "github:NixOS/nixpkgs/nixos-26.05";
+    myXray = {
+      url = "github:Antares0982/rules-dat-xray-flake";
+      inputs.nixpkgs.follows = "nixpkgs-old";
+    };
     home-manager = {
       url = "github:nix-community/home-manager/master";
       inputs.nixpkgs.follows = "nixpkgs";

@@ -9,7 +9,7 @@ import tempfile
 import time
 
 
-MOCK = r'''
+MOCK = r"""
 import json, os, signal, socket, sys, time
 from pathlib import Path
 
@@ -55,7 +55,7 @@ elif tool == "curl":
     sys.exit(sample.get("status", 0))
 elif tool == "sudo":
     os.execvp(args[0], args)
-'''
+"""
 
 
 def check():
@@ -86,7 +86,9 @@ def check():
         def run(*args, success=True, overrides=None):
             result = subprocess.run(
                 ["bash", str(script), *args],
-                env=env | (overrides or {}), capture_output=True, text=True,
+                env=env | (overrides or {}),
+                capture_output=True,
+                text=True,
                 timeout=15,
             )
             assert (result.returncode == 0) == success, result
@@ -94,15 +96,18 @@ def check():
             return result
 
         def node(name, **sample):
-            (subs / name).write_text(json.dumps({
-                "outbounds": [{"tag": "proxy", "sample": sample}]
-            }))
+            (subs / name).write_text(
+                json.dumps({"outbounds": [{"tag": "proxy", "sample": sample}]})
+            )
 
         def calls(tool):
             if not events.exists():
                 return []
-            return [entry for line in events.read_text().splitlines()
-                    if (entry := json.loads(line))[0] == tool]
+            return [
+                entry
+                for line in events.read_text().splitlines()
+                if (entry := json.loads(line))[0] == tool
+            ]
 
         def reset():
             cache.unlink(missing_ok=True)
@@ -124,6 +129,9 @@ def check():
         run()
         assert active.readlink().name == "Japan slow.json"
         assert len(calls("curl")) == 2
+        subs.rename(root / "nodes")
+        subs.symlink_to(root / "nodes", target_is_directory=True)
+        (subs / "active.json").symlink_to(active)
         run("Hong", overrides={"XS_FILTER": "Japan"})
         assert active.readlink().name == "Hong.json"
         run(overrides={"XS_FILTER": "Hong"})
@@ -204,8 +212,12 @@ def check():
             server.listen()
             run(success=False)
         assert len(calls("xray")) == count
-        run(overrides={"XS_SYSTEMD_SCOPE": "system",
-                       "XS_CONFIG_PATH": str(subs / "active.json")})
+        run(
+            overrides={
+                "XS_SYSTEMD_SCOPE": "system",
+                "XS_CONFIG_PATH": str(subs / "active.json"),
+            }
+        )
         assert (subs / "active.json").readlink().name == "Japan.json"
         assert calls("sudo")[-1][1] == ["systemctl", "restart", "xray.service"]
         assert calls("systemctl")[-1][1] == ["restart", "xray.service"]
@@ -215,8 +227,12 @@ def check():
             node("Japan.json", slow=True)
             count = len(calls("curl"))
             with subprocess.Popen(
-                ["bash", str(script)], env=env, start_new_session=True,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                ["bash", str(script)],
+                env=env,
+                start_new_session=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
             ) as process:
                 deadline = time.monotonic() + 5
                 while len(calls("curl")) == count and time.monotonic() < deadline:

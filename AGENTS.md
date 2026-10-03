@@ -13,7 +13,7 @@
 Multi-machine Nix configuration flake managing:
 - `nixos` — desktop PC (x86_64-linux, niri/Wayland, NVIDIA, home-manager)
 - `hk` — Hong Kong server (x86_64-linux, nginx/mail services)
-- `gz`: Guangzhou VPS (x86_64-linux, basic SSH server)
+- `gz`: Guangzhou VPS (x86_64-linux, SSH and outbound Xray proxy)
 - `rpi5` — Raspberry Pi 5 (aarch64-linux)
 - `wsl` — Windows Subsystem for Linux (x86_64-linux)
 - `macbook` — macOS (aarch64-darwin, nix-darwin)
@@ -113,7 +113,7 @@ infrastructure and shared accounts remain independent.
 ## Secrets
 
 Secrets use agenix. Edit encrypted sources with `agenix -e`; recipient keys
-remain in `secrets/secrets.nix`. Feature modules declare their own
+remain in the local, ignored `secrets/agenix-rules.nix`. Feature modules declare their own
 `age.secrets` entries and consume `config.age.secrets.<name>.path`.
 
 `common/agenix.nix` owns agenix tooling, identity paths, and base account password
@@ -122,11 +122,24 @@ it remains while either consumer is enabled.
 
 HK and GZ import `server` for fail2ban, sysstat, and firewall activation.
 HK-specific hardware, accounts, packages, and service integrations live in
-`server/hk`; GZ-specific configuration lives in `server/gz`. GZ deploys only
-`serverPassword` with its dedicated `/etc/ssh/agenix` identity. The local SSH
+`server/hk`; GZ-specific configuration lives in `server/gz`. GZ deploys
+`serverPassword` and its enabled Xray secrets with its dedicated
+`/etc/ssh/agenix` identity. The local SSH
 alias `gz` uses `antares` and `~/.ssh/gz`; root SSH is disabled. Its disko layout
 targets `/dev/vda` with BIOS GRUB and ext4. Installation erases that disk;
 ordinary rebuilds do not repartition it.
+
+GZ uses `services.xray.enable` and `antares.proxy.enable`. Its native Xray
+service reads `/var/xray/config.json`; proxy variables cover login shells and
+the Nix daemon. All proxy listeners are loopback-only. `xs` selects nodes and
+restarts the system service through sudo. `sudo systemctl start xray-sub`
+updates subscriptions manually; a timer also runs after boot and daily.
+Updates retain the selected node when available, otherwise test Japan nodes
+before trying all nodes. Failed updates retain the previous configuration.
+The shared `xraysub.age` and dedicated `xray-template-gz.age` must authorize
+both the original recipient and GZ's agenix key in the local recipient rules.
+The GZ template is a snapshot of the PC template with loopback listeners.
+
 For `nixos-anywhere --extra-files`, explicitly set the staging directories
 `etc` and `etc/ssh` to mode 0755 and the `agenix` private key to 0600; tar
 preserves these directory permissions on the installed system.

@@ -13,8 +13,11 @@
   };
   config.assertions = [
     {
-      assertion = !config.antares.proxy.enable || config.antares.xray.enable;
-      message = "The local proxy environment requires antares.xray.enable; disable antares.proxy.enable for direct access.";
+      assertion =
+        !config.antares.proxy.enable
+        || (config.antares.xray.enable or false)
+        || (config.services.xray.enable or false);
+      message = "The local proxy environment requires Xray; disable antares.proxy.enable for direct access.";
     }
   ];
 }

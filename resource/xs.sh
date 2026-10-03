@@ -150,7 +150,7 @@ files=()
 while IFS= read -r -d '' f; do
 	name=${f##*/}
 	[[ "$name" == *"$FILTER"* ]] && files+=("$name")
-done < <(find "$SUBS" -maxdepth 1 -type f -name '*.json' -print0 | sort -z)
+done < <(find -H "$SUBS" -maxdepth 1 -type f -name '*.json' -print0 | sort -z)
 [ "${#files[@]}" -gt 0 ] || {
 	echo "xs: no config matching '$FILTER' in $SUBS" >&2
 	exit 1

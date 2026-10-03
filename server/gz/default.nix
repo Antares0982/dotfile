@@ -8,6 +8,7 @@
   imports = [
     (modulesPath + "/profiles/qemu-guest.nix")
     ./disk-config.nix
+    ./xray.nix
     ../../common/nix.nix
     ../../common/ssh.nix
     ../../common/sudo.nix
