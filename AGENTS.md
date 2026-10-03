@@ -120,7 +120,9 @@ remain in `secrets/secrets.nix`. Feature modules declare their own
 secrets. QQ relay and QQ Codex share the deployment in `rpi/qq-credentials.nix`;
 it remains while either consumer is enabled.
 
-GZ uses `server/gz` without the broader `server` imports. It deploys only
+HK and GZ import `server` for fail2ban, sysstat, and firewall activation.
+HK-specific hardware, accounts, packages, and service integrations live in
+`server/hk`; GZ-specific configuration lives in `server/gz`. GZ deploys only
 `serverPassword` with its dedicated `/etc/ssh/agenix` identity. The local SSH
 alias `gz` uses `antares` and `~/.ssh/gz`; root SSH is disabled. Its disko layout
 targets `/dev/vda` with BIOS GRUB and ext4. Installation erases that disk;

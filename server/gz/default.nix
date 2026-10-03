@@ -27,7 +27,6 @@
   networking = {
     useDHCP = false;
     interfaces.eth0.useDHCP = true;
-    firewall.enable = true;
   };
   zramSwap.enable = true;
   services.openssh.settings.KbdInteractiveAuthentication = false;

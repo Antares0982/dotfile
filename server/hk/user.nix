@@ -5,12 +5,12 @@
   ...
 }:
 let
-  userCommonSettings = import ../common/users.nix {
+  userCommonSettings = import ../../common/users.nix {
     inherit (config.age) secrets;
   };
 in
 {
-  imports = [ ../common/sudo.nix ];
+  imports = [ ../../common/sudo.nix ];
   users = {
     mutableUsers = false;
     users = {

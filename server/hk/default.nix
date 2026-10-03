@@ -1,6 +1,20 @@
 { config, pkgs, ... }:
+let
+  commonEnvs = import ../../common/shellEnv.nix;
+in
 {
   imports = [
+    ./hardware
+    ./mysql.nix
+    ./packages.nix
+    ./user.nix
+    ./xrayService.nix
+    ../../common/env.nix
+    ../../common/nix.nix
+    ../../common/rabbitmq.nix
+    ../../common/ssh.nix
+    ../../common/time.nix
+    ../../common/zsh.nix
     ./users
   ]
   ++ [
@@ -18,4 +32,12 @@
     ./telegram-bot-api.nix
     ./agent-files.nix
   ];
+  environment.variables.NIX_DOT_FILES = "/home/antares/Nix";
+  programs.zsh = {
+    shellAliases = commonEnvs.aliases;
+    shellInit = ''
+      export PATH=$PATH:$HOME/scripts:$HOME/scripts/linux
+    '';
+  };
+  system.stateVersion = "23.11";
 }

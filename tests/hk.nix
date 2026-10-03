@@ -1,5 +1,16 @@
 { lib }: [
   {
+    name = "server-base";
+    module = { };
+    check =
+      c:
+      c.services.fail2ban.enable
+      && c.services.sysstat.enable
+      && c.services.sysstat.collect-frequency == "*:00/01"
+      && c.services.sysstat.collect-args == "1 1"
+      && c.networking.firewall.enable;
+  }
+  {
     name = "monitor-off";
     module = { lib, ... }: { services.telegram-output-monitor-bot.enable = lib.mkForce false; };
     check =

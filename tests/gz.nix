@@ -30,6 +30,10 @@
       && c.disko.devices.disk.main.device == "/dev/vda"
       && c.fileSystems."/".fsType == "ext4"
       && c.networking.interfaces.eth0.useDHCP
+      && c.services.fail2ban.enable
+      && c.services.sysstat.enable
+      && c.services.sysstat.collect-frequency == "*:00/01"
+      && c.services.sysstat.collect-args == "1 1"
       && c.networking.firewall.enable
       && c.networking.firewall.allowedTCPPorts == [ 22 ]
       && c.networking.firewall.allowedUDPPorts == [ ];

@@ -6,7 +6,7 @@
 }:
 {
   imports = [
-    ../common/agenix.nix
-    ../common/packages.nix
+    ../../common/agenix.nix
+    ../../common/packages.nix
   ];
 }
