@@ -45,7 +45,7 @@ let
     sv_password ""
     sv_gametypes "coop"
     mp_gamemode "coop"
-    z_difficulty "Normal"
+    z_difficulty "Impossible"
     sv_allow_lobby_connect_only 0
     sv_force_unreserved 1
     sv_maxplayers 8
