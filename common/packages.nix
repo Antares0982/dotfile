@@ -31,6 +31,7 @@ in
     nixfmt
     nix-prefetch-scripts
     p7zip
+    python3
     renewal
     ripgrep
     statix

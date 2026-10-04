@@ -14,7 +14,6 @@ let
     fastfetch = "fastfetch";
     killall = "killall";
     nix-update = "nix-update";
-    python313 = "python313";
     python314 = "python314";
     python315 = "python315";
     ethtool = "ethtool";
