@@ -146,7 +146,6 @@ in
       createHome = true;
       homeMode = "0700";
       hashedPassword = "!";
-      shell = pkgs.bashInteractive;
       openssh.authorizedKeys.keys = [
         "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqUj4N9enqwZ8UGUq5DQ4uij6mzIKLYomkpUNZQinXm l4d2@gz"
       ];
