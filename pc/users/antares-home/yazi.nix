@@ -6,7 +6,16 @@
 }:
 {
   config = lib.mkIf config.programs.yazi.enable {
-    programs.yazi.shellWrapperName = "y";
+    programs = {
+      yazi = {
+        shellWrapperName = "y";
+        initLua = ''
+          require("session"):setup {
+            sync_yanked = true,
+          }
+        '';
+      };
+    };
     xdg.configFile."yazi/theme.toml".source = pkgs.fetchurl {
       url = "https://raw.githubusercontent.com/catppuccin/yazi/d62802be39210ea10e54b3e3b09735c6cb9e57c1/themes/macchiato/catppuccin-macchiato-mauve.toml";
       hash = "sha256-U2wqK7RgCM0D9ecjgmGB8K5yXt9wizCJEfnKhLDU3bk=";
