@@ -16,15 +16,12 @@ in
     clang-tools
     cmake
     delta
-    eza
     fd
     find-nix-gc-roots
-    fzf
     gcc
     gdb
     gh
     git
-    gnumake
     gnupg
     jq
     kitty.terminfo
@@ -33,7 +30,6 @@ in
     net-tools
     nixfmt
     nix-prefetch-scripts
-    oh-my-zsh
     p7zip
     renewal
     ripgrep
@@ -42,7 +38,5 @@ in
     tree
     tree-sitter
     uv
-    zsh
-    zsh-powerlevel10k
   ];
 }

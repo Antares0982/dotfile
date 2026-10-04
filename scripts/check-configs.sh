@@ -2,11 +2,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 if [ "$#" -eq 0 ]; then
-	set -- nixos hk rpi5 macbook gz
+	set -- nixos hk rpi5 macbook gz wsl
 fi
 for host in "$@"; do
 	case "$host" in
-	nixos | hk | rpi5 | macbook | gz) ;;
+	nixos | hk | rpi5 | macbook | gz | wsl) ;;
 	*)
 		echo "Unsupported host: $host" >&2
 		exit 2

@@ -60,6 +60,10 @@ in
   antares.gitServer.enable = true;
   imports = [ ../../rpi ];
   environment.etc."zsh/p10k.zsh".source = ../../resource/rpi-p10k.zsh;
+  environment.variables.NIX_DOT_FILES = "/home/antares/Nix";
+  programs.zsh.shellInit = ''
+    export PATH=$PATH:$HOME/scripts:$HOME/scripts/linux
+  '';
   _module.args = {
     myXray = inputs.myXray.packages.${system}.default;
     xray-sub = inputs.myXray.packages.${system}.xray_sub;

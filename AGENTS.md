@@ -244,10 +244,20 @@ instance count to one.
 
 ### Validation
 
-`bash scripts/check-configs.sh` evaluates the four scoped hosts and GZ. To check one
+`bash scripts/check-configs.sh` evaluates all six hosts, including WSL. To check one
 feature while editing, use e.g.
 `CHECK_CASE='blog-off|metrics-off' bash scripts/check-configs.sh hk`.
 Checks cover individual shutdown, shared resources, invalid dependencies, and
 complete business-feature shutdown. They do not decrypt secrets or activate
 configurations. Continue to build only on matching platforms or explicitly
 configured remote builders.
+
+### Zsh
+
+`common/zsh.nix` owns the system Zsh baseline on all six hosts, including
+platform adapters, Oh My Zsh plugins, aliases, and fzf shell integration.
+Linux-only aliases stay on Linux. Host configurations select prompt files and
+host-specific shell paths. PC Home Manager extensions live in
+`pc/users/antares-home/zsh.nix`; environment data stays in `_env.nix`.
+Oh My Zsh owns `compinit`; do not initialize it again in Home Manager.
+Run `CHECK_CASE=zsh-base bash scripts/check-configs.sh` for the shared checks.

@@ -28,17 +28,4 @@ in
     // lib.optionalAttrs osConfig.antares.xray.enable {
       inherit (envs.envs) XRAY_CONF_DIR XRAY_CONFIG_PATH XRAY_TEMPLATE;
     };
-  programs.zsh = {
-    enable = true;
-    shellAliases = envs.aliases;
-    initContent = ''
-      source ${envs.localFileDef.p10kConfPath}
-      eval "$(direnv hook zsh)"
-      export PATH=$PATH:${envs.envs.SCRIPT_DIR}:${envs.envs.SCRIPT_DIR}/linux
-    ''
-    + envs.shellInitExtra
-    + lib.optionalString osConfig.antares.githubAuth.enable ''
-      export GH_TOKEN=$(cat ${osConfig.age.secrets.ghToken.path})
-    '';
-  };
 }

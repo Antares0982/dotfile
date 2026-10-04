@@ -50,6 +50,10 @@ in
     singleTransaction = true;
   };
   environment.etc."zsh/p10k.zsh".source = ../../resource/hk-p10k.zsh;
+  environment.variables.NIX_DOT_FILES = "/home/antares/Nix";
+  programs.zsh.shellInit = ''
+    export PATH=$PATH:$HOME/scripts:$HOME/scripts/linux
+  '';
   _module.args = {
     myXray = inputs.myXray.packages.${system}.default;
     antares-rpc-client = inputs.antares-rpc-client.packages.${system}.default;

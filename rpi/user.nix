@@ -10,12 +10,6 @@ let
   };
 in
 {
-  programs.zsh.shellInit = ''
-    export PATH=$PATH:$HOME/scripts:$HOME/scripts/linux
-  '';
-  environment.variables = {
-    NIX_DOT_FILES = "/home/antares/Nix";
-  };
   users = {
     # mutableUsers = false;
     users.antares = {

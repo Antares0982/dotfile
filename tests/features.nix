@@ -10,7 +10,10 @@ let
   lib = system.pkgs.lib;
   cfg = system.config;
   casesFile = ./. + "/${host}.nix";
-  allCases = if builtins.pathExists casesFile then import casesFile { inherit lib; } else [ ];
+  allCases = [
+    (import ./zsh.nix { inherit lib host; })
+  ]
+  ++ (if builtins.pathExists casesFile then import casesFile { inherit lib; } else [ ]);
   pattern = builtins.getEnv "CHECK_CASE";
   cases = lib.filter (case: pattern == "" || builtins.match pattern case.name != null) allCases;
   drv =

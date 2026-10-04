@@ -1,7 +1,4 @@
 { config, pkgs, ... }:
-let
-  commonEnvs = import ../../common/shellEnv.nix;
-in
 {
   imports = [
     ./hardware
@@ -32,12 +29,5 @@ in
     ./telegram-bot-api.nix
     ./agent-files.nix
   ];
-  environment.variables.NIX_DOT_FILES = "/home/antares/Nix";
-  programs.zsh = {
-    shellAliases = commonEnvs.aliases;
-    shellInit = ''
-      export PATH=$PATH:$HOME/scripts:$HOME/scripts/linux
-    '';
-  };
   system.stateVersion = "23.11";
 }

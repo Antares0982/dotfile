@@ -14,7 +14,7 @@
     ./proxy.nix
     ./stdenv.nix
     ./xray.nix
-    ./zsh.nix
+    ../common/zsh.nix
   ]
   ++ [
     ../common/nix.nix

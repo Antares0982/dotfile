@@ -13,6 +13,7 @@ in
     ./antares-rpc-client.nix
     ./autostart.nix
     ./env.nix
+    ./zsh.nix
     ./kitty.nix
     ./wait-online.nix
     ./xdg-mime.nix
