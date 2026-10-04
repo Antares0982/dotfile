@@ -18,9 +18,10 @@ in
     environment.systemPackages = [
       (rust-overlay-minimal.override {
         extensions = [
+          "clippy"
+          "rust-analyzer"
           "rust-src"
           "rustfmt"
-          "clippy"
         ];
         targets = [
           "aarch64-unknown-linux-gnu"
