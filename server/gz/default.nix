@@ -14,6 +14,7 @@
     ../../common/sudo.nix
     ../../common/time.nix
     ../../common/zsh.nix
+    ../../common/packages.nix
   ];
 
   boot = {

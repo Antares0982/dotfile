@@ -334,26 +334,6 @@
         "type": "github"
       }
     },
-    "renewal": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1789049135,
-        "narHash": "sha256-tQw9JyVngiCOJJ70/VfwiQJG0PGY848ShNTItrO2Iog=",
-        "owner": "Antares0982",
-        "repo": "renewal",
-        "rev": "549656b38e24892c589aadb03c6f351d8834e7ed",
-        "type": "github"
-      },
-      "original": {
-        "owner": "Antares0982",
-        "repo": "renewal",
-        "type": "github"
-      }
-    },
     "root": {
       "inputs": {
         "agenix": "agenix",
@@ -369,7 +349,6 @@
         "nixpkgs-old": "nixpkgs-old",
         "pyproject-build-systems": "pyproject-build-systems",
         "pyproject-nix": "pyproject-nix",
-        "renewal": "renewal",
         "uv2nix": "uv2nix",
         "visitor-badge": "visitor-badge"
       }

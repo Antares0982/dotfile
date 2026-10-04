@@ -6,7 +6,6 @@
   ...
 }:
 let
-  renewal = inputs.renewal.packages.${pkgs.stdenv.hostPlatform.system}.default;
   find-nix-gc-roots = (import ../packages { inherit pkgs; }).find-nix-gc-roots;
 in
 {
@@ -32,7 +31,6 @@ in
     nix-prefetch-scripts
     p7zip
     python3
-    renewal
     ripgrep
     statix
     stylua

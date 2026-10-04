@@ -46,10 +46,6 @@
       url = "github:Antares0982/blog";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    renewal = {
-      url = "github:Antares0982/renewal";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     git-hooks = {
       url = "github:cachix/git-hooks.nix";
       inputs = {

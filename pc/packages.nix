@@ -3,10 +3,12 @@
   lib,
   pkgs,
   linyinfeng-nur-packages,
+  inputs,
   ...
 }:
 let
   localPackages = import ../packages { inherit pkgs; };
+  renewal = inputs.renewal.packages.${pkgs.stdenv.hostPlatform.system}.default;
 in
 {
   imports = [ ../common/packages.nix ];
@@ -39,6 +41,7 @@ in
     perf
     pyright
     qbittorrent
+    renewal
     ruff
     shfmt
     telegram-desktop
