@@ -23,6 +23,8 @@
       && !c.security.sudo.wheelNeedsPassword
       &&
         builtins.attrNames c.age.secrets == [
+          "cloudflareEnv"
+          "l4d2-files-htpasswd"
           "l4d2-private"
           "l4d2-rcon"
           "serverPassword"
@@ -42,7 +44,11 @@
       && c.services.sysstat.collect-frequency == "*:00/01"
       && c.services.sysstat.collect-args == "1 1"
       && c.networking.firewall.enable
-      && c.networking.firewall.allowedTCPPorts == [ 22 ]
+      &&
+        lib.sort builtins.lessThan c.networking.firewall.allowedTCPPorts == [
+          22
+          8443
+        ]
       && c.networking.firewall.allowedUDPPorts == [ 27015 ]
       && c.networking.firewall.allowedTCPPortRanges == [ ]
       && c.services.xray.enable
@@ -91,6 +97,8 @@
       && !(c.systemd.timers ? xray-sub)
       &&
         builtins.attrNames c.age.secrets == [
+          "cloudflareEnv"
+          "l4d2-files-htpasswd"
           "l4d2-private"
           "l4d2-rcon"
           "serverPassword"
@@ -118,7 +126,11 @@
       && lib.hasInfix "-nomaster" c.systemd.services.l4d2.serviceConfig.ExecStart
       && c.systemd.timers.l4d2-update.timerConfig.OnCalendar == "*-*-* 05:00:00 Asia/Shanghai"
       && !c.systemd.timers.l4d2-update.timerConfig.Persistent
-      && c.networking.firewall.allowedTCPPorts == [ 22 ];
+      &&
+        lib.sort builtins.lessThan c.networking.firewall.allowedTCPPorts == [
+          22
+          8443
+        ];
   }
   {
     name = "l4d2-off";
@@ -129,12 +141,61 @@
       && !(c.users.groups ? l4d2)
       && !(c.age.secrets ? l4d2-rcon)
       && !(c.age.secrets ? l4d2-private)
+      && !(c.age.secrets ? l4d2-files-htpasswd)
+      && !(c.age.secrets ? cloudflareEnv)
+      && !(c.systemd.services ? nginx)
+      && c.security.acme.certs == { }
+      && c.networking.firewall.allowedTCPPorts == [ 22 ]
       && !(c.systemd.services ? l4d2)
       && !(c.systemd.services ? l4d2-install)
       && !(c.systemd.services ? l4d2-update)
       && !(c.systemd.timers ? l4d2-update)
       && c.networking.firewall.allowedUDPPorts == [ ]
       && c.users.users ? antares;
+  }
+  {
+    name = "l4d2-files";
+    module = { };
+    check =
+      c:
+      c.antares.l4d2.fileServer.enable
+      && c.services.nginx.enable
+      && c.services.nginx.virtualHosts."gz.chr.fan".onlySSL
+      &&
+        lib.hasInfix (builtins.unsafeDiscardStringContext "xslt_stylesheet ${../resource/l4d2/files.xsl};")
+          c.services.nginx.virtualHosts."gz.chr.fan".extraConfig
+      && lib.all (
+        listener: listener.port == 8443 && listener.ssl
+      ) c.services.nginx.virtualHosts."gz.chr.fan".listen
+      &&
+        c.services.nginx.virtualHosts."gz.chr.fan".basicAuthFile == c.age.secrets.l4d2-files-htpasswd.path
+      && c.age.secrets.l4d2-files-htpasswd.owner == "nginx"
+      && c.age.secrets.l4d2-files-htpasswd.mode == "0400"
+      && c.security.acme.certs."gz.chr.fan".dnsProvider == "cloudflare"
+      && c.security.acme.certs."gz.chr.fan".webroot == null
+      && c.systemd.services.nginx.serviceConfig.ProtectHome
+      &&
+        c.systemd.services.nginx.serviceConfig.BindReadOnlyPaths == [
+          "/home/l4d2/serverfiles/left4dead2/addons:/srv/l4d2-addons"
+        ];
+  }
+  {
+    name = "l4d2-files-off";
+    module = { lib, ... }: { antares.l4d2.fileServer.enable = lib.mkForce false; };
+    check =
+      c:
+      c.systemd.services ? l4d2
+      && !(c.systemd.services ? nginx)
+      && !(c.age.secrets ? l4d2-files-htpasswd)
+      && !(c.age.secrets ? cloudflareEnv)
+      && c.security.acme.certs == { }
+      && c.networking.firewall.allowedTCPPorts == [ 22 ];
+  }
+  {
+    name = "l4d2-files-dependency";
+    module = { lib, ... }: { services.nginx.enable = lib.mkForce false; };
+    valid = false;
+    check = c: c.antares.l4d2.fileServer.enable && !c.services.nginx.enable;
   }
   {
     name = "xray-dependency";

@@ -26,7 +26,7 @@
     (lib.mkIf (config.antares.acme.enable && config.security.acme.certs != { }) {
       users.groups.nginx = { };
       age.secrets.cloudflareEnv = {
-        file = ../../secrets/cloudflare-env.age;
+        file = ../secrets/cloudflare-env.age;
         owner = "acme";
         group = "nginx";
       };

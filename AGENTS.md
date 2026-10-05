@@ -159,6 +159,19 @@ GZ's `serverPassword.age`, `xraysub.age`, `xray-template-gz.age`,
 alongside the PC management key; shared files also authorize their other consumers.
 The GZ template is a snapshot of the PC template with loopback listeners.
 
+GZ's `antares.l4d2.fileServer.enable` enables `https://gz.chr.fan:8443/` while
+L4D2 is enabled. nginx serves only top-level VPK/JPG files from the addons
+directory through a read-only bind mount, with JPG previews and Basic Auth
+username `l4d2`. Keep uploads readable (0644). TCP 8443 must also be allowed by
+the cloud firewall. `l4d2-files-htpasswd.age` authorizes PC/GZ; the shared
+`cloudflare-env.age` authorizes PC/HK/GZ. `modules/acme.nix` owns shared DNS
+certificate issuance; neither port 80 nor 443 is needed on GZ.
+Set the download password using
+`nix shell nixpkgs#apacheHttpd nixpkgs#age -c bash scripts/set-l4d2-password.sh`,
+then rebuild GZ. Validate using
+`nix shell nixpkgs#nginx nixpkgs#apacheHttpd -c python3 scripts/test-l4d2-files.py`
+and `bash scripts/check-configs.sh gz hk`.
+
 For `nixos-anywhere --extra-files`, explicitly set the staging directories
 `etc` and `etc/ssh` to mode 0755 and the `agenix` private key to 0600; tar
 preserves these directory permissions on the installed system.

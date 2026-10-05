@@ -19,7 +19,7 @@
     ./alice.nix
     ./rabbitmq.nix
     ./web.nix
-    ./acme.nix
+    ../../modules/acme.nix
     ./blog.nix
     ./site-metrics.nix
     ./rpc-client.nix
