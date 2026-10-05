@@ -11,6 +11,6 @@ args=()
 for recipient in "${recipients[@]}"; do
 	args+=(-r "$recipient")
 done
-htpasswd -nB l4d2 | age "${args[@]}" > "$encrypted"
+htpasswd -nB l4d2 | age "${args[@]}" >"$encrypted"
 mv "$encrypted" secrets/l4d2-files-htpasswd.age
 echo 'Password encrypted. Rebuild GZ to apply it.'

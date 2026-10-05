@@ -75,7 +75,11 @@
       || (
         home.enable
         && home.completionInit == ""
-        && builtins.length (builtins.attrNames home.shellAliases) == 11
+        && lib.matchAttrs {
+          sctl = "sudo systemctl";
+          jtl = "journalctl --user";
+          sjtl = "sudo journalctl";
+        } home.shellAliases
         && !(home.shellAliases ? ctl)
         && lib.all (text: lib.hasInfix text home.initContent) [
           "[[ ! -f \"/home/antares/.p10k.zsh\" ]]"

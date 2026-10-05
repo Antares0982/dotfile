@@ -9,6 +9,16 @@
     programs = {
       yazi = {
         shellWrapperName = "y";
+        settings.open.prepend_rules = [
+          {
+            # Compressed Blender files look like archives.
+            url = "*.{blend,blender}";
+            use = [
+              "open"
+              "reveal"
+            ];
+          }
+        ];
         initLua = ''
           require("session"):setup {
             sync_yanked = true,

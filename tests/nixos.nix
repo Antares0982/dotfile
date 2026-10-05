@@ -269,6 +269,23 @@
     valid = false;
   }
   {
+    name = "yazi-on";
+    module = { };
+    check =
+      c:
+      let
+        home = c.home-manager.users.antares;
+        rule = builtins.head home.programs.yazi.settings.open.prepend_rules;
+      in
+      home.xdg.configFile ? "yazi/yazi.toml"
+      && rule.url == "*.{blend,blender}"
+      &&
+        rule.use == [
+          "open"
+          "reveal"
+        ];
+  }
+  {
     name = "yazi-off";
     module = { lib, ... }: { home-manager.users.antares.programs.yazi.enable = lib.mkForce false; };
     check =
