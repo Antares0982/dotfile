@@ -94,11 +94,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1791011294,
-        "narHash": "sha256-LXHf4EZANTivKqFEU64iuVhLsm1dPQ3o73QDTRBI4lI=",
+        "lastModified": 1791304521,
+        "narHash": "sha256-frBg1Zaq50u+eGD466Zm/kWnz5okR+RaBRpBpLfM6Ig=",
         "owner": "Antares0982",
         "repo": "l4d2-plugins",
-        "rev": "48e9784b793b6804a3f978517c60fa72a20e5aaf",
+        "rev": "398152afdf3737b29dcf4ce9cb92ffc93cf13c49",
         "type": "github"
       },
       "original": {
