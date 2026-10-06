@@ -65,6 +65,7 @@
         lib.sort builtins.lessThan c.networking.firewall.allowedTCPPorts == [
           22
           8443
+          27015
         ]
       && c.networking.firewall.allowedUDPPorts == [ 27015 ]
       && c.networking.firewall.allowedTCPPortRanges == [ ]
@@ -149,6 +150,7 @@
         lib.sort builtins.lessThan c.networking.firewall.allowedTCPPorts == [
           22
           8443
+          27015
         ];
   }
   {
@@ -209,7 +211,11 @@
       && !(c.age.secrets ? l4d2-files-htpasswd)
       && !(c.age.secrets ? cloudflareEnv)
       && c.security.acme.certs == { }
-      && c.networking.firewall.allowedTCPPorts == [ 22 ];
+      &&
+        lib.sort builtins.lessThan c.networking.firewall.allowedTCPPorts == [
+          22
+          27015
+        ];
   }
   {
     name = "l4d2-files-dependency";

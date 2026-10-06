@@ -54,7 +54,7 @@ Keep universal rules here and put new specialist details in the matching guide.
 | Add, disable, or migrate features; change module composition, options, dependencies, accounts, or feature tests | [Feature modules](docs/maintenance/features.md) |
 | Secrets, passwords, agenix recipients/identities, secret consumers, or installation key staging | [Secrets and identities](docs/maintenance/secrets.md) |
 | GZ/SZ hosts, SSH, disks, or Xray: `hosts/{gz,sz}/`, `server/{gz,sz}/`, `server/vps.nix`, `server/xray-client.nix`, `{gz,sz}.nix` | [GZ and SZ servers](docs/maintenance/gz.md) |
-| L4D2 server, addons, downloads, RCON, or related auth: `modules/l4d2*.nix`, `resource/l4d2/`, L4D2 scripts/secrets/options | [L4D2](docs/maintenance/l4d2.md) |
+| L4D2 server, addons, downloads, RCON, or related auth: `modules/l4d2*.nix`, `resource/l4d2/`, L4D2 scripts/secrets/options | [L4D2](docs/maintenance/l4d2.md); maintain plugin code and packaging in `$GITHUB_DIR/l4d2-plugins` first |
 | Wallpaper, we-layerd assets, period configs, or wallpaper checks | [PC wallpaper](docs/maintenance/wallpaper.md) |
 | Zsh, prompts, shell environment, completion, or fzf integration | [Zsh](docs/maintenance/zsh.md) |
 
