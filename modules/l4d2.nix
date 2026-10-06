@@ -9,6 +9,15 @@ let
   cfg = config.antares.l4d2;
   home = "/home/l4d2";
   game = "${home}/serverfiles/left4dead2";
+  addons = l4d2-addons.overrideAttrs (old: {
+    postBuild = (old.postBuild or "") + ''
+      "$compiler" -i"$includes" -i"$PWD/hooks/sourcemod/scripting/include" \
+        multi/hp_tank_show/scripting/hp_tank_show.sp -ocompiled/hp_tank_show.smx
+    '';
+    postInstallCheck = (old.postInstallCheck or "") + ''
+      test -s "$out/addons/sourcemod/plugins/hp_tank_show.smx"
+    '';
+  });
   runtime =
     (pkgs.steam.override {
       extraLibraries = p: [ p.proxychains-ng ];
@@ -66,7 +75,7 @@ let
     set -euo pipefail
     test ! -e ${home}/.update-incomplete
     test -x ${home}/serverfiles/srcds_linux
-    ${pkgs.rsync}/bin/rsync -r --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r ${l4d2-addons}/ ${game}/
+    ${pkgs.rsync}/bin/rsync -r --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r ${addons}/ ${game}/
     rm -f ${game}/addons/metamod_x64.vdf
     install -m644 ${serverConfig} ${game}/cfg/server.cfg
     install -m644 ${multiConfig} ${game}/cfg/sourcemod/l4dmultislots.cfg
