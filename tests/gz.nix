@@ -33,6 +33,7 @@
       &&
         builtins.attrNames c.age.secrets == [
           "cloudflareEnv"
+          "l4d2-admins"
           "l4d2-files-htpasswd"
           "l4d2-private"
           "l4d2-rcon"
@@ -116,6 +117,7 @@
       &&
         builtins.attrNames c.age.secrets == [
           "cloudflareEnv"
+          "l4d2-admins"
           "l4d2-files-htpasswd"
           "l4d2-private"
           "l4d2-rcon"
@@ -142,6 +144,11 @@
       && c.age.secrets.l4d2-rcon.mode == "0400"
       && c.age.secrets.l4d2-private.owner == "l4d2"
       && c.age.secrets.l4d2-private.mode == "0400"
+      && c.age.secrets.l4d2-admins.owner == "l4d2"
+      && c.age.secrets.l4d2-admins.group == "l4d2"
+      && c.age.secrets.l4d2-admins.mode == "0400"
+      && lib.hasSuffix "/l4d2-admins.age" (toString c.age.secrets.l4d2-admins.file)
+      && builtins.elem c.age.secrets.l4d2-admins.file c.systemd.services.l4d2.restartTriggers
       && c.systemd.services.l4d2.serviceConfig.User == "l4d2"
       && lib.hasInfix "-nomaster" c.systemd.services.l4d2.serviceConfig.ExecStart
       && c.systemd.timers.l4d2-update.timerConfig.OnCalendar == "*-*-* 05:00:00 Asia/Shanghai"
@@ -162,6 +169,7 @@
       && !(c.users.groups ? l4d2)
       && !(c.age.secrets ? l4d2-rcon)
       && !(c.age.secrets ? l4d2-private)
+      && !(c.age.secrets ? l4d2-admins)
       && !(c.age.secrets ? l4d2-files-htpasswd)
       && !(c.age.secrets ? cloudflareEnv)
       && !(c.systemd.services ? nginx)

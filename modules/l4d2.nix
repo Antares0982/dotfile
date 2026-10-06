@@ -72,6 +72,7 @@ let
     install -m644 ${multiConfig} ${game}/cfg/sourcemod/l4dmultislots.cfg
     install -m644 ${gearConfig} ${game}/cfg/sourcemod/l4d_gear_transfer.cfg
     install -m600 ${config.age.secrets.l4d2-private.path} ${game}/addons/sourcemod/configs/server-private.cfg
+    install -m600 ${config.age.secrets.l4d2-admins.path} ${game}/addons/sourcemod/configs/admins_simple.ini
     umask 077
     printf 'rcon_password "%s"\n' "$(cat ${config.age.secrets.l4d2-rcon.path})" > ${game}/cfg/rcon.cfg
   '';
@@ -136,6 +137,9 @@ in
       The service installs the decrypted KeyValues file as `configs/server-private.cfg`
       with mode 0600. Private values never enter plugin builds or the Nix store.
 
+      SourceMod admins live in `secrets/l4d2-admins.age`, shared by GZ and SZ.
+      See `docs/maintenance/l4d2.md` for editing and deployment instructions.
+
       Run `python3 scripts/test-l4d2.py` and `bash scripts/check-configs.sh gz` after
       changes. Verify `plugin_print`, `meta list`, `sm plugins list`, `sm exts list`,
       and `sm_lmm_list coop` through `l4d2-console` after deployment. Eight real clients
@@ -184,11 +188,18 @@ in
       group = "l4d2";
       mode = "0400";
     };
+    age.secrets.l4d2-admins = {
+      file = ../secrets/l4d2-admins.age;
+      owner = "l4d2";
+      group = "l4d2";
+      mode = "0400";
+    };
     environment.systemPackages = [ console ];
     networking.firewall.allowedUDPPorts = [ 27015 ];
     networking.firewall.allowedTCPPorts = [ 27015 ];
     systemd.services.l4d2 = {
       description = "L4D2 campaign server";
+      restartTriggers = [ config.age.secrets.l4d2-admins.file ];
       wantedBy = [ "multi-user.target" ];
       wants = [ "network-online.target" ];
       after = [ "network-online.target" ];
