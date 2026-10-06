@@ -622,17 +622,16 @@
         "rendererSpirvReflect": "rendererSpirvReflect"
       },
       "locked": {
-        "lastModified": 1791041042,
-        "narHash": "sha256-OUEc+5jiWU1jp14B1Rf+jvZsl5XG62hnE1/2m4MfFp4=",
-        "owner": "Antares0982",
+        "lastModified": 1791211722,
+        "narHash": "sha256-d3QKgya7kbhvmmzW+ZSV3WbX+uvOZPg/Az6madCKvmw=",
+        "owner": "Aromatic05",
         "repo": "we-layerd",
-        "rev": "c9684450d283b3eca8802668769b2142789815f7",
+        "rev": "3b463e4cbb202decc474f44eeeb9572313fa2dd6",
         "type": "github"
       },
       "original": {
-        "owner": "Antares0982",
+        "owner": "Aromatic05",
         "repo": "we-layerd",
-        "rev": "c9684450d283b3eca8802668769b2142789815f7",
         "type": "github"
       }
     }
