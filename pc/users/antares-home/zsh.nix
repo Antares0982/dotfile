@@ -25,7 +25,6 @@ in
     completionInit = "";
     shellAliases = {
       yt-dlp = "yt-dlp --cookies-from-browser chrome";
-      chrome_no_proxy = "nohup google-chrome-stable --proxy-server=\"http://127.0.0.1:1083\" --user-data-dir=$HOME/.config/google-chrome-no-proxy &>/dev/null & disown";
       nixtreefmt = "fd -e nix -x nixfmt";
       shtreefmt = "fd -e sh -x shfmt -w";
       sctl = "sudo systemctl";
