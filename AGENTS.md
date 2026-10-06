@@ -6,7 +6,8 @@ Multi-machine Nix configuration flake managing:
 
 - `nixos`: desktop PC (x86_64-linux, niri/Wayland, NVIDIA, home-manager)
 - `hk`: Hong Kong server (x86_64-linux, nginx/mail services)
-- `gz`: Guangzhou VPS (x86_64-linux, SSH and outbound Xray proxy)
+- `gz`: Guangzhou VPS (x86_64-linux, Xray and L4D2)
+- `sz`: Shenzhen VPS (x86_64-linux, UEFI, Xray and L4D2)
 - `rpi5`: Raspberry Pi 5 (aarch64-linux)
 - `wsl`: Windows Subsystem for Linux (x86_64-linux)
 - `macbook`: macOS (aarch64-darwin, nix-darwin)
@@ -52,7 +53,7 @@ Keep universal rules here and put new specialist details in the matching guide.
 | Build, switch, deploy, update flake inputs, or choose configuration checks | [Build and deployment](docs/maintenance/build.md) |
 | Add, disable, or migrate features; change module composition, options, dependencies, accounts, or feature tests | [Feature modules](docs/maintenance/features.md) |
 | Secrets, passwords, agenix recipients/identities, secret consumers, or installation key staging | [Secrets and identities](docs/maintenance/secrets.md) |
-| GZ host, SSH, disks, or Xray: `hosts/gz/`, `server/gz/`, `gz.nix` | [GZ server](docs/maintenance/gz.md) |
+| GZ/SZ hosts, SSH, disks, or Xray: `hosts/{gz,sz}/`, `server/{gz,sz}/`, `server/vps.nix`, `server/xray-client.nix`, `{gz,sz}.nix` | [GZ and SZ servers](docs/maintenance/gz.md) |
 | L4D2 server, addons, downloads, RCON, or related auth: `modules/l4d2*.nix`, `resource/l4d2/`, L4D2 scripts/secrets/options | [L4D2](docs/maintenance/l4d2.md) |
 | Wallpaper, we-layerd assets, period configs, or wallpaper checks | [PC wallpaper](docs/maintenance/wallpaper.md) |
 | Zsh, prompts, shell environment, completion, or fzf integration | [Zsh](docs/maintenance/zsh.md) |
@@ -68,7 +69,7 @@ second package registry.
 ## Validation
 
 For Nix configuration changes, run `bash scripts/check-configs.sh <host> ...`;
-omit hosts for all six. These checks evaluate locked configurations without
+omit hosts for all seven. These checks evaluate locked configurations without
 switching. Stage new Nix files before evaluating Git-backed flakes.
 Use the relevant guide for feature-specific checks. For documentation-only
 changes, check links and `git diff --check`; no system build is needed.

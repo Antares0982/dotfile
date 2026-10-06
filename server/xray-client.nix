@@ -8,7 +8,7 @@
 }:
 let
   xrayDir = "/var/xray";
-  xs = (import ../../packages { inherit pkgs myXray; }).xs.override {
+  xs = (import ../packages { inherit pkgs myXray; }).xs.override {
     inherit xrayDir;
     configPath = "${xrayDir}/config.json";
     systemdScope = "system";
@@ -33,7 +33,7 @@ let
   };
 in
 {
-  imports = [ ../../modules/proxy.nix ];
+  imports = [ ../modules/proxy.nix ];
   config = lib.mkMerge [
     (lib.mkIf config.antares.proxy.enable {
       environment.variables = proxyEnv;
@@ -63,7 +63,7 @@ in
           TimeoutStartSec = "infinity";
           ExecStart = lib.escapeShellArgs [
             "${pkgs.python3}/bin/python3"
-            "${../../resource/xray-update.py}"
+            "${../resource/xray-update.py}"
             xrayDir
             config.age.secrets.xraySubUrl.path
             config.age.secrets.xrayTemplateJson.path
@@ -83,12 +83,12 @@ in
       };
       age.secrets = {
         xraySubUrl = {
-          file = ../../secrets/xraysub.age;
+          file = ../secrets/xraysub.age;
           owner = "antares";
           mode = "0400";
         };
         xrayTemplateJson = {
-          file = ../../secrets/xray-template-gz.age;
+          file = ../secrets/xray-template-gz.age;
           owner = "antares";
           mode = "0400";
         };

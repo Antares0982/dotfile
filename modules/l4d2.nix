@@ -40,7 +40,7 @@ let
     exec ${pkgs.python3}/bin/python3 ${../resource/l4d2/rcon.py} "$@"
   '';
   serverConfig = pkgs.writeText "server.cfg" ''
-    hostname "Antares GZ L4D2"
+    hostname ${builtins.toJSON cfg.serverName}
     sv_lan 0
     sv_password ""
     sv_gametypes "coop"
@@ -142,6 +142,18 @@ in
       are required to validate full player capacity; bots alone cannot prove it.
     '';
   };
+  options.antares.l4d2.serverName = lib.mkOption {
+    type = lib.types.str;
+    default = "Antares GZ L4D2";
+    description = "Displayed game server name.";
+  };
+  options.antares.l4d2.authorizedKeys = lib.mkOption {
+    type = lib.types.listOf lib.types.str;
+    default = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqUj4N9enqwZ8UGUq5DQ4uij6mzIKLYomkpUNZQinXm l4d2@gz"
+    ];
+    description = "SSH keys for the game account.";
+  };
   config = lib.mkIf cfg.enable {
     nixpkgs.config.allowUnfreePredicate =
       p:
@@ -158,9 +170,7 @@ in
       createHome = true;
       homeMode = "0700";
       hashedPassword = "!";
-      openssh.authorizedKeys.keys = [
-        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqUj4N9enqwZ8UGUq5DQ4uij6mzIKLYomkpUNZQinXm l4d2@gz"
-      ];
+      openssh.authorizedKeys.keys = cfg.authorizedKeys;
     };
     age.secrets.l4d2-rcon = {
       file = ../secrets/l4d2-rcon.age;

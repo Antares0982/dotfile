@@ -1,0 +1,40 @@
+{
+  description = "sz (Guanszhou server) per-host flake";
+
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs-old.url = "github:NixOS/nixpkgs/nixos-26.05";
+    myXray = {
+      url = "github:Antares0982/rules-dat-xray-flake";
+      inputs.nixpkgs.follows = "nixpkgs-old";
+    };
+    home-manager = {
+      url = "github:nix-community/home-manager/master";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    agenix = {
+      url = "github:ryantm/agenix";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        home-manager.follows = "home-manager";
+      };
+    };
+    l4d2-plugins = {
+      url = "github:Antares0982/l4d2-plugins";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
+
+  outputs = inputs: {
+    nixosConfigurations.sz = (import ../../systemMap.nix inputs (import ../../sz.nix)).extendModules {
+      modules = [
+        inputs.disko.nixosModules.disko
+        ./configuration.nix
+      ];
+    };
+  };
+}

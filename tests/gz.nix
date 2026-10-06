@@ -1,10 +1,14 @@
-{ lib }: [
+{
+  lib,
+  host ? "gz",
+}:
+[
   {
     name = "base";
     module = { };
     check =
       c:
-      c.networking.hostName == "gz"
+      c.networking.hostName == host
       && c.users.mutableUsers == false
       && c.users.users.antares.uid == 1000
       && c.users.users.antares.home == "/home/antares"
@@ -13,7 +17,12 @@
       && c.users.defaultUserShell == c.users.users.antares.shell
       &&
         c.users.users.antares.openssh.authorizedKeys.keys == [
-          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOS4Ty97Xiann8mMJHDjv5HqCzdideBuPq28PeVSHvZH antares@gz"
+          (
+            if host == "gz" then
+              "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOS4Ty97Xiann8mMJHDjv5HqCzdideBuPq28PeVSHvZH antares@gz"
+            else
+              "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIB3DEDDiBMHxE1V/aXD81+cBY8uRnoT6V8wrY1/DHFvj antares@sz"
+          )
         ]
       && c.services.openssh.enable
       && c.services.openssh.settings.PermitRootLogin == "no"
@@ -35,7 +44,15 @@
       && c.users.users.antares.hashedPasswordFile == c.age.secrets.serverPassword.path
       && !(c.users.users ? alice)
       && !(c.users.users ? git)
-      && c.boot.loader.grub.devices == [ "/dev/vda" ]
+      && (
+        if host == "gz" then
+          c.boot.loader.grub.devices == [ "/dev/vda" ]
+        else
+          c.boot.loader.grub.efiSupport
+          && c.boot.loader.grub.efiInstallAsRemovable
+          && !c.boot.loader.efi.canTouchEfiVariables
+          && c.fileSystems."/boot".fsType == "vfat"
+      )
       && c.disko.devices.disk.main.device == "/dev/vda"
       && c.fileSystems."/".fsType == "ext4"
       && c.networking.interfaces.eth0.useDHCP
@@ -114,6 +131,8 @@
     check =
       c:
       c.antares.l4d2.enable
+      && c.antares.l4d2.serverName == (if host == "gz" then "Antares GZ L4D2" else "Antares SZ L4D2")
+      && c.users.users.l4d2.openssh.authorizedKeys.keys == c.antares.l4d2.authorizedKeys
       && c.users.users.l4d2.home == "/home/l4d2"
       && c.users.users.l4d2.hashedPassword == "!"
       && c.users.users.l4d2.extraGroups == [ ]
@@ -160,19 +179,20 @@
       c:
       c.antares.l4d2.fileServer.enable
       && c.services.nginx.enable
-      && c.services.nginx.virtualHosts."gz.chr.fan".onlySSL
+      && c.services.nginx.virtualHosts."${host}.chr.fan".onlySSL
       &&
         lib.hasInfix (builtins.unsafeDiscardStringContext "xslt_stylesheet ${../resource/l4d2/files.xsl};")
-          c.services.nginx.virtualHosts."gz.chr.fan".extraConfig
+          c.services.nginx.virtualHosts."${host}.chr.fan".extraConfig
       && lib.all (
         listener: listener.port == 8443 && listener.ssl
-      ) c.services.nginx.virtualHosts."gz.chr.fan".listen
+      ) c.services.nginx.virtualHosts."${host}.chr.fan".listen
       &&
-        c.services.nginx.virtualHosts."gz.chr.fan".basicAuthFile == c.age.secrets.l4d2-files-htpasswd.path
+        c.services.nginx.virtualHosts."${host}.chr.fan".basicAuthFile
+        == c.age.secrets.l4d2-files-htpasswd.path
       && c.age.secrets.l4d2-files-htpasswd.owner == "nginx"
       && c.age.secrets.l4d2-files-htpasswd.mode == "0400"
-      && c.security.acme.certs."gz.chr.fan".dnsProvider == "cloudflare"
-      && c.security.acme.certs."gz.chr.fan".webroot == null
+      && c.security.acme.certs."${host}.chr.fan".dnsProvider == "cloudflare"
+      && c.security.acme.certs."${host}.chr.fan".webroot == null
       && c.systemd.services.nginx.serviceConfig.ProtectHome
       &&
         c.systemd.services.nginx.serviceConfig.BindReadOnlyPaths == [

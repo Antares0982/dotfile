@@ -11,8 +11,8 @@ Do not build a host whose system platform differs from the current machine.
 For those hosts, only run local evaluation; perform full builds on a matching
 host or an explicitly configured remote builder.
 
-Build HK and GZ locally with remote builders disabled, then push their closures;
-build RPi on an aarch64 host. For GZ deployment, read the [GZ guide](gz.md).
+Build HK, GZ, and SZ locally with remote builders disabled, then push their closures;
+build RPi on an aarch64 host. For GZ/SZ deployment, read the [GZ guide](gz.md).
 For key provisioning or rotation, read [secrets and identities](secrets.md).
 
 **NixOS systems** (from this repo directory):
@@ -21,6 +21,7 @@ For key provisioning or rotation, read [secrets and identities](secrets.md).
 nixos-rebuild build --flake ./hosts/nixos#nixos
 nixos-rebuild build --flake ./hosts/hk#hk
 nixos-rebuild build --flake ./hosts/gz#gz
+nixos-rebuild build --flake ./hosts/sz#sz
 nixos-rebuild build --flake ./hosts/wsl#wsl
 nixos-rebuild build --flake ./hosts/rpi5#rpi5
 
@@ -46,7 +47,7 @@ nix flake update nixpkgs --flake ./hosts/nixos         # update a specific input
 
 ## Configuration checks
 
-`bash scripts/check-configs.sh` evaluates all six hosts, including WSL. To check one
+`bash scripts/check-configs.sh` evaluates all seven hosts, including WSL. To check one
 feature while editing, use e.g.
 `CHECK_CASE='blog-off|metrics-off' bash scripts/check-configs.sh hk`.
 Checks cover individual shutdown, shared resources, invalid dependencies, and

@@ -1,10 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
+sz_key=
+if [[ ${1:-} == --sz-key && $# -ge 2 ]]; then
+	sz_key=$(realpath "$2")
+	shift 2
+fi
 if (($# < 4 || $# > 5)); then
-	echo "Usage: $0 ADMIN_KEY RPI_KEY HK_KEY GZ_KEY [BEFORE_SECRETS_DIR]" >&2
+	echo "Usage: $0 [--sz-key SZ_KEY] ADMIN_KEY RPI_KEY HK_KEY GZ_KEY [BEFORE_SECRETS_DIR]" >&2
 	exit 2
 fi
 keys=("$(realpath "$1")" "$(realpath "$2")" "$(realpath "$3")" "$(realpath "$4")")
+hosts=(admin rpi5 hk gz)
+if [[ -n $sz_key ]]; then
+	keys+=("$sz_key")
+	hosts+=(sz)
+fi
 before=${5:+$(realpath "$5")}
 cd "$(dirname "$0")/.."
 age=${AGE_BIN:-age}
@@ -17,10 +27,9 @@ public=()
 for key in "${keys[@]}"; do
 	public+=("$(cat "$key" | ssh-keygen -y -P '' -f /dev/stdin | awk '{print $1 " " $2}')")
 done
-hosts=(admin rpi5 hk gz)
 expected=$(jq -cn --argjson files "$files" --arg key "${public[0]}" \
 	'$files | map({key: ., value: [$key]}) | from_entries')
-for i in 1 2 3; do
+for ((i = 1; i < ${#keys[@]}; i++)); do
 	host=${hosts[$i]}
 	used=$(nix eval --offline --no-write-lock-file --json \
 		"./hosts/$host#nixosConfigurations.$host.config.age.secrets" \
@@ -36,7 +45,7 @@ jq -en --argjson rules "$rules" --argjson expected "$expected" \
 }
 for file in secrets/*.age; do
 	name=${file##*/}
-	for i in 0 1 2 3; do
+	for i in "${!keys[@]}"; do
 		allowed=false
 		if jq -e --arg file "$name" --arg key "${public[$i]}" \
 			'.[$file].publicKeys | index($key) != null' <<<"$rules" >/dev/null; then

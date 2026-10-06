@@ -62,6 +62,7 @@
         builtins.elem host [
           "hk"
           "gz"
+          "sz"
         ]
       then
         builtins.readFile theme == builtins.readFile ../resource/hk-p10k.zsh

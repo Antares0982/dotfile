@@ -1,6 +1,6 @@
 # Zsh
 
-`common/zsh.nix` owns the system Zsh baseline on all six hosts, including
+`common/zsh.nix` owns the system Zsh baseline on all seven hosts, including
 platform adapters, Oh My Zsh plugins, aliases, and fzf shell integration.
 Linux-only aliases stay on Linux. Host configurations select prompt files and
 host-specific shell paths. PC Home Manager extensions live in
