@@ -195,6 +195,7 @@ in
     };
     environment.systemPackages = [ console ];
     networking.firewall.allowedUDPPorts = [ 27015 ];
+    networking.firewall.allowedTCPPorts = [ 27015 ];
     systemd.services.l4d2 = {
       description = "L4D2 campaign server";
       wantedBy = [ "multi-user.target" ];
