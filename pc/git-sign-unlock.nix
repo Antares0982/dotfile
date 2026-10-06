@@ -39,7 +39,7 @@ in
       serviceConfig = {
         Type = "oneshot";
         User = "root";
-        ExecStart = "${config.programs.ssh.package}/bin/ssh-add ${lib.escapeShellArg "${user.home}/.ssh/github_sign"}";
+        ExecStart = "${config.programs.ssh.package}/bin/ssh-add ${lib.escapeShellArg "${user.home}/.ssh/github_sign"} ${lib.escapeShellArg "${user.home}/.ssh/github_push"}";
         StandardInput = "null";
         TimeoutStartSec = 15;
         LimitCORE = 0;
