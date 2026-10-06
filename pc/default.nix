@@ -17,7 +17,6 @@
     ./display.nix
     ./wallpaper.nix
     ./fcitx5.nix
-    ./github-auth.nix
     ./git-sign-unlock.nix
     ./fonts.nix
     ./mcp-nixos.nix

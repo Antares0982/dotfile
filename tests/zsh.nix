@@ -76,6 +76,8 @@
       || (
         home.enable
         && home.completionInit == ""
+        && !(c.age.secrets ? ghToken)
+        && !(lib.hasInfix "GH_TOKEN" home.initContent)
         && lib.matchAttrs {
           sctl = "sudo systemctl";
           jtl = "journalctl --user";

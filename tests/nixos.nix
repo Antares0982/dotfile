@@ -219,14 +219,6 @@
       && c.home-manager.users.antares.systemd.user.services ? xray;
   }
   {
-    name = "github-auth-off";
-    module = { lib, ... }: { antares.githubAuth.enable = lib.mkForce false; };
-    check =
-      c:
-      !(c.age.secrets ? ghToken)
-      && !(lib.hasInfix "export GH_TOKEN=" c.home-manager.users.antares.programs.zsh.initContent);
-  }
-  {
     name = "git-sign-unlock-on";
     module = { };
     check =
@@ -306,7 +298,6 @@
         proxy.enable = lib.mkForce false;
         autostart.enable = lib.mkForce false;
         waitOnline.enable = lib.mkForce false;
-        githubAuth.enable = lib.mkForce false;
         gitSignUnlock.enable = lib.mkForce false;
         rust.enable = lib.mkForce false;
       };
@@ -327,7 +318,6 @@
       c:
       c.users.users ? antares
       && !(c.systemd.services ? openlist)
-      && !(c.age.secrets ? ghToken)
       && !(c.age.secrets ? gitSignPassphrase)
       && !(c.systemd.services ? git-sign-unlock)
       && builtins.attrNames c.home-manager.users.antares.systemd.user.services == [ "nix-gc" ];

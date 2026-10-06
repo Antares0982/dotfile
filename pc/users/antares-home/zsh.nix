@@ -1,5 +1,4 @@
 {
-  osConfig,
   pkgs,
   lib,
   ...
@@ -168,9 +167,6 @@ in
         agenix --identity /etc/ssh/agenix -e "$@"
       }
     ''
-    + lib.concatStrings (lib.mapAttrsToList genNixFunc nixFuncAliases)
-    + lib.optionalString osConfig.antares.githubAuth.enable ''
-      export GH_TOKEN=$(cat ${osConfig.age.secrets.ghToken.path})
-    '';
+    + lib.concatStrings (lib.mapAttrsToList genNixFunc nixFuncAliases);
   };
 }

@@ -74,7 +74,7 @@ integration as well as the upstream service.
 | nixos, rpi5, macbook | `antares.xray.enable`, `antares.proxy.enable` |
 | rpi5 | `services.antares-runners.instances.<name>.enable`, `antares.agent.enable`, `antares.qq.enable`, `antares.gitServer.enable`, `services.ssh-probe.enable` |
 | hk | `antares.blog.enable`, `antares.blog.metrics.enable`, `antares.messaging.enable`, `mailserver.enable`, `services.mysql.enable`, `services.nginx.enable`, `antares.acme.enable`, `services.xray.enable` |
-| nixos | `antares.desktop.enable`, `antares.wallpaper.enable`, `antares.rust.enable`, `antares.autostart.enable`, `antares.waitOnline.enable`, `antares.githubAuth.enable`, `services.mcp-nixos.enable` |
+| nixos | `antares.desktop.enable`, `antares.wallpaper.enable`, `antares.rust.enable`, `antares.autostart.enable`, `antares.waitOnline.enable`, `services.mcp-nixos.enable` |
 | nixos | `services.pipewire.enable`, `hardware.bluetooth.enable`, `i18n.inputMethod.enable`, `services.samba.enable`, `programs.steam.enable`, `programs.ydotool.enable` |
 | macbook | `antares.nixShell.enable`, `antares.systemCompiler.enable` |
 
