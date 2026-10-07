@@ -11,6 +11,7 @@ in
 {
   nixpkgs.config.allowUnfree = true;
   environment.systemPackages = with pkgs; [
+    bat
     cachix
     clang-tools
     cmake
