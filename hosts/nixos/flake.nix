@@ -7,7 +7,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixpkgs-old.url = "github:NixOS/nixpkgs/nixos-26.05";
     we-layerd = {
-      url = "github:Aromatic05/we-layerd";
+      url = "github:Antares0982/we-layerd/fix/nix-cuda-video-interop";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 

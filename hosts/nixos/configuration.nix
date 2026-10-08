@@ -31,7 +31,10 @@ in
   home-manager.users.antares.programs.yazi.enable = true;
   imports = [ ../../pc ];
   _module.args = {
-    we-layerd = inputs.we-layerd.packages.${system}.default;
+    we-layerd = inputs.we-layerd.packages.${system}.default.override {
+      cudaSupport = true;
+      cudaPackages = pkgs.cudaPackages;
+    };
     myXray = inputs.myXray.packages.${system}.default;
     xray-sub = inputs.myXray.packages.${system}.xray_sub;
     antares-rpc-client = inputs.antares-rpc-client.packages.${system}.default;
