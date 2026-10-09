@@ -371,17 +371,17 @@
     "renderer": {
       "flake": false,
       "locked": {
-        "lastModified": 1791464973,
+        "lastModified": 1791468782,
         "narHash": "sha256-QMkJFR8e4x3XKUsC0AagCBKToNeevWZfEK7pffUd7J0=",
-        "owner": "Antares0982",
+        "owner": "Aromatic05",
         "repo": "wallpaper-engine-renderer",
-        "rev": "81bcb2cda1312c1da2ab8e2e7c322a7f5a1d6441",
+        "rev": "90f74d503dacbb580633493724cf0f8983f3bd1d",
         "type": "github"
       },
       "original": {
-        "owner": "Antares0982",
+        "owner": "Aromatic05",
         "repo": "wallpaper-engine-renderer",
-        "rev": "81bcb2cda1312c1da2ab8e2e7c322a7f5a1d6441",
+        "rev": "90f74d503dacbb580633493724cf0f8983f3bd1d",
         "type": "github"
       }
     },
@@ -622,16 +622,15 @@
         "rendererSpirvReflect": "rendererSpirvReflect"
       },
       "locked": {
-        "lastModified": 1791465051,
-        "narHash": "sha256-6yvPXPDa9Sv1g4SRujNJuyNclM2Mmh4RUHFLXycjLec=",
-        "owner": "Antares0982",
+        "lastModified": 1791531682,
+        "narHash": "sha256-IryPHSD6eWxSVje3NtCVYtqA2E5LobnPlyISQlVqFtM=",
+        "owner": "Aromatic05",
         "repo": "we-layerd",
-        "rev": "d1653d152f5048b822127c0afe8bc59272b14ce4",
+        "rev": "40ad89f581f2dc469b1e00aab7d7e57580451f67",
         "type": "github"
       },
       "original": {
-        "owner": "Antares0982",
-        "ref": "fix/nix-cuda-video-interop",
+        "owner": "Aromatic05",
         "repo": "we-layerd",
         "type": "github"
       }
