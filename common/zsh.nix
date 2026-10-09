@@ -21,7 +21,7 @@ let
     )
     // {
       make = "make -j$(${pkgs.coreutils}/bin/nproc)";
-      cat = "bat --paging=never";
+      cat = "bat -pp";
     };
 in
 {
