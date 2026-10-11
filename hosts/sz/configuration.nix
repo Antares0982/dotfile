@@ -7,13 +7,17 @@
     ../../modules/l4d2-files.nix
   ];
   networking.hostName = "sz";
-  antares.l4d2.enable = true;
-  antares.l4d2.serverName = "Antares SZ L4D2";
-  antares.l4d2.authorizedKeys = [
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHB94ncYnwgquf/Zqd92Bdnxvcibo042d0VbQvf9TSR4 antares@sz-l4d2"
-  ];
-  antares.l4d2.fileServer.domain = "sz.chr.fan";
-  antares.l4d2.fileServer.enable = true;
+  antares.l4d2 = {
+    enable = true;
+    serverName = "Antares SZ L4D2";
+    authorizedKeys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHB94ncYnwgquf/Zqd92Bdnxvcibo042d0VbQvf9TSR4 antares@sz-l4d2"
+    ];
+    fileServer = {
+      domain = "sz.chr.fan";
+      enable = true;
+    };
+  };
   services.xray.enable = true;
   antares.proxy = {
     enable = true;
