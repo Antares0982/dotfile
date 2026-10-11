@@ -211,7 +211,7 @@ in
         Group = "l4d2";
         WorkingDirectory = "${home}/serverfiles";
         ExecStartPre = prepare;
-        ExecStart = "${runtime}/bin/steam-run ./srcds_run -game left4dead2 -console -norestart -nomaster -ip 0.0.0.0 -port 27015 +sv_setmax 31 -maxplayers 31 +map c1m1_hotel";
+        ExecStart = "${runtime}/bin/steam-run ./srcds_run -game left4dead2 -console -norestart -nomaster -ip 0.0.0.0 -port 27015 +sv_setmax 31 -maxplayers 31 +map c5m1_waterfront";
         Restart = "on-failure";
         RestartSec = 10;
         TimeoutStopSec = 45;
@@ -249,7 +249,7 @@ in
     systemd.timers.l4d2-update = {
       wantedBy = [ "timers.target" ];
       timerConfig = {
-        OnCalendar = "*-*-* 05:00:00 Asia/Shanghai";
+        OnCalendar = "*-*-* 07:00:00 Asia/Shanghai";
         Persistent = false;
       };
     };

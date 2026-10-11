@@ -151,7 +151,7 @@
       && builtins.elem c.age.secrets.l4d2-admins.file c.systemd.services.l4d2.restartTriggers
       && c.systemd.services.l4d2.serviceConfig.User == "l4d2"
       && lib.hasInfix "-nomaster" c.systemd.services.l4d2.serviceConfig.ExecStart
-      && c.systemd.timers.l4d2-update.timerConfig.OnCalendar == "*-*-* 05:00:00 Asia/Shanghai"
+      && c.systemd.timers.l4d2-update.timerConfig.OnCalendar == "*-*-* 07:00:00 Asia/Shanghai"
       && !c.systemd.timers.l4d2-update.timerConfig.Persistent
       &&
         lib.sort builtins.lessThan c.networking.firewall.allowedTCPPorts == [
