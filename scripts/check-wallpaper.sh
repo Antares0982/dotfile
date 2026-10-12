@@ -17,15 +17,15 @@ for hour in '' 6 24 -1 bad; do
 done
 echo 'Wallpaper time boundaries passed.'
 if [[ $# -gt 0 ]]; then
-	"${PYTHON:-python3}" - "$1" <<'PY'
+	"${PYTHON:-python3}" - "$@" <<'PY'
 import pathlib
 import sys
 import tomllib
 
 expected = {
-    "config.toml": ("3759473977", "3657215414"),
-    "evening.toml": ("3545541611", "3780257889"),
-    "night.toml": ("3222456142", "3780257889"),
+    "config.toml": ("day-main", "day-secondary"),
+    "evening.toml": ("evening-main", "evening-secondary"),
+    "night.toml": ("night-main", "night-secondary"),
 }
 for name, ids in expected.items():
     config = tomllib.loads((pathlib.Path(sys.argv[1]) / name).read_text())
@@ -35,9 +35,14 @@ for name, ids in expected.items():
     for output, wallpaper in zip(("HDMI-A-5", "HDMI-A-1"), ids):
         assert config["outputs"][output] == {
             "wallpaper_id": wallpaper,
-            "source": f"/var/lib/we-layerd/workshop/{wallpaper}",
+            "source": f"/var/lib/we-layerd/current/{wallpaper}",
         }
         assert config["wallpapers"][wallpaper]["muted"] is True
+if len(sys.argv) > 2:
+    greeter = tomllib.loads(pathlib.Path(sys.argv[2]).read_text())
+    assert greeter["renderer"]["source"] == "/var/lib/we-layerd/current/greeter"
+    assert greeter["renderer"]["muted"] is True
+    assert greeter["general"]["interactive"] is False
 print("Wallpaper configurations passed.")
 PY
 fi

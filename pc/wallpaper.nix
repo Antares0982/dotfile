@@ -8,10 +8,19 @@
 let
   enabled = config.antares.desktop.enable && config.antares.wallpaper.enable;
   root = "/var/lib/we-layerd";
+  defaults = {
+    day-main = "3759473977";
+    day-secondary = "3657215414";
+    evening-main = "3545541611";
+    evening-secondary = "3780257889";
+    night-main = "3222456142";
+    night-secondary = "3780257889";
+    greeter = "3482954869";
+  };
   format = pkgs.formats.toml { };
   binding = id: {
     wallpaper_id = id;
-    source = "${root}/workshop/${id}";
+    source = "${root}/current/${id}";
   };
   common = {
     renderer = {
@@ -19,18 +28,9 @@ let
       fps = 60;
       muted = true;
     };
-    wallpapers =
-      lib.genAttrs
-        [
-          "3759473977"
-          "3657215414"
-          "3545541611"
-          "3780257889"
-          "3222456142"
-        ]
-        (_: {
-          muted = true;
-        });
+    wallpapers = lib.genAttrs (lib.attrNames (removeAttrs defaults [ "greeter" ])) (_: {
+      muted = true;
+    });
   };
   desktop =
     main: secondary:
@@ -42,9 +42,9 @@ let
       };
     };
   settings = {
-    "config.toml" = desktop "3759473977" "3657215414";
-    "evening.toml" = desktop "3545541611" "3780257889";
-    "night.toml" = desktop "3222456142" "3780257889";
+    "config.toml" = desktop "day-main" "day-secondary";
+    "evening.toml" = desktop "evening-main" "evening-secondary";
+    "night.toml" = desktop "night-main" "night-secondary";
   };
   configs = lib.mapAttrs (name: value: format.generate "we-layerd-${name}" value) settings;
   configDir = pkgs.linkFarm "we-layerd-configs" (
@@ -64,7 +64,7 @@ let
   loginConfig = format.generate "we-layerd-greeter.toml" {
     general.interactive = false;
     renderer = common.renderer // {
-      source = "${root}/workshop/3482954869";
+      source = "${root}/current/greeter";
       cache_path = "/var/cache/we-layerd-greeter";
     };
   };
@@ -171,8 +171,12 @@ in
     systemd.tmpfiles.rules = [
       "d ${root} 0755 root root -"
       "d ${root}/workshop 0755 root root -"
+      "d ${root}/current 0755 root root -"
       "d /var/cache/we-layerd-greeter 0700 greeter greeter -"
-    ];
+    ]
+    ++ lib.mapAttrsToList (
+      name: id: "L ${root}/current/${name} - - - - ${root}/workshop/${id}"
+    ) defaults;
     environment.etc."greetd/we-layerd.toml".source = loginConfig;
     services.displayManager.regreet.extraCss = ''
       window.background {

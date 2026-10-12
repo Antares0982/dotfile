@@ -76,6 +76,16 @@
       && home.xdg.configFile ? "we-layerd/evening.toml"
       && home.xdg.configFile ? "we-layerd/night.toml"
       && c.environment.etc ? "greetd/we-layerd.toml"
+      && lib.elem "d /var/lib/we-layerd/current 0755 root root -" c.systemd.tmpfiles.rules
+      && lib.all (rule: lib.elem rule c.systemd.tmpfiles.rules) [
+        "L /var/lib/we-layerd/current/day-main - - - - /var/lib/we-layerd/workshop/3759473977"
+        "L /var/lib/we-layerd/current/day-secondary - - - - /var/lib/we-layerd/workshop/3657215414"
+        "L /var/lib/we-layerd/current/evening-main - - - - /var/lib/we-layerd/workshop/3545541611"
+        "L /var/lib/we-layerd/current/evening-secondary - - - - /var/lib/we-layerd/workshop/3780257889"
+        "L /var/lib/we-layerd/current/night-main - - - - /var/lib/we-layerd/workshop/3222456142"
+        "L /var/lib/we-layerd/current/night-secondary - - - - /var/lib/we-layerd/workshop/3780257889"
+        "L /var/lib/we-layerd/current/greeter - - - - /var/lib/we-layerd/workshop/3482954869"
+      ]
       && lib.hasInfix "/bin/niri --config" c.services.greetd.settings.default_session.command
       && !(lib.hasInfix "/home/antares" c.services.greetd.settings.default_session.command);
   }
@@ -88,6 +98,7 @@
       && !(c.home-manager.users.antares.systemd.user.timers ? we-layerd-switch)
       && !(c.home-manager.users.antares.xdg.configFile ? "we-layerd/config.toml")
       && !(c.environment.etc ? "greetd/we-layerd.toml")
+      && !(lib.any (lib.hasInfix "/var/lib/we-layerd") c.systemd.tmpfiles.rules)
       && lib.hasInfix "/bin/cage" c.services.greetd.settings.default_session.command
       && lib.hasInfix "/boot/background.png" c.services.displayManager.regreet.extraCss;
   }
@@ -101,6 +112,7 @@
       && !(c.home-manager.users.antares.systemd.user.timers ? we-layerd-switch)
       && !(c.home-manager.users.antares.xdg.configFile ? "we-layerd/config.toml")
       && !(c.environment.etc ? "greetd/we-layerd.toml")
+      && !(lib.any (lib.hasInfix "/var/lib/we-layerd") c.systemd.tmpfiles.rules)
       && !(c.systemd.services ? git-sign-unlock)
       && !(c.home-manager.users.antares.systemd.user.services ? git-sign-unlock)
       && !(c.age.secrets ? gitSignPassphrase)
