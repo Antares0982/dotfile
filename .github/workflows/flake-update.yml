@@ -22,6 +22,9 @@ jobs:
         - host: gz
           runner: '["ubuntu-latest"]'
           self_hosted: false
+        - host: z
+          runner: '["ubuntu-latest"]'
+          self_hosted: false
         - host: rpi5
           runner: '["self-hosted", "Linux", "ARM64"]'
           self_hosted: true
