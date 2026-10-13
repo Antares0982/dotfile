@@ -3,6 +3,7 @@ from html.parser import HTMLParser
 import os
 from pathlib import Path
 import socket
+import stat
 import subprocess
 import tempfile
 import time
@@ -34,21 +35,31 @@ with tempfile.TemporaryDirectory() as temporary:
     work = Path(temporary)
     addons = work / "addons"
     addons.mkdir()
+    uploads = addons / ".uploads"
+    uploads.mkdir(mode=0o700)
     files = {
         "map.vpk": b"vpk-content" * 100,
         "中文 & <地图> #?%\"'.VPK": b"special-name",
         "preview.JpG": b"\xff\xd8\xff\xd9",
+        "preview.JPEG": b"jpeg-content",
+        "preview.PnG": b"png-content",
+        "preview.GIF": b"gif-content",
+        "preview.WeBP": b"webp-content",
     }
     for name, data in files.items():
         (addons / name).write_bytes(data)
-    for name in ["private.cfg", "index.html", ".hidden.vpk", "test.jpeg"]:
+    for name in ["private.cfg", "index.html", ".hidden.vpk", "test.svg", "map.vpk.exe"]:
         (addons / name).write_text("private fixture")
     (addons / "nested.vpk").mkdir()
     (addons / "nested.vpk" / "secret.vpk").write_text("private fixture")
     (work / "outside.vpk").write_text("private fixture")
     (addons / "link.vpk").symlink_to(work / "outside.vpk")
+    (addons / "dangling.vpk").symlink_to(work / "missing.vpk")
     (work / "htpasswd").write_bytes(
         subprocess.check_output([htpasswd, "-niB", "l4d2"], input=b"test-password\n")
+        + subprocess.check_output(
+            [htpasswd, "-niB", "another"], input=b"test-password\n"
+        )
     )
     with socket.socket() as sock:
         sock.bind(("127.0.0.1", 0))
@@ -57,6 +68,7 @@ with tempfile.TemporaryDirectory() as temporary:
         (root / "resource/l4d2/files.conf")
         .read_text()
         .replace("@stylesheet@", str(root / "resource/l4d2/files.xsl"))
+        .replace("@uploads@", str(uploads))
     )
     config = work / "nginx.conf"
     config.write_text(f"""
@@ -97,13 +109,20 @@ with tempfile.TemporaryDirectory() as temporary:
         [nginx, "-e", str(work / "error.log"), "-p", temporary, "-c", str(config)]
     )
 
-    def request(path, password="test-password", method="GET", headers=None):
+    def request(
+        path,
+        password="test-password",
+        method="GET",
+        headers=None,
+        data=None,
+        username="l4d2",
+    ):
         headers = dict(headers or {})
         if password is not None:
-            token = base64.b64encode(f"l4d2:{password}".encode()).decode()
+            token = base64.b64encode(f"{username}:{password}".encode()).decode()
             headers["Authorization"] = f"Basic {token}"
         req = urllib.request.Request(
-            f"http://127.0.0.1:{port}{path}", headers=headers, method=method
+            f"http://127.0.0.1:{port}{path}", headers=headers, method=method, data=data
         )
         try:
             response = opener.open(req, timeout=5)
@@ -125,18 +144,35 @@ with tempfile.TemporaryDirectory() as temporary:
         for path in ["/", "/map.vpk", "/preview.JpG"]:
             for password in [None, "wrong"]:
                 assert request(path, password)[0] == 401
+        for path in ["/map.vpk", "/new.vpk", "/new.png"]:
+            for password in [None, "wrong"]:
+                assert request(path, password, method="PUT", data=b"denied")[0] == 401
+        assert not (addons / "new.vpk").exists()
+        assert not (addons / "new.png").exists()
         status, headers, body = request("/")
         assert status == 200 and headers.get_content_type() == "text/html"
         html = body.decode()
         assert "private fixture" not in html
         page = Links(html)
-        assert page.images == ["/preview.JpG"]
+        assert set(page.images) == {
+            "/" + name for name in files if name.startswith("preview.")
+        }
+        assert 'id="upload"' in html and 'type="file"' in html
+        assert "同名文件会被覆盖" in html and "2 GiB" in html
+        assert "request.status >= 200 && request.status < 300" in html
         for name, data in files.items():
             path = "/" + urllib.parse.quote(name, safe="")
             assert any(urllib.parse.unquote(url) == "/" + name for url in page.urls)
             assert request(path)[2] == data
             assert request(path, method="HEAD")[2] == b""
         assert request("/preview.JpG")[1].get_content_type() == "image/jpeg"
+        for extension, mime in [
+            ("JPEG", "image/jpeg"),
+            ("PnG", "image/png"),
+            ("GIF", "image/gif"),
+            ("WeBP", "image/webp"),
+        ]:
+            assert request("/preview." + extension)[1].get_content_type() == mime
         assert request("/map.vpk")[1].get_content_type() == "application/octet-stream"
         status, headers, body = request("/map.vpk", headers={"Range": "bytes=3-8"})
         assert status == 206 and body == files["map.vpk"][3:9]
@@ -144,26 +180,88 @@ with tempfile.TemporaryDirectory() as temporary:
             "/private.cfg",
             "/index.html",
             "/.hidden.vpk",
-            "/test.jpeg",
+            "/test.svg",
+            "/map.vpk.exe",
+            "/bad.vpk%0a",
             "/nested.vpk",
             "/nested.vpk/",
             "/nested.vpk/secret.vpk",
             "/nested.vpk%2fsecret.vpk",
             "/%2e%2e/outside.vpk",
             "/link.vpk",
+            "/dangling.vpk",
+            "/.uploads/partial.vpk",
         ]:
             assert request(path)[0] in (400, 403, 404), path
+            assert request(path, method="PUT", data=b"denied")[0] in (400, 403, 404), (
+                path
+            )
+        assert (work / "outside.vpk").read_text() == "private fixture"
+        assert not (work / "missing.vpk").exists()
+        assert (addons / "link.vpk").is_symlink()
+        assert (addons / "dangling.vpk").is_symlink()
+        assert (addons / "nested.vpk" / "secret.vpk").read_text() == "private fixture"
         for name in [
             "private.cfg",
             "index.html",
             ".hidden.vpk",
             "nested.vpk",
-            "test.jpeg",
+            "test.svg",
+            "map.vpk.exe",
         ]:
             assert "/" + name not in page.urls
-        for method in ["POST", "PUT", "DELETE"]:
+        for method in ["POST", "DELETE", "MKCOL", "COPY", "MOVE"]:
             assert request("/map.vpk", method=method)[0] in (403, 405)
+        assert request("/", method="PUT", data=b"denied")[0] in (403, 405)
         assert (addons / "map.vpk").read_bytes() == files["map.vpk"]
+        for name, data in files.items():
+            path = "/" + urllib.parse.quote("上传 " + name, safe="")
+            target = addons / ("上传 " + name)
+            assert request(path, method="PUT", data=data, username="another")[0] == 201
+            assert request(path)[2] == data
+            assert stat.S_IMODE(target.stat().st_mode) == 0o644
+            assert any(
+                urllib.parse.unquote(url) == "/上传 " + name
+                for url in Links(request("/")[2].decode()).urls
+            )
+            assert request(path, method="PUT", data=b"replacement")[0] == 204
+            assert request(path)[2] == b"replacement"
+        assert (
+            request(
+                "/map.vpk",
+                method="PUT",
+                data=b"",
+                headers={"Content-Length": str(2 * 1024**3 + 1)},
+            )[0]
+            == 413
+        )
+        token = base64.b64encode(b"l4d2:test-password").decode()
+        for path in ["/map.vpk", "/interrupted.vpk"]:
+            with socket.create_connection(("127.0.0.1", port), timeout=5) as sock:
+                sock.sendall(
+                    (
+                        f"PUT {path} HTTP/1.1\r\nHost: localhost\r\n"
+                        f"Authorization: Basic {token}\r\n"
+                        "Content-Length: 1048576\r\n\r\n"
+                    ).encode()
+                    + b"partial" * 4096
+                )
+                for attempt in range(100):
+                    if list(uploads.iterdir()):
+                        break
+                    time.sleep(0.05)
+                else:
+                    raise AssertionError("upload was not buffered")
+                assert request("/map.vpk")[2] == files["map.vpk"]
+                sock.shutdown(socket.SHUT_WR)
+                sock.recv(4096)
+            for attempt in range(100):
+                if not list(uploads.iterdir()):
+                    break
+                time.sleep(0.05)
+            assert not list(uploads.iterdir()), "partial upload was not cleaned up"
+        assert (addons / "map.vpk").read_bytes() == files["map.vpk"]
+        assert not (addons / "interrupted.vpk").exists()
         (addons / "new.vpk").write_text("new")
         assert "/new.vpk" in Links(request("/")[2].decode()).urls
         (addons / "new.vpk").unlink()
@@ -172,4 +270,4 @@ with tempfile.TemporaryDirectory() as temporary:
     finally:
         process.terminate()
         process.wait(timeout=10)
-print("L4D2 download checks passed")
+print("L4D2 upload and download checks passed")

@@ -205,9 +205,16 @@
       && c.security.acme.certs."${host}.chr.fan".webroot == null
       && c.systemd.services.nginx.serviceConfig.ProtectHome
       &&
-        c.systemd.services.nginx.serviceConfig.BindReadOnlyPaths == [
+        c.systemd.services.nginx.serviceConfig.BindPaths == [
           "/home/l4d2/serverfiles/left4dead2/addons:/srv/l4d2-addons"
-        ];
+        ]
+      && builtins.elem "/srv/l4d2-addons" c.systemd.services.nginx.serviceConfig.ReadWritePaths
+      && builtins.elem "a+ /home/l4d2/serverfiles/left4dead2/addons - - - - u:nginx:rwx,m::rwx" c.systemd.tmpfiles.rules
+      && builtins.elem "d /home/l4d2/serverfiles/left4dead2/addons/.uploads 0700 nginx nginx - -" c.systemd.tmpfiles.rules
+      &&
+        lib.hasInfix "client_max_body_size 2g;"
+          c.services.nginx.virtualHosts."${host}.chr.fan".extraConfig
+      && lib.hasInfix "dav_methods PUT;" c.services.nginx.virtualHosts."${host}.chr.fan".extraConfig;
   }
   {
     name = "l4d2-files-off";

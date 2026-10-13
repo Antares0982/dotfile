@@ -6,19 +6,19 @@ let
 in
 {
   imports = [ ./acme.nix ];
-  options.antares.l4d2.fileServer.enable = lib.mkEnableOption "L4D2 addon downloads";
+  options.antares.l4d2.fileServer.enable = lib.mkEnableOption "L4D2 addon downloads and uploads";
 
   options.antares.l4d2.fileServer.domain = lib.mkOption {
     type = lib.types.str;
     default = "gz.chr.fan";
-    description = "Addon download domain.";
+    description = "Addon file server domain.";
   };
 
   config = lib.mkIf enabled {
     assertions = [
       {
         assertion = config.services.nginx.enable;
-        message = "L4D2 downloads require nginx.";
+        message = "L4D2 files require nginx.";
       }
     ];
     antares.acme.enable = true;
@@ -43,9 +43,11 @@ in
         acmeRoot = null;
         root = "/srv/l4d2-addons";
         basicAuthFile = config.age.secrets.l4d2-files-htpasswd.path;
-        extraConfig = builtins.replaceStrings [ "@stylesheet@" ] [ "${../resource/l4d2/files.xsl}" ] (
-          builtins.readFile ../resource/l4d2/files.conf
-        );
+        extraConfig =
+          builtins.replaceStrings
+            [ "@stylesheet@" "@uploads@" ]
+            [ "${../resource/l4d2/files.xsl}" "/srv/l4d2-addons/.uploads" ]
+            (builtins.readFile ../resource/l4d2/files.conf);
       };
     };
     age.secrets.l4d2-files-htpasswd = {
@@ -58,10 +60,12 @@ in
       "d /home/l4d2/serverfiles 0700 l4d2 l4d2 - -"
       "d ${game} 0700 l4d2 l4d2 - -"
       "d ${game}/addons 0700 l4d2 l4d2 - -"
-      "a+ ${game}/addons - - - - u:nginx:r-x,m::r-x"
+      "a+ ${game}/addons - - - - u:nginx:rwx,m::rwx"
+      "d ${game}/addons/.uploads 0700 nginx nginx - -"
     ];
-    systemd.services.nginx.serviceConfig.BindReadOnlyPaths = [
-      "${game}/addons:/srv/l4d2-addons"
-    ];
+    systemd.services.nginx.serviceConfig = {
+      BindPaths = [ "${game}/addons:/srv/l4d2-addons" ];
+      ReadWritePaths = [ "/srv/l4d2-addons" ];
+    };
   };
 }

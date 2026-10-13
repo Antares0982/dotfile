@@ -116,12 +116,17 @@ in
       unmanaged addons. Restart after map changes. Mission Manager and ACS keep their
       generated map lists and caches in the writable SourceMod tree.
 
-      GZ enables `antares.l4d2.fileServer.enable` for authenticated downloads at
-      `https://gz.chr.fan:8443/`, with username `l4d2`. Only top-level VPK and JPG
-      files are exposed; JPGs have previews. Keep uploaded files readable (0644).
+      GZ and SZ enable `antares.l4d2.fileServer.enable` for authenticated downloads
+      and uploads at `https://gz.chr.fan:8443/` and `https://sz.chr.fan:8443/`,
+      with username `l4d2`. Every authenticated user can upload through the page.
+      Top-level VPK, JPG/JPEG, PNG, GIF, and WebP files are allowed by extension;
+      images have previews. Uploads are limited to 2 GiB, saved readable (0644),
+      and replace same-name files atomically. Contents are not validated.
+      Each host stores files independently; restart manually after map changes.
       The cloud firewall must allow TCP 8443. Certificates renew through Cloudflare
-      DNS verification without opening 80 or 443. Disabling L4D2 also disables downloads.
-      Set or rotate the independent download password on PC, then rebuild GZ:
+      DNS verification without opening 80 or 443. Disabling L4D2 also disables
+      file access without deleting files. Set or rotate the independent file server
+      password on PC, then rebuild both hosts:
 
       ```bash
       nix shell nixpkgs#apacheHttpd nixpkgs#age -c bash scripts/set-l4d2-password.sh
