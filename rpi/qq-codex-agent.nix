@@ -9,6 +9,7 @@ let
   user = "qq-codex-agent";
   app = config.services.qq-codex-agent.package;
   ghToken = "/etc/qq-codex-private/gh-token";
+  rconPassword = "/etc/qq-codex-agent/l4d2-rcon";
   launcher = pkgs.writeShellScript "qq-codex-launch" ''
     set -eu
     export GH_TOKEN="$(${pkgs.coreutils}/bin/cat ${ghToken})"
@@ -57,6 +58,8 @@ let
                         "/bin/sh",
                         "-ec",
                         'test ! -r ${ghToken}; '
+                        'test -s ${rconPassword}; test ! -w ${rconPassword}; '
+                        'cat ${rconPassword} >/dev/null; '
                         'for tool in git gh uv nix; do command -v "$tool"; "$tool" --version >/dev/null; done; '
                         'test "$(nix run --offline "git+file://$PWD#hello")" = "Hello, world!"',
                     ],
@@ -75,11 +78,13 @@ let
     no_proxy = "127.0.0.1,localhost,::1";
     NIX_REMOTE = "daemon";
     NIX_CONFIG = "experimental-features = nix-command flakes";
+    L4D2_RCON_PASSWORD_FILE = rconPassword;
   };
   mounts = [
     "/nix/store"
     "/nix/var/nix/daemon-socket"
     "${config.age.secrets.qqCodexGhToken.path}:${ghToken}"
+    "${config.age.secrets.l4d2-rcon.path}:${rconPassword}"
   ];
 in
 {
@@ -126,6 +131,12 @@ in
       group = user;
       mode = "0400";
     };
+    age.secrets.l4d2-rcon = {
+      file = ../secrets/l4d2-rcon.age;
+      owner = user;
+      group = user;
+      mode = "0400";
+    };
     system.activationScripts.qqCodexRestart = {
       deps = [ "agenix" ];
       text = ''
@@ -165,6 +176,7 @@ in
         config.age.secrets.qqRelayEnv.file
         config.age.secrets.qqCodexAllowlist.file
         config.age.secrets.qqCodexGhToken.file
+        config.age.secrets.l4d2-rcon.file
       ];
       inherit environment;
       serviceConfig = {

@@ -132,6 +132,20 @@
       && c.users.users ? napcat;
   }
   {
+    name = "qq-codex-rcon";
+    module = { };
+    check =
+      c:
+      c.age.secrets.l4d2-rcon.owner == "qq-codex-agent"
+      && c.age.secrets.l4d2-rcon.group == "qq-codex-agent"
+      && c.age.secrets.l4d2-rcon.mode == "0400"
+      &&
+        c.systemd.services.qq-codex-agent.environment.L4D2_RCON_PASSWORD_FILE
+        == "/etc/qq-codex-agent/l4d2-rcon"
+      && builtins.elem "${c.age.secrets.l4d2-rcon.path}:/etc/qq-codex-agent/l4d2-rcon" c.systemd.services.qq-codex-agent.serviceConfig.BindReadOnlyPaths
+      && builtins.elem c.age.secrets.l4d2-rcon.file c.systemd.services.qq-codex-agent.restartTriggers;
+  }
+  {
     name = "qq-off";
     module = { lib, ... }: { antares.qq.enable = lib.mkForce false; };
     check =
@@ -145,6 +159,7 @@
       && !(c.system.activationScripts ? qqCodexRestart)
       && !(c.age.secrets ? qqRelayEnv)
       && !(c.age.secrets ? qqCodexGhToken)
+      && !(c.age.secrets ? l4d2-rcon)
       && !(c.age.secrets ? napcatEnv);
   }
   {
@@ -156,6 +171,7 @@
       && !(c.systemd.services ? qq-codex-auth)
       && !(c.systemd.services ? qq-codex-login)
       && !(c.age.secrets ? qqCodexGhToken)
+      && !(c.age.secrets ? l4d2-rcon)
       && c.age.secrets ? qqRelayEnv
       && c.systemd.services ? qq-napcat-relay;
   }
