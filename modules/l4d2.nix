@@ -52,6 +52,7 @@ let
     sv_visiblemaxplayers 8
     sv_steam_bypass 0
     sv_steamgroup ""
+    sv_cheats 1
     exec rcon.cfg
   '';
   multiConfig = pkgs.writeText "l4dmultislots.cfg" ''
