@@ -35,6 +35,7 @@ in
     # kdePackages.konsole
     libnotify
     # libreoffice
+    nix-output-monitor
     nixos-shell
     opencode
     openssl
@@ -53,6 +54,5 @@ in
     unar
     vscode.fhs
     xarchiver
-
   ];
 }
