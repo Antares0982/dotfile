@@ -36,6 +36,7 @@
         && lib.hasInfix "/share/fzf/completion.zsh" rc
         && lib.hasInfix "/share/fzf/key-bindings.zsh" rc
         && lib.hasInfix "alias -- 'ls=eza'" rc
+        && lib.hasInfix "alias -- 'nixtreefmt=" rc
         && !(lib.hasInfix "systemctl" rc)
         && !(lib.hasInfix "top -d" rc)
         && !(lib.hasInfix "powerlevel10k.zsh-theme" rc)
@@ -54,6 +55,7 @@
         && c.programs.fzf.fuzzyCompletion
         && zsh.shellAliases.ls == "eza"
         && zsh.shellAliases.ctl == "systemctl --user"
+        && lib.hasInfix "/bin/fd -t f -e nix -x " zsh.shellAliases.nixtreefmt
         && lib.hasInfix "/bin/nproc" zsh.shellAliases.make
         && lib.hasInfix "powerlevel10k.zsh-theme" rc
     )
@@ -84,6 +86,7 @@
           sjtl = "sudo journalctl";
         } home.shellAliases
         && !(home.shellAliases ? ctl)
+        && !(home.shellAliases ? nixtreefmt)
         && lib.all (text: lib.hasInfix text home.initContent) [
           "[[ ! -f \"/home/antares/.p10k.zsh\" ]]"
           "direnv hook zsh"
