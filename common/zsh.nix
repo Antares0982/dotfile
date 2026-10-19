@@ -12,6 +12,9 @@ let
     "sudo"
     "z"
   ];
+  formatNixFile = pkgs.writeShellScript "nixtreefmt-file" ''
+    ${pkgs.nixfmt}/bin/nixfmt "$1" && printf '%s\n' "$1"
+  '';
   aliases =
     builtins.removeAttrs (import ./shellEnv.nix).aliases (
       lib.optionals darwin [
@@ -22,6 +25,7 @@ let
     // {
       make = "make -j$(${pkgs.coreutils}/bin/nproc)";
       cat = "bat -pp";
+      nixtreefmt = "${pkgs.fd}/bin/fd -t f -e nix -x ${formatNixFile}";
     };
 in
 {

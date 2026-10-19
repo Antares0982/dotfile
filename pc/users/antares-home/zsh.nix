@@ -24,7 +24,6 @@ in
     completionInit = "";
     shellAliases = {
       yt-dlp = "yt-dlp --cookies-from-browser chrome";
-      nixtreefmt = "fd -e nix -x nixfmt";
       shtreefmt = "fd -e sh -x shfmt -w";
       sctl = "sudo systemctl";
       ctlr = "ctl restart";
