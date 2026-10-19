@@ -8,7 +8,6 @@
       && c.systemd.services ? codex-login
       && builtins.elem "codex-auth-clients" c.users.users.agent.extraGroups
       && c.systemd.services.antares-agent.environment.ANTARES_AUTH_SOCKET == "/run/codex-auth/auth.sock"
-      && c.services.qq-codex-agent.authSocket == "/run/codex-auth/auth.sock"
       && !(c.age.secrets ? antaresAgentEnv);
   }
   {
@@ -130,6 +129,21 @@
       && c.age.secrets ? qqRelayEnv
       && c.systemd.services ? qq-codex-agent
       && c.users.users ? napcat;
+  }
+  {
+    name = "qq-codex-config";
+    module = { };
+    check =
+      c:
+      c.services.qq-codex-agent.configFile == c.age.secrets.qqCodexAllowlist.path
+      && c.services.qq-codex-agent.allowlistFile == null
+      && c.age.secrets.qqCodexAllowlist.owner == "qq-codex-agent"
+      && c.age.secrets.qqCodexAllowlist.mode == "0400"
+      && builtins.elem "${c.age.secrets.qqCodexAllowlist.path}:/etc/qq-codex-private/config.toml" c.systemd.services.qq-codex-agent.serviceConfig.BindReadOnlyPaths
+      && !(builtins.any (
+        path: lib.hasSuffix ":/etc/qq-codex-private/allowlist.toml" path
+      ) c.systemd.services.qq-codex-agent.serviceConfig.BindReadOnlyPaths)
+      && builtins.elem c.age.secrets.qqCodexAllowlist.file c.systemd.services.qq-codex-agent.restartTriggers;
   }
   {
     name = "qq-codex-rcon";

@@ -30,6 +30,16 @@ with current encrypted secrets before rollback.
 secrets. QQ relay and QQ Codex share the deployment in `rpi/qq-credentials.nix`;
 it remains while either consumer is enabled.
 
+QQ Codex's `secrets/qq-codex-allowlist.age` keeps its historical filename but
+contains the complete application TOML, including allowlists and optional
+`agent_admin_qq`. `services.qq-codex-agent.configFile` references the existing
+agenix secret; it is mounted at `/etc/qq-codex-private/config.toml` and is denied
+to model tools. No generated application defaults are merged. Keep required
+paths, shared auth socket and resource directory aligned with the application
+module's mounts. Top-level fields belong before any group table declarations.
+NapCat tokens and shared login credentials remain separate. Publish the updated
+application and update the RPi source input before deploying this configuration.
+
 ## Edit a secret
 
 On PC, using its management key:

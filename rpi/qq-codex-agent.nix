@@ -13,7 +13,7 @@ let
   launcher = pkgs.writeShellScript "qq-codex-launch" ''
     set -eu
     export GH_TOKEN="$(${pkgs.coreutils}/bin/cat ${ghToken})"
-    exec ${app}/bin/qq-codex-agent
+    exec ${app}/bin/qq-codex-agent --config /etc/qq-codex-private/config.toml
   '';
   threadCheck = pkgs.writeText "qq-codex-thread-check.py" ''
     import asyncio
@@ -27,7 +27,7 @@ let
     from qq_codex_agent import Settings, codex_config
 
     async def main():
-        settings = Settings.load("/etc/qq-codex-agent/config.toml")
+        settings = Settings.load("/etc/qq-codex-private/config.toml")
         async with asyncio.timeout(30):
             with tempfile.TemporaryDirectory(dir=settings.workspace_dir) as directory:
                 Path(directory, "flake.nix").write_text(
@@ -101,9 +101,8 @@ in
         inherit inputs;
         system = pkgs.stdenv.hostPlatform.system;
       };
-      allowlistFile = config.age.secrets.qqCodexAllowlist.path;
+      configFile = config.age.secrets.qqCodexAllowlist.path;
       tokenFile = "/run/qq-codex-auth/token";
-      authSocket = "/run/codex-auth/auth.sock";
       extraPackages = [
         pkgs.gh
         pkgs.nix
