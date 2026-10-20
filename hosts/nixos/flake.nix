@@ -11,14 +11,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # follows helpers, kept only to dedup linyinfeng-nur's transitive inputs
-    flake-compat.url = "github:edolstra/flake-compat";
-    flake-utils.url = "github:numtide/flake-utils";
-    flake-parts = {
-      url = "github:hercules-ci/flake-parts";
-      inputs.nixpkgs-lib.follows = "nixpkgs";
-    };
-
     home-manager = {
       url = "github:nix-community/home-manager/master";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -78,16 +70,6 @@
     renewal = {
       url = "github:Antares0982/renewal";
       inputs.nixpkgs.follows = "nixpkgs";
-    };
-    linyinfeng-nur = {
-      url = "github:linyinfeng/nur-packages";
-      inputs = {
-        nixpkgs.follows = "nixpkgs";
-        flake-compat.follows = "flake-compat";
-        flake-utils.follows = "flake-utils";
-        nixos-stable.follows = "nixpkgs-old";
-        flake-parts.follows = "flake-parts";
-      };
     };
   };
 

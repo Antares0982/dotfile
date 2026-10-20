@@ -3,6 +3,7 @@
   myXray ? null,
 }:
 {
+  plangothic = pkgs.callPackage ./plangothic.nix { };
   nix-zshell = pkgs.callPackage ./nix-zshell.nix { };
   git-ssh-sign = pkgs.callPackage ./git-ssh-sign.nix { };
   find-nix-gc-roots = pkgs.callPackage ./find-nix-gc-roots.nix { };
