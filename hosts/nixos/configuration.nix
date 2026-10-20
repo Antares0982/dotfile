@@ -40,6 +40,5 @@ in
     antares-rpc-client = inputs.antares-rpc-client.packages.${system}.default;
     pull-all = inputs.pull-all.packages.${system}.default;
     rust-overlay = inputs.rust-overlay.overlays.default;
-    linyinfeng-nur-packages = inputs.linyinfeng-nur.packages.${system};
   };
 }

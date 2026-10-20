@@ -1,9 +1,10 @@
 {
-  config,
   pkgs,
-  linyinfeng-nur-packages,
   ...
 }:
+let
+  localPackages = import ../packages { inherit pkgs; };
+in
 {
   fonts = {
     enableDefaultPackages = true;
@@ -23,7 +24,7 @@
         source-han-serif
         wqy_microhei
         wqy_zenhei
-        linyinfeng-nur-packages.plangothic
+        localPackages.plangothic
       ]
       ++ (with pkgs.nerd-fonts; [
         fira-code
