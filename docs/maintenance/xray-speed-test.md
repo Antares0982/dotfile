@@ -70,12 +70,11 @@ abandoned results older than a day when it next runs. Its cache lives below
 `.agent/xray-speed-test/cache/`. A request queued behind other work can time out;
 retry after the active test completes rather than starting competing probes.
 
-The deployable skill is in `.agents/skills/xray-switch/SKILL.md`; install that file
-at the same relative location in the agent workspace. It selects from `results`
-and uses the existing `switch:<filename>` trigger. The privileged switch helper
+Clients can select from `results` and use the existing `switch:<filename>`
+trigger. The privileged switch helper
 rejects missing files, node symlinks, paths and `active.json`, atomically replaces
 the active symlink, and restores the previous link if restart fails. Successful
-restart does not prove external connectivity, so the skill also checks egress.
+restart does not prove external connectivity; clients must also check egress.
 
 ## Validation and timing
 
@@ -98,6 +97,6 @@ After deployment, force a worker run and record candidate count, per-stage
 `wall_seconds`, total wall time and downloaded bytes. Compare the final three
 against isolated ten-second reference probes using the same URL and nodes,
 without switching between measurements or probing concurrently. Complete one
-skill-driven switch and verify its link and external connectivity. This live
+trigger-based switch and verify its link and external connectivity. This live
 acceptance requires deployment; package builds and mocked checks alone do not
 establish it.
