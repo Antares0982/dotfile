@@ -15,9 +15,9 @@ assert builtins.elem systemdScope [
 pkgs.writeShellApplication {
   name = "xs";
   runtimeInputs = [
-    myXray
+    (pkgs.callPackage ./xray-speed-test.nix { inherit myXray xrayDir; })
     pkgs.jq
-    pkgs.curl
+    pkgs.coreutils
     pkgs.systemd
   ];
   text =

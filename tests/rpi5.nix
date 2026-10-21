@@ -99,6 +99,8 @@
       && !(c.systemd.services ? antares-agent-update)
       && !(c.systemd.services ? xray-helper)
       && !(c.systemd.paths ? xray-helper)
+      && !(c.systemd.services ? xray-speed-test)
+      && !(c.systemd.paths ? xray-speed-test)
       && !(c.systemd.generators ? antares-agent-mounts)
       && !(c.age.secrets ? antaresAgentEnv)
       && !(c.age.secrets ? agentRelayRabbitKey)
@@ -190,6 +192,20 @@
       && c.systemd.services ? qq-napcat-relay;
   }
   {
+    name = "xray-speed-test-user";
+    module = { };
+    check =
+      c:
+      c.systemd.services.xray-speed-test.serviceConfig.User == "agent"
+      && c.systemd.services.xray-speed-test.serviceConfig.Group == "agent"
+      && c.systemd.services.xray-speed-test.serviceConfig.NoNewPrivileges
+      && c.systemd.services.xray-speed-test.serviceConfig.ProtectSystem == "strict"
+      && !(builtins.elem "agent" c.users.groups.xray.members)
+      &&
+        c.systemd.paths.xray-speed-test.pathConfig.DirectoryNotEmpty
+        == "/home/agent/agent_work/.agent/xray-speed-test/requests";
+  }
+  {
     name = "xray-off";
     module = { lib, ... }: {
       antares.xray.enable = lib.mkForce false;
@@ -201,6 +217,8 @@
       && !(c.systemd.services ? xray-sub)
       && !(c.systemd.services ? xray-helper)
       && !(c.systemd.paths ? xray-helper)
+      && !(c.systemd.services ? xray-speed-test)
+      && !(c.systemd.paths ? xray-speed-test)
       && !(c.users.groups ? xray)
       && !(c.age.secrets ? xraySubUrl)
       && !(c.environment.variables ? http_proxy)
