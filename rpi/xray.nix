@@ -15,6 +15,19 @@ let
     systemdScope = "system";
   };
 
+  speedTest = (import ../packages { inherit pkgs myXray; }).xray-speed-test.override {
+    inherit xrayDir;
+  };
+  switchNode = pkgs.writeShellApplication {
+    name = "xray-switch-node";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.systemd
+    ];
+    text = builtins.readFile ../resource/xray-switch.sh;
+  };
+  speedDir = "/home/agent/agent_work/.agent/xray-speed-test";
+
   # Inside the agent's workspace, not its home: ProtectHome=tmpfs shadows
   # /home/agent for the unit, and the bubblewrap sandbox only permits writes
   # under cwd -- which is the workspace. Anywhere else and the model cannot
@@ -25,7 +38,10 @@ in
   options.antares.xray.enable = lib.mkEnableOption "Xray proxy and subscriptions";
   config = lib.mkIf (config.antares.xray.enable) {
 
-    environment.systemPackages = [ xs ];
+    environment.systemPackages = [
+      xs
+      speedTest
+    ];
 
     # ── shared group for xray management ──
     users.groups.xray = {
@@ -41,6 +57,10 @@ in
     ]
     ++ lib.optionals config.antares.agent.enable [
       "d ${triggerDir} 0700 agent agent - -"
+      "d ${speedDir} 0700 agent agent - -"
+      "d ${speedDir}/requests 0700 agent agent - -"
+      "d ${speedDir}/processing 0700 agent agent - -"
+      "d ${speedDir}/results 0700 agent agent - -"
     ];
 
     # ── subscription updater (oneshot + daily timer) ──
@@ -89,16 +109,8 @@ in
               ${pkgs.systemd}/bin/systemctl start xray-sub
               ;;
             switch:*)
-              node="''${action#switch:}"
-              # Resolve relative paths to subsDir
-              [[ "$node" != /* ]] && node="${subsDir}/$node"
-              # Only allow real paths under subsDir, no traversal or self-reference
-              if [[ "$node" == *..* ]] || [[ "$node" != "${subsDir}/"* ]] || \
-                 [[ "$(basename "$node")" == "active.json" ]]; then
-                rm -f "$f"; continue
-              fi
-              ln -sf "$node" "${subsDir}/active.json"
-              ${pkgs.systemd}/bin/systemctl restart xray
+              ${switchNode}/bin/xray-switch-node "${subsDir}" "''${action#switch:}" ||
+                echo "xray-helper: switch failed" >&2
               ;;
           esac
           rm -f "$f"
@@ -111,6 +123,41 @@ in
       wantedBy = [ "paths.target" ];
       pathConfig = {
         DirectoryNotEmpty = triggerDir;
+      };
+    };
+
+    # Probe outside the agent network namespace, without root or config write access.
+    systemd.services.xray-speed-test = lib.mkIf config.antares.agent.enable {
+      description = "Unprivileged Xray speed-test worker";
+      after = [ "network-online.target" ];
+      wants = [ "network-online.target" ];
+      environment = {
+        XDG_CACHE_HOME = "${speedDir}/cache";
+      };
+      serviceConfig = {
+        Type = "oneshot";
+        User = "agent";
+        Group = "agent";
+        ExecStart = "${speedTest}/bin/xray-speed-test --worker --queue-dir ${speedDir}";
+        TimeoutStartSec = "infinity";
+        Restart = "on-failure";
+        RestartSec = "2s";
+        NoNewPrivileges = true;
+        ProtectSystem = "strict";
+        ProtectHome = "tmpfs";
+        BindPaths = [ speedDir ];
+        PrivateTmp = true;
+        UMask = "0077";
+        KillMode = "control-group";
+      };
+    };
+
+    systemd.paths.xray-speed-test = lib.mkIf config.antares.agent.enable {
+      description = "Watch for Xray speed-test requests";
+      wantedBy = [ "paths.target" ];
+      pathConfig = {
+        DirectoryNotEmpty = "${speedDir}/requests";
+        PathExistsGlob = "${speedDir}/processing/*.json";
       };
     };
 
