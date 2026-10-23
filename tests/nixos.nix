@@ -103,6 +103,24 @@
       && lib.hasInfix "/boot/background.png" c.services.displayManager.regreet.extraCss;
   }
   {
+    name = "video-defaults";
+    module = { };
+    check =
+      c:
+      lib.all
+        (
+          mime:
+          c.home-manager.users.antares.xdg.mimeApps.defaultApplications.${mime}
+          == [ "org.kde.haruna.desktop" ]
+        )
+        [
+          "video/matroska"
+          "video/x-matroska"
+          "video/mp4"
+          "video/webm"
+        ];
+  }
+  {
     name = "desktop-off";
     module = { lib, ... }: { antares.desktop.enable = lib.mkForce false; };
     check =
