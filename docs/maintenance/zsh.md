@@ -10,5 +10,6 @@ Run `CHECK_CASE=zsh-base bash scripts/check-configs.sh` for the shared checks.
 
 `nixtreefmt` formats regular `.nix` files below the current directory using
 `fd -t f -e nix -x`, with fd's default parallelism and ignore rules. It prints
-each successfully processed path, including files that were already formatted.
+only paths whose formatting changed; already formatted files produce no output.
 Formatting failures retain nixfmt's diagnostics and produce a nonzero exit status.
+Run `bash scripts/test-nixtreefmt.sh` to check changed, unchanged, and invalid files.

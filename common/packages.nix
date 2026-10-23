@@ -10,33 +10,36 @@ let
 in
 {
   nixpkgs.config.allowUnfree = true;
-  environment.systemPackages = with pkgs; [
-    bat
-    cachix
-    clang-tools
-    cmake
-    delta
-    fd
-    find-nix-gc-roots
-    gcc
-    gdb
-    gh
-    git
-    gnupg
-    jq
-    kitty.terminfo
-    nano
-    neovim
-    net-tools
-    nixfmt
-    nix-prefetch-scripts
-    p7zip
-    python3
-    ripgrep
-    statix
-    stylua
-    tree
-    tree-sitter
-    uv
-  ];
+  environment.systemPackages =
+    with pkgs;
+    [
+      bat
+      cachix
+      clang-tools
+      cmake
+      delta
+      fd
+      find-nix-gc-roots
+      gcc
+      gdb
+      gh
+      git
+      gnupg
+      jq
+      kitty.terminfo
+      nano
+      neovim
+      net-tools
+      nixfmt
+      nix-prefetch-scripts
+      p7zip
+      python3
+      ripgrep
+      statix
+      stylua
+      tree
+      tree-sitter
+      uv
+    ]
+    ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.bubblewrap ];
 }

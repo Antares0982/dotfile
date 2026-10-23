@@ -8,20 +8,20 @@ node="$subs/$name"
 scratch=$(mktemp -d "$subs/.switch.XXXXXXXX")
 trap 'rm -rf "$scratch"' EXIT
 if [[ -L "$subs/active.json" ]]; then
-    cp -P "$subs/active.json" "$scratch/previous"
+	cp -P "$subs/active.json" "$scratch/previous"
 elif [[ -e "$subs/active.json" ]]; then
-    echo 'xray-switch: active.json must be a symlink' >&2
-    exit 1
+	echo 'xray-switch: active.json must be a symlink' >&2
+	exit 1
 fi
 ln -s "$node" "$scratch/next"
 mv -Tf "$scratch/next" "$subs/active.json"
 if ! systemctl restart xray; then
-    if [[ -L "$scratch/previous" ]]; then
-        mv -Tf "$scratch/previous" "$subs/active.json"
-    else
-        rm -f "$subs/active.json"
-    fi
-    systemctl restart xray || true
-    echo 'xray-switch: restart failed; restored previous selection' >&2
-    exit 1
+	if [[ -L "$scratch/previous" ]]; then
+		mv -Tf "$scratch/previous" "$subs/active.json"
+	else
+		rm -f "$subs/active.json"
+	fi
+	systemctl restart xray || true
+	echo 'xray-switch: restart failed; restored previous selection' >&2
+	exit 1
 fi

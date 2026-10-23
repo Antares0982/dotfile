@@ -71,11 +71,11 @@ esac
 tmp=$(mktemp -d)
 speed_pid=""
 cleanup() {
-    if [ -n "$speed_pid" ]; then
-        kill "$speed_pid" 2>/dev/null || true
-        wait "$speed_pid" 2>/dev/null || true
-    fi
-    rm -rf "$tmp"
+	if [ -n "$speed_pid" ]; then
+		kill "$speed_pid" 2>/dev/null || true
+		wait "$speed_pid" 2>/dev/null || true
+	fi
+	rm -rf "$tmp"
 }
 trap cleanup EXIT
 trap 'exit 130' INT
@@ -111,8 +111,8 @@ fi
 
 sel="${names[$idx]}"
 [[ "$sel" != */* && "$sel" != active.json && -f "$SUBS/$sel" && ! -L "$SUBS/$sel" ]] || {
-    echo "xs: selected node is no longer available" >&2
-    exit 1
+	echo "xs: selected node is no longer available" >&2
+	exit 1
 }
 ln -sfn "$SUBS/$sel" "$CFG"
 if [ "$SCOPE" = system ]; then

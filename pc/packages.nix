@@ -24,6 +24,7 @@ in
     # discord
     element-desktop
     ffmpeg
+    gdu
     google-chrome
     haruna
     imagemagick

@@ -13,7 +13,9 @@ let
     "z"
   ];
   formatNixFile = pkgs.writeShellScript "nixtreefmt-file" ''
-    ${pkgs.nixfmt}/bin/nixfmt "$1" && printf '%s\n' "$1"
+    if ! ${pkgs.nixfmt}/bin/nixfmt --check --quiet "$1"; then
+      ${pkgs.nixfmt}/bin/nixfmt "$1" && printf '%s\n' "$1"
+    fi
   '';
   aliases =
     builtins.removeAttrs (import ./shellEnv.nix).aliases (
