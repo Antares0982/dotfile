@@ -10,7 +10,6 @@
       rc = c.environment.etc.zshrc.text;
       packages = map lib.getName c.environment.systemPackages;
       home = if host == "nixos" then c.home-manager.users.antares.programs.zsh else null;
-      theme = c.environment.etc."zsh/p10k.zsh".source or null;
     in
     zsh.enable
     && !zsh.enableGlobalCompInit
@@ -20,11 +19,14 @@
       "fzf"
       "eza"
       "gnumake"
-      "powerlevel10k"
     ]
     && !(lib.hasInfix "fzf" zsh.shellInit)
     && !(lib.hasInfix "fzf" zsh.loginShellInit)
     && !(lib.hasInfix "autoload -U compinit && compinit" rc)
+    && !(builtins.elem "powerlevel10k" packages)
+    && !(lib.hasInfix "p10k" rc)
+    && !(lib.hasInfix "powerlevel10k" rc)
+    && !(c.environment.etc ? "zsh/p10k.zsh")
     && (
       if darwin then
         zsh.enableSyntaxHighlighting
@@ -39,7 +41,6 @@
         && lib.hasInfix "alias -- 'nixtreefmt=" rc
         && !(lib.hasInfix "systemctl" rc)
         && !(lib.hasInfix "top -d" rc)
-        && !(lib.hasInfix "powerlevel10k.zsh-theme" rc)
       else
         zsh.syntaxHighlighting.enable
         && zsh.autosuggestions.enable
@@ -57,21 +58,6 @@
         && zsh.shellAliases.ctl == "systemctl --user"
         && lib.hasInfix "/bin/fd -t f -e nix -x " zsh.shellAliases.nixtreefmt
         && lib.hasInfix "/bin/nproc" zsh.shellAliases.make
-        && lib.hasInfix "powerlevel10k.zsh-theme" rc
-    )
-    && (
-      if
-        builtins.elem host [
-          "hk"
-          "gz"
-          "sz"
-        ]
-      then
-        builtins.readFile theme == builtins.readFile ../resource/hk-p10k.zsh
-      else if host == "rpi5" then
-        builtins.readFile theme == builtins.readFile ../resource/rpi-p10k.zsh
-      else
-        theme == null
     )
     && (
       host != "nixos"
@@ -80,6 +66,7 @@
         && home.completionInit == ""
         && !(c.age.secrets ? ghToken)
         && !(lib.hasInfix "GH_TOKEN" home.initContent)
+        && !(lib.hasInfix "p10k" home.initContent)
         && lib.matchAttrs {
           sctl = "sudo systemctl";
           jtl = "journalctl --user";
@@ -88,7 +75,6 @@
         && !(home.shellAliases ? ctl)
         && !(home.shellAliases ? nixtreefmt)
         && lib.all (text: lib.hasInfix text home.initContent) [
-          "[[ ! -f \"/home/antares/.p10k.zsh\" ]]"
           "direnv hook zsh"
           "command yazi"
           "_f()"

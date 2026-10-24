@@ -1,5 +1,12 @@
 { inputs, pkgs, ... }:
 {
+  antares.starship = {
+    enable = true;
+    settings.palettes.host = {
+      cwd_bg = "#ff8700";
+      cwd_fg = "#000000";
+    };
+  };
   imports = [
     ../../server
     ../../server/gz
@@ -23,6 +30,5 @@
     myXray = inputs.myXray.packages.${pkgs.stdenv.hostPlatform.system}.default;
     xray-sub = inputs.myXray.packages.${pkgs.stdenv.hostPlatform.system}.xray_sub;
   };
-  environment.etc."zsh/p10k.zsh".source = ../../resource/hk-p10k.zsh;
   system.stateVersion = "26.11";
 }

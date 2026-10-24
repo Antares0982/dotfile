@@ -1,5 +1,4 @@
 {
-  config,
   currentDevice,
   lib,
   pkgs,
@@ -31,10 +30,11 @@ let
     };
 in
 {
+  imports = [ ../modules/starship.nix ];
+
   environment.systemPackages = [
     pkgs.eza
     pkgs.gnumake
-    pkgs.zsh-powerlevel10k
   ]
   ++ lib.optionals darwin [
     pkgs.oh-my-zsh
@@ -74,15 +74,6 @@ in
             enable = true;
             inherit plugins;
           };
-          promptInit = ''
-            POWERLEVEL10K_MODE=nerdfont-complete
-          ''
-          + lib.optionalString (config.environment.etc ? "zsh/p10k.zsh") ''
-            [[ -f /etc/zsh/p10k.zsh ]] && source /etc/zsh/p10k.zsh
-          ''
-          + ''
-            source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
-          '';
         }
     );
   }

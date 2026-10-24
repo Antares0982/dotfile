@@ -42,7 +42,6 @@ in
       sjtlb = "sjtl -b";
     };
     initContent = ''
-      [[ ! -f "${envs.localFileDef.p10kConfPath}" ]] || source "${envs.localFileDef.p10kConfPath}"
       eval "$(direnv hook zsh)"
       export PATH=$PATH:${envs.envs.SCRIPT_DIR}:${envs.envs.SCRIPT_DIR}/linux
 

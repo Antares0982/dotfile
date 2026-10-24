@@ -8,6 +8,13 @@ let
   system = pkgs.stdenv.hostPlatform.system;
 in
 {
+  antares.starship = {
+    enable = true;
+    settings.palettes.host = {
+      cwd_bg = "#00af00";
+      cwd_fg = "#000000";
+    };
+  };
   services.telegram-output-monitor-bot.enable = true;
   antares.monitor.proxy = if config.antares.proxy.enable then config.antares.proxy.httpUrl else null;
   services.antares-rpc-client.enable = true;

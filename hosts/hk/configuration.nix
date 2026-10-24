@@ -8,6 +8,13 @@ let
   system = pkgs.stdenv.hostPlatform.system;
 in
 {
+  antares.starship = {
+    enable = true;
+    settings.palettes.host = {
+      cwd_bg = "#ff8700";
+      cwd_fg = "#000000";
+    };
+  };
   services.telegram-output-monitor-bot.enable = true;
   services.antares-rpc-client.enable = true;
   services.xray.enable = true;
@@ -49,7 +56,6 @@ in
     ];
     singleTransaction = true;
   };
-  environment.etc."zsh/p10k.zsh".source = ../../resource/hk-p10k.zsh;
   environment.variables.NIX_DOT_FILES = "/home/antares/Nix";
   programs.zsh.shellInit = ''
     export PATH=$PATH:$HOME/scripts:$HOME/scripts/linux

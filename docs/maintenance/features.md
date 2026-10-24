@@ -70,6 +70,7 @@ integration as well as the upstream service.
 
 | Host | Controls |
 |---|---|
+| all seven hosts | `antares.starship.enable` ([settings](zsh.md#starship)) |
 | nixos, hk, rpi5 | `services.telegram-output-monitor-bot.enable`, `services.antares-rpc-client.enable`, `services.rabbitmq.enable` |
 | nixos, rpi5, macbook | `antares.xray.enable`, `antares.proxy.enable` |
 | rpi5 | `services.antares-runners.instances.<name>.enable`, `antares.agent.enable`, `antares.qq.enable`, `antares.gitServer.enable`, `services.ssh-probe.enable` |

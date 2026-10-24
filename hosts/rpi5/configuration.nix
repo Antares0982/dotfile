@@ -13,6 +13,13 @@ let
     }).github-runner;
 in
 {
+  antares.starship = {
+    enable = true;
+    settings.palettes.host = {
+      cwd_bg = "#8700d7";
+      cwd_fg = "#ffffff";
+    };
+  };
   services.antares-runners.instances.actionrunner = {
     enable = true;
     user = "actionrunner";
@@ -59,7 +66,6 @@ in
   services.ssh-probe.enable = true;
   antares.gitServer.enable = true;
   imports = [ ../../rpi ];
-  environment.etc."zsh/p10k.zsh".source = ../../resource/rpi-p10k.zsh;
   environment.variables.NIX_DOT_FILES = "/home/antares/Nix";
   programs.zsh.shellInit = ''
     export PATH=$PATH:$HOME/scripts:$HOME/scripts/linux
