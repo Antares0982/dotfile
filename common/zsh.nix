@@ -58,6 +58,10 @@ in
             mkdir -p "$ZSH_CACHE_DIR"
             plugins=(${lib.concatStringsSep " " plugins})
             source "$ZSH/oh-my-zsh.sh"
+            # Let a later user Oh My Zsh setup resolve its own custom directory.
+            if [[ "$ZSH_CUSTOM" == "$ZSH/custom" ]]; then
+              unset ZSH_CUSTOM
+            fi
             source ${pkgs.fzf}/share/fzf/completion.zsh
             source ${pkgs.fzf}/share/fzf/key-bindings.zsh
           ''
