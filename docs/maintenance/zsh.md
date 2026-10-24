@@ -10,7 +10,12 @@ Run `CHECK_CASE='zsh-base|starship-.*' bash scripts/check-configs.sh` for the sh
 
 ## Starship
 
-`modules/starship.nix` owns the shared prompt. Each host enables
+`modules/starship.nix` owns the shared prompt. Its base is
+[`resource/starship.toml`](../../resource/starship.toml), adapted from Starship
+1.26.0's [Gruvbox Rainbow preset](https://starship.rs/presets/gruvbox-rainbow).
+Keeping the preset in the repository gives every host the same base despite
+independent package versions. The preset uses Nerd Font glyphs.
+Each host enables
 `antares.starship.enable` and overrides `antares.starship.settings` in
 `hosts/<name>/configuration.nix`; WSL uses `wsl/default.nix`.
 Settings recursively override the shared defaults, preserving unspecified fields.
@@ -30,7 +35,9 @@ antares.starship = {
 
 The shared palette colors the directory and its read-only marker. PC uses green,
 macbook pink, servers orange, RPi purple, and WSL blue. Purple and blue use white
-text; the other backgrounds use black. Other prompt settings keep Starship defaults.
+text; the other backgrounds use black. The adjoining Powerline separators follow
+the directory background. The remaining layout, icons, directory substitutions,
+Git/language modules, clock, and prompt character follow the preset.
 
 Nix generates `/etc/starship.toml`. Interactive Zsh always sets `STARSHIP_CONFIG`
 to this file, ignoring inherited paths and home-directory configuration files.

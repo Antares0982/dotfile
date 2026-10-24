@@ -16,17 +16,7 @@ in
     settings = lib.mkOption {
       type = toml.type;
       default = { };
-      apply = lib.recursiveUpdate {
-        palette = "host";
-        palettes.host = {
-          cwd_bg = "#00af00";
-          cwd_fg = "#000000";
-        };
-        directory = {
-          style = "bold fg:cwd_fg bg:cwd_bg";
-          read_only_style = "fg:cwd_fg bg:cwd_bg";
-        };
-      };
+      apply = lib.recursiveUpdate (builtins.fromTOML (builtins.readFile ../resource/starship.toml));
       description = "Starship settings recursively overriding the shared defaults.";
     };
   };

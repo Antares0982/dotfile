@@ -50,8 +50,14 @@ in
       && settings.directory.read_only_style == "fg:cwd_fg bg:cwd_bg"
       && settings.palettes.host.cwd_bg == builtins.elemAt colors.${host} 0
       && settings.palettes.host.cwd_fg == builtins.elemAt colors.${host} 1
-      && !(settings ? format)
-      && !(settings.directory ? format)
+      && lib.hasInfix "[](bg:cwd_bg fg:color_orange)$directory[](fg:cwd_bg bg:color_aqua)" settings.format
+      && lib.hasInfix "$line_break$character" settings.format
+      && settings.palettes.host.color_fg0 == "#fbf1c7"
+      && !settings.os.disabled
+      && settings.username.show_always
+      && !settings.time.disabled
+      && settings.directory.format == "[ $path]($style)[$read_only]($read_only_style)[ ]($style)"
+      && settings.directory.truncation_length == 3
       && lib.hasInfix "export STARSHIP_CONFIG=/etc/starship.toml" zsh.interactiveShellInit
       && lib.hasInfix "$TERM != dumb" zsh.promptInit
       && lib.hasInfix "/bin/starship init zsh" zsh.promptInit
@@ -92,8 +98,10 @@ in
   {
     name = "starship-overrides";
     module.antares.starship.settings = {
+      format = "$directory$character";
       directory.style = "bold blue";
       directory.truncation_length = 5;
+      directory.substitutions.Documents = "Docs";
       add_newline = false;
     };
     check =
@@ -102,7 +110,10 @@ in
         settings = c.antares.starship.settings;
       in
       settings.directory.style == "bold blue"
+      && settings.format == "$directory$character"
       && settings.directory.truncation_length == 5
+      && settings.directory.substitutions.Documents == "Docs"
+      && settings.directory.substitutions.Downloads == " "
       && settings.directory.read_only_style == "fg:cwd_fg bg:cwd_bg"
       && settings.palettes.host.cwd_bg == builtins.elemAt colors.${host} 0
       && !settings.add_newline;
