@@ -10,10 +10,7 @@ in
 {
   antares.starship = {
     enable = true;
-    settings.palettes.host = {
-      cwd_bg = "#ff8700";
-      cwd_fg = "#000000";
-    };
+    settings.palettes.host.color_os = "#ff8700";
   };
   services.telegram-output-monitor-bot.enable = true;
   services.antares-rpc-client.enable = true;

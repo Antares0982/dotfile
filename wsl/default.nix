@@ -7,10 +7,7 @@
 {
   antares.starship = {
     enable = true;
-    settings.palettes.host = {
-      cwd_bg = "#005faf";
-      cwd_fg = "#ffffff";
-    };
+    settings.palettes.host.color_os = "#005faf";
   };
   wsl.enable = true;
   nixpkgs.config.allowUnfree = true;

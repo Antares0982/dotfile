@@ -10,10 +10,7 @@ in
 {
   antares.starship = {
     enable = true;
-    settings.palettes.host = {
-      cwd_bg = "#ff5faf";
-      cwd_fg = "#000000";
-    };
+    settings.palettes.host.color_os = "#ff5faf";
   };
   antares.xray.enable = true;
   antares.proxy.enable = true;

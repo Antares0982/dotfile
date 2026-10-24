@@ -15,10 +15,7 @@ in
 {
   antares.starship = {
     enable = true;
-    settings.palettes.host = {
-      cwd_bg = "#8700d7";
-      cwd_fg = "#ffffff";
-    };
+    settings.palettes.host.color_os = "#8700d7";
   };
   services.antares-runners.instances.actionrunner = {
     enable = true;

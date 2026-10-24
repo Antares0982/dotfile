@@ -3,12 +3,12 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
 format = """
-[](color_orange)\
+[](color_os)\
 $os\
 $username\
-[](bg:cwd_bg fg:color_orange)\
+[](bg:color_yellow fg:color_os)\
 $directory\
-[](fg:cwd_bg bg:color_aqua)\
+[](fg:color_yellow bg:color_aqua)\
 $git_branch\
 $git_status\
 [](fg:color_aqua bg:color_blue)\
@@ -35,8 +35,7 @@ $line_break$character"""
 palette = 'host'
 
 [palettes.host]
-cwd_bg = '#00af00'
-cwd_fg = '#000000'
+color_os = '#00af00'
 color_fg0 = '#fbf1c7'
 color_bg1 = '#3c3836'
 color_bg3 = '#665c54'
@@ -50,7 +49,7 @@ color_yellow = '#d79921'
 
 [os]
 disabled = false
-style = "bg:color_orange fg:color_fg0"
+style = "bg:color_os fg:color_fg0"
 
 [os.symbols]
 Windows = "󰍲"
@@ -78,23 +77,18 @@ Pop = ""
 
 [username]
 show_always = true
-style_user = "bg:color_orange fg:color_fg0"
-style_root = "bg:color_orange fg:color_fg0"
+style_user = "bg:color_os fg:color_fg0"
+style_root = "bg:color_os fg:color_fg0"
 format = '[ $user ]($style)'
 
 [directory]
-style = "bold fg:cwd_fg bg:cwd_bg"
-read_only_style = "fg:cwd_fg bg:cwd_bg"
+style = "fg:color_fg0 bg:color_yellow"
+read_only_style = "fg:color_fg0 bg:color_yellow"
 format = "[ $path]($style)[$read_only]($read_only_style)[ ]($style)"
 truncation_length = 3
 truncation_symbol = "…/"
-
-[directory.substitutions]
-"Documents" = "󰈙 "
-"Downloads" = " "
-"Music" = "󰝚 "
-"Pictures" = " "
-"Developer" = "󰲋 "
+fish_style_pwd_dir_length = 1
+home_symbol = "~"
 
 [git_branch]
 symbol = ""

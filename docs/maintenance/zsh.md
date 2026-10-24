@@ -25,18 +25,18 @@ All [Starship settings](https://starship.rs/config/) are supported, for example:
 antares.starship = {
   enable = true;
   settings = {
-    palettes.host.cwd_bg = "#00af00";
-    palettes.host.cwd_fg = "#000000";
+    palettes.host.color_os = "#00af00";
     directory.truncation_length = 5;
     add_newline = false;
   };
 };
 ```
 
-The shared palette colors the directory and its read-only marker. PC uses green,
-macbook pink, servers orange, RPi purple, and WSL blue. Purple and blue use white
-text; the other backgrounds use black. The adjoining Powerline separators follow
-the directory background. The remaining layout, icons, directory substitutions,
+`palettes.host.color_os` colors the OS/username segment and its adjoining
+Powerline separators. PC uses green, macbook pink, servers orange, RPi purple,
+and WSL blue. All use the preset's off-white `color_fg0` (`#fbf1c7`) text.
+The directory and its read-only marker use the preset's yellow background
+(`color_yellow`, `#d79921`) and off-white text. The remaining layout, icons,
 Git/language modules, clock, and prompt character follow the preset.
 
 Nix generates `/etc/starship.toml`. Interactive Zsh always sets `STARSHIP_CONFIG`
@@ -49,6 +49,27 @@ noninteractive shells do not initialize the prompt.
 Setting `antares.starship.enable = false` removes its package, generated file,
 and initialization, leaving the ordinary Zsh prompt. Powerlevel10k is no longer
 managed or loaded. Old files in user homes are left untouched.
+
+### Directory paths
+
+All hosts use `fish_style_pwd_dir_length = 1` and `home_symbol = "~"`.
+Parents that would otherwise be omitted are abbreviated to their first
+character; the home directory appears as `~`. For example, the repository
+`~/Documents/GitHub/Nix` appears as `~/D/G/Nix`.
+
+`truncation_length = 3` and Starship's default `truncate_to_repo = true`
+determine which trailing components remain unabbreviated. To keep two
+characters per abbreviated parent instead, set a host override:
+
+```nix
+antares.starship.settings.directory = {
+  fish_style_pwd_dir_length = 2;
+};
+```
+
+The preset's directory icon substitutions are removed because nonempty
+`substitutions` disable Fish-style abbreviation. See the
+[directory options](https://starship.rs/config/#directory).
 
 ## Formatting
 

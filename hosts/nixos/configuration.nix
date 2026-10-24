@@ -10,10 +10,7 @@ in
 {
   antares.starship = {
     enable = true;
-    settings.palettes.host = {
-      cwd_bg = "#00af00";
-      cwd_fg = "#000000";
-    };
+    settings.palettes.host.color_os = "#00af00";
   };
   services.telegram-output-monitor-bot.enable = true;
   antares.monitor.proxy = if config.antares.proxy.enable then config.antares.proxy.httpUrl else null;
