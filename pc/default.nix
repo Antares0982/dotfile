@@ -18,6 +18,7 @@
     ./wallpaper.nix
     ./fcitx5.nix
     ./git-sign-unlock.nix
+    ./gpu-unlock.nix
     ./fonts.nix
     ./mcp-nixos.nix
     ./rpc-client.nix

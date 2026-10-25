@@ -1,5 +1,40 @@
 { lib }: [
   {
+    name = "gpu-unlock-on";
+    module = { };
+    check =
+      c:
+      c.antares.gpuUnlock.enable
+      && lib.elem "gpu_unlock.targets=0000:01:00.0" c.boot.kernelParams
+      && lib.elem "gpu_unlock" c.boot.initrd.availableKernelModules
+      && lib.any (p: lib.getName p == "gpu-unlock") c.boot.extraModulePackages
+      && lib.any (p: lib.getName p == "gpu-unlock-firmware") c.hardware.firmware.paths
+      && c.boot.initrd.systemd.services.gpu-unlock.wantedBy == [ "sysinit.target" ]
+      && !c.boot.initrd.systemd.services.gpu-unlock.unitConfig.DefaultDependencies
+      && lib.all (unit: lib.elem unit c.boot.initrd.systemd.services.gpu-unlock.before) [
+        "systemd-modules-load.service"
+        "systemd-udev-trigger.service"
+        "systemd-udevd.service"
+      ];
+  }
+  {
+    name = "gpu-unlock-off";
+    module = { lib, ... }: { antares.gpuUnlock.enable = lib.mkForce false; };
+    check =
+      c:
+      !(lib.any (lib.hasPrefix "gpu_unlock.") c.boot.kernelParams)
+      && !(lib.elem "gpu_unlock" c.boot.initrd.availableKernelModules)
+      && !(lib.any (p: lib.getName p == "gpu-unlock") c.boot.extraModulePackages)
+      && !(lib.any (p: lib.getName p == "gpu-unlock-firmware") c.hardware.firmware.paths)
+      && !(c.boot.initrd.systemd.services ? gpu-unlock);
+  }
+  {
+    name = "gpu-unlock-dependency";
+    module = { lib, ... }: { boot.initrd.systemd.enable = lib.mkForce false; };
+    check = c: true;
+    valid = false;
+  }
+  {
     name = "openlist-on";
     module = { };
     check =
@@ -372,6 +407,7 @@
         autostart.enable = lib.mkForce false;
         waitOnline.enable = lib.mkForce false;
         gitSignUnlock.enable = lib.mkForce false;
+        gpuUnlock.enable = lib.mkForce false;
         rust.enable = lib.mkForce false;
       };
       services.pipewire.enable = lib.mkForce false;

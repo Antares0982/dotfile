@@ -77,6 +77,7 @@ integration as well as the upstream service.
 | hk | `antares.blog.enable`, `antares.blog.metrics.enable`, `antares.messaging.enable`, `mailserver.enable`, `services.mysql.enable`, `services.nginx.enable`, `antares.acme.enable`, `services.xray.enable` |
 | nixos | `antares.desktop.enable`, `antares.wallpaper.enable`, `antares.rust.enable`, `antares.autostart.enable`, `antares.waitOnline.enable`, `services.mcp-nixos.enable` |
 | nixos | `services.pipewire.enable`, `hardware.bluetooth.enable`, `i18n.inputMethod.enable`, `services.samba.enable`, `programs.steam.enable`, `programs.ydotool.enable` |
+| nixos | `antares.gpuUnlock.enable` (RTX 3090 at `0000:01:00.0`, enabled by the host) |
 | macbook | `antares.nixShell.enable`, `antares.systemCompiler.enable` |
 
 QQ components use `antares.qq.{napcat,relay,codex}.enable`. HK messaging components
@@ -84,6 +85,13 @@ use `antares.alice.enable`, `antares.trilug.enable`,
 `services.telegram-bot-api.enable`, and `antares.agentFiles.enable`.
 A stack's master switch dominates component selections. Blog metrics also
 require the blog master switch.
+
+GPU unlock requires a systemd initrd and runs before NVIDIA binds the card.
+Its source and generated firmware are pinned to the tested revision. After
+enabling or disabling it, rebuild and power off before booting the new generation.
+Disabling removes its boot parameter, module, firmware and initrd service.
+Suspend/resume persistence has not been validated; check the unlock again after
+resume. Kernel/driver updates also require a new hardware check.
 
 ### Dependencies and State
 

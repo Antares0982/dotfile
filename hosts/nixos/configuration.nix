@@ -32,6 +32,7 @@ in
   services.openlist.enable = true;
   antares.waitOnline.enable = true;
   antares.gitSignUnlock.enable = true;
+  antares.gpuUnlock.enable = true;
   home-manager.users.antares.programs.yazi.enable = true;
   imports = [ ../../pc ];
   _module.args = {
