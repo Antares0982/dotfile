@@ -121,11 +121,50 @@
         ];
   }
   {
+    name = "niri-session";
+    module = { };
+    check =
+      c:
+      let
+        home = c.home-manager.users.antares;
+        services = home.systemd.user.services;
+      in
+      home.xdg.configFile ? "niri/config.kdl"
+      && home.programs.waybar.systemd.enable
+      && home.systemd.user.startServices
+      &&
+        lib.all
+          (
+            name:
+            lib.elem "graphical-session.target" services.${name}.Unit.PartOf
+            && lib.elem "graphical-session.target" services.${name}.Install.WantedBy
+            && services.${name}.Service.Restart == "on-failure"
+          )
+          [
+            "waybar"
+            "mako"
+            "kdeconnect-indicator"
+            "lxqt-policykit-agent"
+            "qbittorrent"
+          ]
+      && lib.elem "waybar.service" services.qbittorrent.Unit.After
+      && !(lib.elem "waybar.service" services.qbittorrent.Unit.PartOf)
+      && services.qbittorrent.Service.TimeoutStopSec == 120;
+  }
+  {
     name = "desktop-off";
     module = { lib, ... }: { antares.desktop.enable = lib.mkForce false; };
     check =
       c:
       !c.programs.niri.enable
+      && !(c.home-manager.users.antares.xdg.configFile ? "niri/config.kdl")
+      && lib.all (name: !(builtins.hasAttr name c.home-manager.users.antares.systemd.user.services)) [
+        "waybar"
+        "mako"
+        "kdeconnect-indicator"
+        "lxqt-policykit-agent"
+        "qbittorrent"
+      ]
       && !(c.home-manager.users.antares.systemd.user.services ? we-layerd)
       && !(c.home-manager.users.antares.systemd.user.timers ? we-layerd-switch)
       && !(c.home-manager.users.antares.xdg.configFile ? "we-layerd/config.toml")

@@ -1,4 +1,5 @@
 """Unprivileged, sequential Xray throughput probes and agent request transport."""
+
 import argparse
 import fcntl
 import hashlib
@@ -16,12 +17,19 @@ import uuid
 
 URL = "https://speed.cloudflare.com/__down?bytes=100000000"
 QUEUE = Path("/home/agent/agent_work/.agent/xray-speed-test")
-PARAMS = {"quick_seconds": 3, "final_seconds": 5, "connect_seconds": 2,
-          "startup_seconds": 5, "finalists": 3}
+PARAMS = {
+    "quick_seconds": 3,
+    "final_seconds": 5,
+    "connect_seconds": 2,
+    "startup_seconds": 5,
+    "finalists": 3,
+}
 
 
 def publish(path, value, staging=None):
-    with tempfile.NamedTemporaryFile(mode="w", dir=staging or path.parent, delete=False) as stream:
+    with tempfile.NamedTemporaryFile(
+        mode="w", dir=staging or path.parent, delete=False
+    ) as stream:
         temp = Path(stream.name)
         try:
             json.dump(value, stream, allow_nan=False)
@@ -32,9 +40,17 @@ def publish(path, value, staging=None):
 
 
 def nodes(subscriptions, pattern):
-    return sorted((p for p in subscriptions.glob("*.json")
-                   if p.name != "active.json" and not p.is_symlink()
-                   and p.is_file() and pattern in p.name), key=lambda p: p.name)
+    return sorted(
+        (
+            p
+            for p in subscriptions.glob("*.json")
+            if p.name != "active.json"
+            and not p.is_symlink()
+            and p.is_file()
+            and pattern in p.name
+        ),
+        key=lambda p: p.name,
+    )
 
 
 def stop(process):
@@ -66,14 +82,26 @@ def probe(path, content, timeout):
         with socket.socket() as sock:
             sock.bind(("127.0.0.1", 0))
             port = sock.getsockname()[1]
-        conf = {"log": {"loglevel": "error"}, "inbounds": [
-            {"listen": "127.0.0.1", "port": port, "protocol": "socks",
-             "settings": {"auth": "noauth", "udp": False}}], "outbounds": [outbound]}
+        conf = {
+            "log": {"loglevel": "error"},
+            "inbounds": [
+                {
+                    "listen": "127.0.0.1",
+                    "port": port,
+                    "protocol": "socks",
+                    "settings": {"auth": "noauth", "udp": False},
+                }
+            ],
+            "outbounds": [outbound],
+        }
         with tempfile.TemporaryDirectory(prefix="xray-speed-") as directory:
             filename = Path(directory) / "config.json"
             filename.write_text(json.dumps(conf))
-            process = subprocess.Popen(["xray", "-c", str(filename)],
-                                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            process = subprocess.Popen(
+                ["xray", "-c", str(filename)],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
             deadline = time.monotonic() + PARAMS["startup_seconds"]
             while True:
                 if process.poll() is not None:
@@ -86,34 +114,72 @@ def probe(path, content, timeout):
                         raise ValueError("Xray startup timeout")
                     time.sleep(0.05)
             url = os.environ.get("XS_TEST_URL", URL)
-            command = ["curl", "-q", "-sS", "-o", os.devnull,
-                       "--connect-timeout", str(PARAMS["connect_seconds"]),
-                       "--max-time", str(timeout), "--noproxy", "",
-                       "--socks5-hostname", f"127.0.0.1:{port}",
-                       "-w", "%{http_code} %{speed_download} %{size_download} %{time_total} %{time_starttransfer}"]
+            command = [
+                "curl",
+                "-q",
+                "-sS",
+                "-o",
+                os.devnull,
+                "--connect-timeout",
+                str(PARAMS["connect_seconds"]),
+                "--max-time",
+                str(timeout),
+                "--noproxy",
+                "",
+                "--socks5-hostname",
+                f"127.0.0.1:{port}",
+                "-w",
+                "%{http_code} %{speed_download} %{size_download} %{time_total} %{time_starttransfer}",
+            ]
             if url.startswith("https://speed.cloudflare.com/"):
                 command += ["--referer", "https://speed.cloudflare.com/"]
             curl = None
             try:
-                curl = subprocess.Popen(command + ["--url", url], stdout=subprocess.PIPE,
-                                        stderr=subprocess.DEVNULL, text=True)
+                curl = subprocess.Popen(
+                    command + ["--url", url],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL,
+                    text=True,
+                )
                 output, _ = curl.communicate(timeout=timeout + 2)
             finally:
                 stop(curl)
             http, rate, size, seconds, first = map(float, output.split())
             if not all(math.isfinite(v) for v in (http, rate, size, seconds, first)):
                 raise ValueError("non-finite metrics")
-            sample.update(http=int(http), curl_status=curl.returncode,
-                          bytes_per_second=rate, bytes=size, seconds=seconds,
-                          time_starttransfer=first)
-            sample["valid"] = (http == 200 and rate > 0 and size > 0 and seconds > 0
-                               and (curl.returncode == 0 or
-                                    (curl.returncode == 28 and seconds - first >= 1)))
+            sample.update(
+                http=int(http),
+                curl_status=curl.returncode,
+                bytes_per_second=rate,
+                bytes=size,
+                seconds=seconds,
+                time_starttransfer=first,
+            )
+            sample["valid"] = (
+                http == 200
+                and rate > 0
+                and size > 0
+                and seconds > 0
+                and (
+                    curl.returncode == 0
+                    or (curl.returncode == 28 and seconds - first >= 1)
+                )
+            )
             if not sample["valid"]:
                 sample["error"] = "no valid download sample"
-    except (ValueError, KeyError, IndexError, TypeError, AttributeError, OSError, subprocess.TimeoutExpired):
+    except (
+        ValueError,
+        KeyError,
+        IndexError,
+        TypeError,
+        AttributeError,
+        OSError,
+        subprocess.TimeoutExpired,
+    ):
         # Do not expose node credentials/configuration through exception text.
-        sample["error"] = "invalid configuration, startup failure or malformed probe metrics"
+        sample["error"] = (
+            "invalid configuration, startup failure or malformed probe metrics"
+        )
     finally:
         stop(process)
         sample["wall_seconds"] = time.monotonic() - started
@@ -122,21 +188,32 @@ def probe(path, content, timeout):
 
 def valid_cache(value, key):
     try:
-        return (value["version"] == 2 and value["key"] == key
-                and 0 <= time.time() - value["created_at"] < 600
-                and isinstance(value["results"], list) and bool(value["results"])
-                and all(isinstance(r["file"], str) and r["valid"] is True
-                        and all(isinstance(r[k], (int, float)) and math.isfinite(r[k]) and r[k] > 0
-                                for k in ("bytes_per_second", "bytes", "seconds"))
-                        for r in value["results"]))
+        return (
+            value["version"] == 2
+            and value["key"] == key
+            and 0 <= time.time() - value["created_at"] < 600
+            and isinstance(value["results"], list)
+            and bool(value["results"])
+            and all(
+                isinstance(r["file"], str)
+                and r["valid"] is True
+                and all(
+                    isinstance(r[k], (int, float)) and math.isfinite(r[k]) and r[k] > 0
+                    for k in ("bytes_per_second", "bytes", "seconds")
+                )
+                for r in value["results"]
+            )
+        )
     except (KeyError, TypeError, ValueError):
         return False
 
 
 def measure(subscriptions, pattern, refresh=False):
     started = time.monotonic()
-    cache_dir = Path(os.environ.get("XDG_CACHE_HOME", str(
-        Path.home() / ".cache"))) / "xray-speed-test"
+    cache_dir = (
+        Path(os.environ.get("XDG_CACHE_HOME", str(Path.home() / ".cache")))
+        / "xray-speed-test"
+    )
     cache_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
     # One lock across filters: parallel bandwidth samples cannot be compared reliably.
     with (cache_dir / "lock").open("a") as lock:
@@ -146,9 +223,15 @@ def measure(subscriptions, pattern, refresh=False):
             raise ValueError("no matching node configurations")
         # Snapshot once, including content in the cache key; subscription replacement invalidates cache.
         snapshots = [(p, p.read_bytes()) for p in files]
-        identity = {"directory": str(subscriptions.resolve()), "filter": pattern,
-                    "url": os.environ.get("XS_TEST_URL", URL), "parameters": PARAMS,
-                    "files": [(p.name, hashlib.sha256(data).hexdigest()) for p, data in snapshots]}
+        identity = {
+            "directory": str(subscriptions.resolve()),
+            "filter": pattern,
+            "url": os.environ.get("XS_TEST_URL", URL),
+            "parameters": PARAMS,
+            "files": [
+                (p.name, hashlib.sha256(data).hexdigest()) for p, data in snapshots
+            ],
+        }
         key = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
         cache = cache_dir / (key + ".json")
         if not refresh:
@@ -162,19 +245,34 @@ def measure(subscriptions, pattern, refresh=False):
         for path, data in snapshots:
             print(f"xray-speed-test: quick {path.name}", file=sys.stderr, flush=True)
             samples.append(probe(path, data, PARAMS["quick_seconds"]))
-        finalists = sorted((s for s in samples if s["valid"]),
-                           key=lambda s: (-s["bytes_per_second"], s["file"]))[:PARAMS["finalists"]]
+        finalists = sorted(
+            (s for s in samples if s["valid"]),
+            key=lambda s: (-s["bytes_per_second"], s["file"]),
+        )[: PARAMS["finalists"]]
         contents = {p.name: (p, data) for p, data in snapshots}
         final = []
         for sample in finalists:
-            print(f"xray-speed-test: final {sample['file']}", file=sys.stderr, flush=True)
+            print(
+                f"xray-speed-test: final {sample['file']}", file=sys.stderr, flush=True
+            )
             final.append(probe(*contents[sample["file"]], PARAMS["final_seconds"]))
-        results = sorted((s for s in final if s["valid"]),
-                         key=lambda s: (-s["bytes_per_second"], s["file"]))
-        value = {"version": 2, "key": key, "filter": pattern, "url": identity["url"],
-                 "parameters": PARAMS, "created_at": time.time(), "cached": False,
-                 "quick": samples, "final": final, "results": results,
-                 "wall_seconds": time.monotonic() - started}
+        results = sorted(
+            (s for s in final if s["valid"]),
+            key=lambda s: (-s["bytes_per_second"], s["file"]),
+        )
+        value = {
+            "version": 2,
+            "key": key,
+            "filter": pattern,
+            "url": identity["url"],
+            "parameters": PARAMS,
+            "created_at": time.time(),
+            "cached": False,
+            "quick": samples,
+            "final": final,
+            "results": results,
+            "wall_seconds": time.monotonic() - started,
+        }
         if results:
             publish(cache, value)
         return value
@@ -186,8 +284,11 @@ def request(queue, subscriptions, pattern, refresh):
             raise ValueError("speed-test worker is not deployed")
     token = uuid.uuid4().hex
     target = queue / "results" / (token + ".json")
-    publish(queue / "requests" / (token + ".json"),
-            {"id": token, "filter": pattern, "refresh": refresh}, staging=queue)
+    publish(
+        queue / "requests" / (token + ".json"),
+        {"id": token, "filter": pattern, "refresh": refresh},
+        staging=queue,
+    )
     count = len(nodes(subscriptions, pattern))
     budget = (PARAMS["startup_seconds"] + PARAMS["quick_seconds"] + 4) * count + 60
     deadline = time.monotonic() + budget
@@ -202,7 +303,11 @@ def request(queue, subscriptions, pattern, refresh):
                     raise ValueError(value["error"])
                 return value["measurement"]
             if time.monotonic() >= next_report:
-                print(f"xray-speed-test: waiting for worker ({token})", file=sys.stderr, flush=True)
+                print(
+                    f"xray-speed-test: waiting for worker ({token})",
+                    file=sys.stderr,
+                    flush=True,
+                )
                 next_report = time.monotonic() + 10
             time.sleep(0.2)
         raise ValueError("worker wait timed out; no switch performed")
@@ -233,12 +338,19 @@ def worker(queue, subscriptions):
                     continue
                 try:
                     value = json.loads(claimed.read_text())
-                    if (value.get("id") != token or not isinstance(value.get("filter"), str)
-                            or type(value.get("refresh")) is not bool
-                            or set(value) != {"id", "filter", "refresh"}):
+                    if (
+                        value.get("id") != token
+                        or not isinstance(value.get("filter"), str)
+                        or type(value.get("refresh")) is not bool
+                        or set(value) != {"id", "filter", "refresh"}
+                    ):
                         raise ValueError("invalid worker request")
-                    result = {"id": token, "measurement": measure(
-                        subscriptions, value["filter"], value["refresh"])}
+                    result = {
+                        "id": token,
+                        "measurement": measure(
+                            subscriptions, value["filter"], value["refresh"]
+                        ),
+                    }
                 except (OSError, ValueError, TypeError, AttributeError):
                     result = {"id": token, "error": "speed-test worker request failed"}
                 publish(queue / "results" / source.name, result)
@@ -251,28 +363,42 @@ def worker(queue, subscriptions):
 
 def main():
     parser = argparse.ArgumentParser(prog="xray-speed-test", description=__doc__)
-    parser.add_argument("filter", nargs="?", default=os.environ.get("XS_FILTER", "Japan"))
+    parser.add_argument(
+        "filter", nargs="?", default=os.environ.get("XS_FILTER", "Japan")
+    )
     parser.add_argument("--refresh", action="store_true")
     parser.add_argument("--via-worker", action="store_true")
     parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--queue-dir", type=Path, default=QUEUE)
     args = parser.parse_args()
-    xdir = Path(os.environ.get("XRAY_CONF_DIR", str(
-        Path(os.environ.get("XDG_CONFIG_HOME", str(Path.home() / ".config"))) / "xray")))
+    xdir = Path(
+        os.environ.get(
+            "XRAY_CONF_DIR",
+            str(
+                Path(os.environ.get("XDG_CONFIG_HOME", str(Path.home() / ".config")))
+                / "xray"
+            ),
+        )
+    )
     if args.worker:
         # Worker parameters are fixed by the host, never supplied in requests.
         os.environ.pop("XS_TEST_URL", None)
         worker(args.queue_dir, xdir / "subscriptions")
         return 0
-    value = (request(args.queue_dir, xdir / "subscriptions", args.filter, args.refresh)
-             if args.via_worker else measure(xdir / "subscriptions", args.filter, args.refresh))
+    value = (
+        request(args.queue_dir, xdir / "subscriptions", args.filter, args.refresh)
+        if args.via_worker
+        else measure(xdir / "subscriptions", args.filter, args.refresh)
+    )
     print(json.dumps(value, allow_nan=False))
     return 0 if value["results"] else 1
 
 
 if __name__ == "__main__":
+
     def interrupted(signum, _frame):
         raise KeyboardInterrupt
+
     signal.signal(signal.SIGTERM, interrupted)
     try:
         sys.exit(main())

@@ -15,6 +15,7 @@ in
     ./env.nix
     ./zsh.nix
     ./kitty.nix
+    ./niri.nix
     ./wait-online.nix
     ./xdg-mime.nix
     ./xray.nix
