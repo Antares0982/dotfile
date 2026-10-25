@@ -1,4 +1,6 @@
 import importlib.util
+import json
+import subprocess
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
@@ -49,6 +51,25 @@ def simulate(snapshots, timeout=1):
 
 
 def main():
+    with patch.object(
+        layout.subprocess,
+        "run",
+        return_value=subprocess.CompletedProcess([], 0, "", ""),
+    ):
+        assert layout.action("spawn", "--", "true") is None
+        try:
+            layout.msg("windows")
+        except json.JSONDecodeError:
+            pass
+        else:
+            raise AssertionError("Empty window query was accepted")
+    with patch.object(
+        layout.subprocess,
+        "run",
+        return_value=subprocess.CompletedProcess([], 0, "[]", ""),
+    ):
+        assert layout.msg("windows") == []
+
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory)
         assert layout.claim_session(root, "socket-1")

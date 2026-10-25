@@ -17,7 +17,7 @@ def msg(*args):
         text=True,
         timeout=5,
     )
-    return json.loads(result.stdout)
+    return None if args[0] == "action" else json.loads(result.stdout)
 
 
 def action(*args):
