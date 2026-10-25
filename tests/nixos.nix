@@ -68,6 +68,7 @@
       service.Unit.PartOf == [ "niri.service" ]
       && service.Install.WantedBy == [ "niri.service" ]
       && service.Service.Restart == "on-failure"
+      && lib.any (package: lib.getName package == "we-wallpaper") home.home.packages
       && timer.Timer.OnCalendar == "*-*-* 00,06,19:00:00"
       && timer.Timer.Persistent
       && timer.Timer.OnClockChange
@@ -95,6 +96,9 @@
     check =
       c:
       !(c.home-manager.users.antares.systemd.user.services ? we-layerd)
+      && !(lib.any (
+        package: lib.getName package == "we-wallpaper"
+      ) c.home-manager.users.antares.home.packages)
       && !(c.home-manager.users.antares.systemd.user.timers ? we-layerd-switch)
       && !(c.home-manager.users.antares.xdg.configFile ? "we-layerd/config.toml")
       && !(c.environment.etc ? "greetd/we-layerd.toml")

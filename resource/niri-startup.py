@@ -1,9 +1,11 @@
+import fcntl
 import hashlib
 import json
 import os
 import subprocess
 import sys
 import time
+import uuid
 from pathlib import Path
 
 TERMINALS = ("kitty-work-left", "kitty-work-top", "kitty-work-bottom")
@@ -39,13 +41,76 @@ def place(window, workspace, column):
     action("move-column-to-index", column)
 
 
-def arrange_work(windows):
-    for index, app in enumerate(TERMINALS, 1):
-        place(windows[app], "work", index)
+def arrange_work(windows, workspace="work", apps=TERMINALS):
+    for index, app in enumerate(apps, 1):
+        place(windows[app], workspace, index)
         action("set-column-width", "50%")
-    action("consume-or-expel-window-left", "--id", windows[TERMINALS[2]]["id"])
-    for app in TERMINALS[1:]:
+    action("consume-or-expel-window-left", "--id", windows[apps[2]]["id"])
+    for app in apps[1:]:
         action("reset-window-height", "--id", windows[app]["id"])
+
+
+def open_terminals(timeout=10):
+    target = next((w for w in msg("workspaces") if w["is_focused"]), None)
+    if target is None or target["output"] is None:
+        raise RuntimeError("no focused workspace on a connected monitor")
+    token = uuid.uuid4().hex
+    apps = tuple(f"kitty-layout-{token}-{side}" for side in ("left", "top", "bottom"))
+    for app in apps:
+        action(
+            "spawn", "--", "@kitty@", "--class", app, "--directory", str(Path.home())
+        )
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        windows = {w["app_id"]: w for w in msg("windows") if w["app_id"] in apps}
+        if len(windows) == 3:
+            break
+        time.sleep(0.1)
+    else:
+        raise RuntimeError("timed out waiting for three terminals")
+
+    for app in apps:
+        workspace = next(
+            (w for w in msg("workspaces") if w["id"] == target["id"]), None
+        )
+        if workspace is None or workspace["output"] != target["output"]:
+            raise RuntimeError("target workspace disappeared or changed monitor")
+        window = windows[app]
+        action("move-window-to-monitor", "--id", window["id"], target["output"])
+        action("focus-window", "--id", window["id"])
+        action(
+            "move-window-to-workspace", "--window-id", window["id"], workspace["idx"]
+        )
+        action("move-window-to-tiling", "--id", window["id"])
+        current = msg("windows")
+        moved = next((w for w in current if w["id"] == window["id"]), None)
+        if moved is None or moved["layout"]["pos_in_scrolling_layout"] is None:
+            raise RuntimeError("new terminal disappeared or could not be tiled")
+        column = moved["layout"]["pos_in_scrolling_layout"][0]
+        if any(
+            w["id"] != moved["id"]
+            and w["workspace_id"] == moved["workspace_id"]
+            and not w["is_floating"]
+            and w["layout"]["pos_in_scrolling_layout"][0] == column
+            for w in current
+        ):
+            action("consume-or-expel-window-right", "--id", window["id"])
+    workspace = next((w for w in msg("workspaces") if w["id"] == target["id"]), None)
+    if workspace is None or workspace["output"] != target["output"]:
+        raise RuntimeError("target workspace disappeared or changed monitor")
+    arrange_work(windows, workspace["idx"], apps)
+    action("focus-window", "--id", windows[apps[0]]["id"])
+
+
+def terminals():
+    runtime = Path(os.environ["XDG_RUNTIME_DIR"])
+    socket = Path(os.environ["NIRI_SOCKET"]).name
+    with (runtime / f"niri-terminals-{socket}.lock").open("a") as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            return
+        open_terminals()
 
 
 def arrange_im(windows):
@@ -110,5 +175,14 @@ def arrange(timeout=120):
 
 
 if __name__ == "__main__":
-    if claim_session(Path(os.environ["XDG_RUNTIME_DIR"]), os.environ["NIRI_SOCKET"]):
-        arrange()
+    try:
+        if sys.argv[1:] == ["--terminals"]:
+            terminals()
+        elif sys.argv[1:]:
+            sys.exit("usage: niri-startup.py [--terminals]")
+        elif claim_session(
+            Path(os.environ["XDG_RUNTIME_DIR"]), os.environ["NIRI_SOCKET"]
+        ):
+            arrange()
+    except (OSError, RuntimeError, subprocess.SubprocessError) as error:
+        sys.exit(f"niri layout: {error}")

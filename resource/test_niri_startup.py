@@ -1,3 +1,4 @@
+import fcntl
 import importlib.util
 import json
 import subprocess
@@ -50,7 +51,102 @@ def simulate(snapshots, timeout=1):
     return calls
 
 
+def check_terminals():
+    for output, name in (("HDMI-A-5", "work"), ("HDMI-A-1", None)):
+        target = {
+            "id": 42,
+            "idx": 2,
+            "name": name,
+            "output": output,
+            "is_focused": True,
+        }
+        existing = window("kitty-work-left", 99) | {
+            "workspace_id": 42,
+            "layout": {"pos_in_scrolling_layout": [1, 1]},
+        }
+        windows = [existing]
+        calls = []
+        spawned = []
+
+        def msg(*args, target=target, windows=windows, calls=calls, spawned=spawned):
+            if args == ("workspaces",):
+                return [target]
+            if args == ("windows",):
+                return windows
+            calls.append(args)
+            if args[:2] == ("action", "spawn"):
+                app = args[args.index("--class") + 1]
+                spawned.append(app)
+                number = len(spawned)
+                windows.append(
+                    window(app, number)
+                    | {
+                        "workspace_id": 42,
+                        "layout": {"pos_in_scrolling_layout": [number, 1]},
+                    }
+                )
+
+        with patch.object(layout, "msg", msg):
+            layout.open_terminals()
+            first = spawned.copy()
+            layout.open_terminals()
+        assert len(spawned) == len(set(spawned)) == 6
+        assert all(app.startswith("kitty-layout-") for app in spawned)
+        assert not set(first) & set(spawned[3:])
+        assert all(app not in layout.TERMINALS for app in spawned)
+        assert calls[-1] == ("action", "focus-window", "--id", 4)
+        assert sum(c[:2] == ("action", "set-column-width") for c in calls) == 6
+        assert ("action", "consume-or-expel-window-left", "--id", 3) in calls
+        assert ("action", "consume-or-expel-window-left", "--id", 6) in calls
+        assert ("action", "consume-or-expel-window-right", "--id", 1) in calls
+        for call in calls:
+            assert 99 not in call
+            if call[1] == "move-window-to-monitor":
+                assert call[-1] == output
+            elif call[1] == "move-window-to-workspace":
+                assert call[-1] == 2
+
+    calls = []
+
+    def missing(*args):
+        if args == ("workspaces",):
+            return [target]
+        if args == ("windows",):
+            return [existing]
+        calls.append(args)
+
+    with (
+        patch.object(layout, "msg", missing),
+        patch.object(layout.time, "monotonic", side_effect=[0, 0, 11]),
+        patch.object(layout.time, "sleep"),
+    ):
+        try:
+            layout.open_terminals()
+        except RuntimeError as error:
+            assert "timed out" in str(error)
+        else:
+            raise AssertionError("Missing terminals accepted")
+    assert len(calls) == 3 and all(c[:2] == ("action", "spawn") for c in calls)
+
+    with (
+        tempfile.TemporaryDirectory() as directory,
+        patch.dict(
+            layout.os.environ,
+            {"XDG_RUNTIME_DIR": directory, "NIRI_SOCKET": "/run/niri.test.sock"},
+        ),
+        patch.object(layout, "open_terminals") as opened,
+        (Path(directory) / "niri-terminals-niri.test.sock.lock").open("a") as lock,
+    ):
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        layout.terminals()
+        opened.assert_not_called()
+        fcntl.flock(lock, fcntl.LOCK_UN)
+        layout.terminals()
+        opened.assert_called_once()
+
+
 def main():
+    check_terminals()
     with patch.object(
         layout.subprocess,
         "run",

@@ -16,6 +16,23 @@ for hour in '' 6 24 -1 bad; do
 	fi
 done
 echo 'Wallpaper time boundaries passed.'
+test_dir=$(mktemp -d)
+trap 'rm -rf -- "$test_dir"' EXIT
+export XDG_RUNTIME_DIR="$test_dir" NIRI_SOCKET="$test_dir/niri.test.sock"
+for hour in {00..23}; do
+	[[ $(wallpaper_config /configs "$hour") == "/configs/$(select_config "$hour")" ]]
+done
+override=$(wallpaper_override)
+touch "$override"
+for hour in {00..23}; do
+	[[ $(wallpaper_config /configs "$hour") == "$override" ]]
+done
+NIRI_SOCKET="$test_dir/niri.next.sock"
+[[ $(wallpaper_config /configs 06) == /configs/config.toml ]]
+NIRI_SOCKET="$test_dir/niri.test.sock"
+rm "$override"
+[[ $(wallpaper_config /configs 00) == /configs/night.toml ]]
+"${PYTHON:-python3}" "$(dirname "$0")/../resource/test_we_wallpaper.py"
 if [[ $# -gt 0 ]]; then
 	"${PYTHON:-python3}" - "$@" <<'PY'
 import pathlib

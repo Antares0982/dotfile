@@ -39,3 +39,25 @@ wallpaper, greeter. Restart selects the current period and reopens its resources
 replacing a link alone is not watched. Use restart because the existing reload
 command uses `switch`, which can skip unchanged configuration paths. A changed
 `greeter` link takes effect the next time the greeter starts.
+
+## Temporary desktop override
+
+After rebuilding, run `we-wallpaper /path/to/workshop/item` to show the same
+wallpaper on both desktop outputs. The directory must contain a readable, valid
+`project.json`. Run `we-wallpaper` without arguments to restore the current time
+period's configuration. Paths with spaces are supported when quoted.
+
+The override lives in `$XDG_RUNTIME_DIR`, keyed by the niri session socket.
+Scheduled switches leave it intact, and wallpaper service restarts reuse it.
+A new niri session or reboot starts without the override. Persistent configs,
+the greeter, and links under `/var/lib/we-layerd/current` are unchanged.
+Invalid resources are rejected before restarting; application failures restore
+the previous override and attempt to restart the previous configuration.
+
+On 2026-10-25, `day-main` and `evening-main` pointed into the missing directory
+`~/.wall-paper-engine-workshop`. The renamed directory is
+`~/.wallpaper-engine-workshop`, a link to Steam's workshop content. Both links
+were repaired to use that path, retaining IDs `3424649201` and `3545541611`.
+The two `*-backup` links still point to valid provisioned resources. The
+non-forcing tmpfiles `L` rules intentionally preserve these local choices;
+rebuilding does not repair a dangling link.

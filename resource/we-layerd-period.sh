@@ -6,3 +6,19 @@ select_config() {
 	*) return 1 ;;
 	esac
 }
+
+wallpaper_override() {
+	local socket=${NIRI_SOCKET:?}
+	printf '%s/we-layerd-%s.toml\n' "${XDG_RUNTIME_DIR:?}" "${socket##*/}"
+}
+
+wallpaper_config() {
+	local override selected
+	override=$(wallpaper_override) || return
+	if [[ -f "$override" ]]; then
+		printf '%s\n' "$override"
+	else
+		selected=$(select_config "$2") || return
+		printf '%s/%s\n' "$1" "$selected"
+	fi
+}

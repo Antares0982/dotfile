@@ -50,16 +50,41 @@ let
   configDir = pkgs.linkFarm "we-layerd-configs" (
     lib.mapAttrsToList (name: path: { inherit name path; }) configs
   );
+  temporaryConfig = format.generate "we-layerd-temporary.toml" (
+    settings."config.toml"
+    // {
+      outputs = lib.mapAttrs (
+        _: output: output // { source = "@wallpaper-source@"; }
+      ) settings."config.toml".outputs;
+    }
+  );
+  wallpaperScript = pkgs.replaceVars ../resource/we-wallpaper.py {
+    systemctl = "${pkgs.systemd}/bin/systemctl";
+    weLayerd = "${we-layerd}/bin/we-layerd";
+    wallpaper-source = null;
+  };
+  wallpaper = pkgs.writeShellScriptBin "we-wallpaper" ''
+    set -eu
+    ${builtins.readFile ../resource/we-layerd-period.sh}
+    selected=$(select_config "$(${pkgs.coreutils}/bin/date +%H)")
+    exec ${pkgs.python3}/bin/python3 ${wallpaperScript} \
+      "${configDir}/$selected" ${temporaryConfig} "$(wallpaper_override)" "$@"
+  '';
   session = pkgs.writeShellScript "we-layerd-session" ''
     set -eu
     ${builtins.readFile ../resource/we-layerd-period.sh}
     case "$1" in
       run) ;;
-      switch) ${pkgs.systemd}/bin/systemctl --user is-active --quiet we-layerd.service || exit 0 ;;
+      switch)
+        exec 9>"$(wallpaper_override).lock"
+        ${pkgs.util-linux}/bin/flock -s 9
+        [[ ! -f "$(wallpaper_override)" ]] || exit 0
+        ${pkgs.systemd}/bin/systemctl --user is-active --quiet we-layerd.service || exit 0
+        ;;
       *) exit 2 ;;
     esac
-    selected=$(select_config "$(${pkgs.coreutils}/bin/date +%H)")
-    exec ${we-layerd}/bin/we-layerd "$1" --config "${configDir}/$selected"
+    selected=$(wallpaper_config ${configDir} "$(${pkgs.coreutils}/bin/date +%H)")
+    exec ${we-layerd}/bin/we-layerd "$1" --config "$selected"
   '';
   loginConfig = format.generate "we-layerd-greeter.toml" {
     general.interactive = false;
@@ -117,7 +142,10 @@ in
 
   config = lib.mkIf enabled {
     home-manager.users.antares = {
-      home.packages = [ we-layerd ];
+      home.packages = [
+        we-layerd
+        wallpaper
+      ];
       xdg.configFile = lib.mapAttrs' (
         name: source:
         lib.nameValuePair "we-layerd/${name}" {

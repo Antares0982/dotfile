@@ -98,6 +98,13 @@ window-rule {
 }
 
 window-rule {
+    match app-id="^kitty-layout-"
+    open-floating false
+    open-fullscreen false
+    default-column-width { proportion 0.5; }
+}
+
+window-rule {
     match at-startup=true app-id="^google-chrome$"
     open-on-workspace "web"
     open-maximized true
@@ -153,6 +160,7 @@ binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
 
     Mod+T hotkey-overlay-title="Open a Terminal: kitty" { spawn "kitty"; }
+    Mod+Shift+T repeat=false hotkey-overlay-title="Open Three Terminals" { spawn "@startup@" "@startupScript@" "--terminals"; }
     Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
     Mod+E hotkey-overlay-title="Open File Manager: thunar" { spawn "thunar"; }
     Mod+B hotkey-overlay-title="Open chrome: chrome" { spawn "google-chrome"; }
