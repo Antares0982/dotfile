@@ -40,6 +40,19 @@ module's mounts. Top-level fields belong before any group table declarations.
 NapCat tokens and shared login credentials remain separate. Publish the updated
 application and update the RPi source input before deploying this configuration.
 
+The group cadence v3 migration replaces the three legacy per-group fields with
+`observation_interval_seconds`, `message_ttl_seconds`, and
+`conversation_gap_seconds`. Follow the application's
+[configuration contract](https://github.com/Antares0982/qq-codex-agent/blob/main/docs/specs/configuration.md) and
+[migration procedure](https://github.com/Antares0982/qq-codex-agent/blob/main/docs/internal/deployment.md#群聊节奏-v3-迁移).
+Edit this encrypted TOML alongside the application change, validate it using the
+new application's Settings parser, and compare parsed configurations to ensure
+only cadence fields changed. Emit only validation success/failure, never group
+IDs or plaintext. Keep recipients and mount permissions unchanged. New encrypted
+configuration and the matching application input must deploy together; do not
+activate the new configuration with an older pinned application. Rollback also
+requires the matching pre-migration application database backup.
+
 ## Edit a secret
 
 On PC, using its management key:
