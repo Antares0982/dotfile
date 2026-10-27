@@ -40,6 +40,22 @@ replacing a link alone is not watched. Use restart because the existing reload
 command uses `switch`, which can skip unchanged configuration paths. A changed
 `greeter` link takes effect the next time the greeter starts.
 
+For login wallpapers, provision a copy under `/var/lib/we-layerd/workshop/`
+before changing `current/greeter`. Do not link into the user's Steam library:
+`/home/antares` and its `.local/share/Steam` directory are `0700`, so greeter
+cannot traverse them even when the wallpaper files are readable. Keep those
+private directory permissions intact. Check access as the actual login user:
+
+```bash
+sudo -u greeter head -c 80 /var/lib/we-layerd/current/greeter/project.json
+```
+
+On 2026-10-28, `greeter` pointed into that private Steam library at workshop
+item `3121923834`, producing `Permission denied` for the greeter user. The item
+was copied to `/var/lib/we-layerd/workshop/3121923834` (directories `0755`, files
+`0644`) and the link updated. All three resource files were verified readable
+as greeter. No rebuild is needed; log out to start the next greeter session.
+
 ## Temporary desktop override
 
 After rebuilding, run `we-wallpaper /path/to/workshop/item` to show the same
