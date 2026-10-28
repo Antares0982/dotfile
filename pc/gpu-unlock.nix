@@ -13,13 +13,6 @@ in
   options.antares.gpuUnlock.enable = lib.mkEnableOption "the RTX 3090 tensor unlock at 0000:01:00.0";
 
   config = lib.mkIf config.antares.gpuUnlock.enable {
-    assertions = [
-      {
-        assertion = config.boot.initrd.systemd.enable;
-        message = "GPU unlock requires a systemd initrd.";
-      }
-    ];
-
     boot.kernelParams = [ "gpu_unlock.targets=0000:01:00.0" ];
     boot.extraModulePackages = [ package ];
     hardware.firmware = [ package.firmware ];

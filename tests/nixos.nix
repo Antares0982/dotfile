@@ -29,12 +29,6 @@
       && !(c.boot.initrd.systemd.services ? gpu-unlock);
   }
   {
-    name = "gpu-unlock-dependency";
-    module = { lib, ... }: { boot.initrd.systemd.enable = lib.mkForce false; };
-    check = c: true;
-    valid = false;
-  }
-  {
     name = "openlist-on";
     module = { };
     check =
