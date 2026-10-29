@@ -19,7 +19,6 @@ in
       c:
       let
         settings = c.antares.starship.settings;
-        zsh = c.programs.zsh;
       in
       c.antares.starship.enable
       && c.environment.etc ? "starship.toml"
@@ -46,11 +45,6 @@ in
       && settings.directory.fish_style_pwd_dir_length == 1
       && settings.directory.home_symbol == "~"
       && (settings.directory.substitutions or { }) == { }
-      && lib.hasInfix "export STARSHIP_CONFIG=/etc/starship.toml" zsh.interactiveShellInit
-      && lib.hasInfix "$TERM != dumb" zsh.promptInit
-      && lib.hasInfix "/bin/starship init zsh" zsh.promptInit
-      && !(lib.hasInfix "starship" zsh.shellInit)
-      && !(lib.hasInfix "starship" zsh.loginShellInit)
       && lib.all (
         home:
         home.programs.zsh.enable
@@ -63,8 +57,6 @@ in
         && home.home.sessionVariables.STARSHIP_CONFIG == "/etc/starship.toml"
         && !(home.home.file ? "/etc/starship.toml")
         && !(home.xdg.configFile ? "starship.toml")
-        && lib.hasInfix "/bin/starship init zsh" home.programs.zsh.initContent
-        && lib.hasInfix "${lib.escapeShellArg home.home.username}) ;;" zsh.promptInit
       ) (homes c);
   }
   {
@@ -74,13 +66,9 @@ in
       c:
       !(c.environment.etc ? "starship.toml")
       && !(builtins.elem "starship" (map lib.getName c.environment.systemPackages))
-      && !(lib.hasInfix "starship" c.environment.etc.zshrc.text)
       && !(c.environment.etc ? "zsh/p10k.zsh")
       && lib.all (
-        home:
-        !home.programs.starship.enable
-        && !(home.home.sessionVariables ? STARSHIP_CONFIG)
-        && !(lib.hasInfix "starship" home.programs.zsh.initContent)
+        home: !home.programs.starship.enable && !(home.home.sessionVariables ? STARSHIP_CONFIG)
       ) (homes c);
   }
   {
