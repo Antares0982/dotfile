@@ -115,6 +115,9 @@ in
           wire_api = "responses";
           requires_openai_auth = true;
           supports_websockets = false;
+          mcp_servers = {
+            animegarden.url = "https://api.animes.garden/mcp";
+          };
         };
       };
     };
@@ -184,6 +187,5 @@ in
         BindReadOnlyPaths = mounts;
       };
     };
-
   };
 }
