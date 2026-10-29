@@ -108,6 +108,7 @@ in
         pkgs.nix
       ];
       codexSettings = {
+        mcp_servers.animegarden.url = "https://api.animes.garden/mcp";
         model_provider = "openai-http";
         model_providers.openai-http = {
           name = "OpenAI";
@@ -115,9 +116,6 @@ in
           wire_api = "responses";
           requires_openai_auth = true;
           supports_websockets = false;
-          mcp_servers = {
-            animegarden.url = "https://api.animes.garden/mcp";
-          };
         };
       };
     };
