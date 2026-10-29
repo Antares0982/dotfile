@@ -388,8 +388,7 @@
         home = c.home-manager.users.antares;
       in
       !(lib.any (p: lib.getName p == "yazi") home.home.packages)
-      && !(lib.any (name: lib.hasPrefix "yazi/" name) (builtins.attrNames home.xdg.configFile))
-      && !(lib.hasInfix "command yazi" home.programs.zsh.initContent);
+      && !(lib.any (name: lib.hasPrefix "yazi/" name) (builtins.attrNames home.xdg.configFile));
   }
   {
     name = "all-features-off";

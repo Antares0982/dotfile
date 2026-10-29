@@ -69,6 +69,13 @@ second package registry.
 
 ## Validation
 
+Do not assert the presence or absence of strings in Zsh initialization scripts
+(including generated zshrc, system init hooks, and Home Manager init content),
+exact alias definitions, or similar frequently changing shell customizations.
+These details change with user needs; pinning them in tests adds maintenance
+cost without meaningful coverage. Test stable module interfaces, feature
+enable/disable behavior, and resource ownership instead.
+
 For Nix configuration changes, run `bash scripts/check-configs.sh <host> ...`;
 omit hosts for all seven. These checks evaluate locked configurations without
 switching. Stage new Nix files before evaluating Git-backed flakes.
