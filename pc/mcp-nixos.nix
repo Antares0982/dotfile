@@ -1,7 +1,7 @@
 {
   config,
   lib,
-  pkgs,
+  mcp-nixos,
   ...
 }:
 {
@@ -27,7 +27,7 @@
       };
 
       serviceConfig = {
-        ExecStart = "${pkgs.mcp-nixos}/bin/mcp-nixos";
+        ExecStart = "${mcp-nixos}/bin/mcp-nixos";
         DynamicUser = true;
         CacheDirectory = "mcp-nixos";
         Restart = "on-failure";
