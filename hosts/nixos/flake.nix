@@ -6,6 +6,10 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixpkgs-old.url = "github:NixOS/nixpkgs/nixos-26.05";
+    mcp-nixos = {
+      url = "github:utensils/mcp-nixos";
+      inputs.nixpkgs.follows = "nixpkgs-old";
+    };
     we-layerd = {
       url = "github:Aromatic05/we-layerd";
       inputs.nixpkgs.follows = "nixpkgs";

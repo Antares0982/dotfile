@@ -36,8 +36,12 @@ in
   home-manager.users.antares.programs.yazi.enable = true;
   imports = [ ../../pc ];
   _module.args = {
-    # FastMCP in unstable is broken with MCP SDK 2.x; keep its compatible stack.
-    mcp-nixos = inputs.nixpkgs-old.legacyPackages.${system}.mcp-nixos;
+    # Blender MCP requires MCP SDK 1.x.
+    blender-mcp =
+      (import ../../packages {
+        pkgs = inputs.nixpkgs-old.legacyPackages.${system};
+      }).blender-mcp;
+    mcp-nixos = inputs.mcp-nixos.packages.${system}.default;
     we-layerd = inputs.we-layerd.packages.${system}.default.override {
       cudaSupport = true;
       cudaPackages = pkgs.cudaPackages;

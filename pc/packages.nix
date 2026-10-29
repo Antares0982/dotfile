@@ -3,6 +3,7 @@
   lib,
   pkgs,
   inputs,
+  blender-mcp,
   ...
 }:
 let
@@ -17,7 +18,7 @@ in
     android-tools
     aria2
     blender
-    localPackages.blender-mcp
+    blender-mcp
     cheat
     codex
     direnv
