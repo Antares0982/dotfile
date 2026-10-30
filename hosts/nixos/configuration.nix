@@ -27,6 +27,7 @@ in
   services.samba.enable = true;
   programs.steam.enable = true;
   programs.ydotool.enable = true;
+  programs.direnv.enable = false;
   antares.rust.enable = true;
   services.mcp-nixos.enable = true;
   services.openlist.enable = true;

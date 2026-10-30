@@ -8,6 +8,31 @@ host-specific shell paths. PC Home Manager extensions live in
 Oh My Zsh owns `compinit`; do not initialize it again in Home Manager.
 Run `CHECK_CASE='zsh-base|starship-.*' bash scripts/check-configs.sh` for the shared checks.
 
+The `ctl`/`sctl` and `jtl`/`sjtl` alias families are shared by all six Linux
+hosts. macOS does not define these systemd aliases.
+
+## Directory selection
+
+All hosts use zoxide instead of the Oh My Zsh `z` plugin. `z` jumps by directory
+history and `zi` opens its fzf selector. New visits populate the zoxide database;
+existing Oh My Zsh history is not imported automatically.
+
+On PC, `zn`, `zc`, and `zo` open that selector, then run Neovim, Codex, or
+OpenCode in the selected directory through `_f`, preserving devShell handling.
+Optional keywords narrow the candidates, e.g. `zc nix`. Cancelling leaves the
+current directory unchanged and starts nothing. Run
+`bash scripts/test-zsh-jump.sh` to check selection, argument forwarding, and
+cancellation.
+
+## Direnv
+
+PC (`hosts/nixos/configuration.nix`) and WSL (`wsl/default.nix`) explicitly set
+`programs.direnv.enable = false`. Set it to `true` to install direnv and enable
+the native NixOS shell integration, including Zsh and nix-direnv. No separate
+package entry or Home Manager hook is needed. Existing user files are preserved.
+Run `CHECK_CASE='direnv-.*' bash scripts/check-configs.sh nixos wsl` to check
+the disabled configuration and re-enabling it.
+
 ## Starship
 
 `modules/starship.nix` owns the shared prompt. Its base is

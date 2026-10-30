@@ -10,6 +10,7 @@
     settings.palettes.host.color_os = "#005faf";
   };
   wsl.enable = true;
+  programs.direnv.enable = false;
   nixpkgs.config.allowUnfree = true;
   imports = [
 

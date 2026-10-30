@@ -21,7 +21,6 @@ in
     blender-mcp
     cheat
     codex
-    direnv
     # discord
     element-desktop
     ffmpeg

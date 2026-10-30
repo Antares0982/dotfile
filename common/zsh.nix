@@ -9,7 +9,6 @@ let
   plugins = [
     "git"
     "sudo"
-    "z"
   ];
   formatNixFile = pkgs.writeShellScript "nixtreefmt-file" ''
     if ! ${pkgs.nixfmt}/bin/nixfmt --check --quiet "$1"; then
@@ -17,16 +16,28 @@ let
     fi
   '';
   aliases =
-    builtins.removeAttrs (import ./shellEnv.nix).aliases (
-      lib.optionals darwin [
-        "top"
-        "ctl"
-      ]
-    )
+    builtins.removeAttrs (import ./shellEnv.nix).aliases (lib.optionals darwin [ "top" ])
     // {
-      make = "make -j$(${pkgs.coreutils}/bin/nproc)";
       cat = "bat -pp";
       nixtreefmt = "${pkgs.fd}/bin/fd -t f -e nix -x ${formatNixFile}";
+    }
+    // lib.optionalAttrs (!darwin) {
+      ctl = "systemctl --user";
+      sctl = "sudo systemctl";
+      ctlr = "ctl restart";
+      sctlr = "sctl restart";
+      ctls = "ctl status";
+      sctls = "sctl status";
+      ctlc = "ctl cat";
+      sctlc = "sctl cat";
+      jtl = "journalctl --user";
+      sjtl = "sudo journalctl";
+      jtlu = "jtl -u";
+      sjtlu = "sjtl -u";
+      jtleu = "jtl -e -u";
+      sjtleu = "sjtl -e -u";
+      jtlb = "jtl -b";
+      sjtlb = "sjtl -b";
     };
 in
 {
@@ -39,6 +50,7 @@ in
   ++ lib.optionals darwin [
     pkgs.oh-my-zsh
     pkgs.fzf
+    pkgs.zoxide
   ];
 
   programs = {
@@ -60,6 +72,7 @@ in
             source "$ZSH/oh-my-zsh.sh"
             source ${pkgs.fzf}/share/fzf/completion.zsh
             source ${pkgs.fzf}/share/fzf/key-bindings.zsh
+            eval "$(${pkgs.zoxide}/bin/zoxide init zsh)"
           ''
           + lib.concatStringsSep "\n" (
             lib.mapAttrsToList (name: value: "alias -- ${lib.escapeShellArg "${name}=${value}"}") aliases
@@ -78,6 +91,7 @@ in
     );
   }
   // lib.optionalAttrs (!darwin) {
+    zoxide.enable = true;
     fzf = {
       keybindings = true;
       fuzzyCompletion = true;

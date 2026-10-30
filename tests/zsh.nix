@@ -18,6 +18,7 @@
       "fzf"
       "eza"
       "gnumake"
+      "zoxide"
     ]
     && !(builtins.elem "powerlevel10k" packages)
     && !(c.environment.etc ? "zsh/p10k.zsh")
@@ -32,6 +33,9 @@
         zsh.syntaxHighlighting.enable
         && zsh.autosuggestions.enable
         && zsh.ohMyZsh.enable
+        && !(builtins.elem "z" zsh.ohMyZsh.plugins)
+        && c.programs.zoxide.enable
+        && c.programs.zoxide.enableZshIntegration
         && c.programs.fzf.keybindings
         && c.programs.fzf.fuzzyCompletion
     )

@@ -25,24 +25,8 @@ in
     shellAliases = {
       yt-dlp = "yt-dlp --cookies-from-browser chrome";
       shtreefmt = "fd -e sh -x shfmt -w";
-      sctl = "sudo systemctl";
-      ctlr = "ctl restart";
-      sctlr = "sctl restart";
-      ctls = "ctl status";
-      sctls = "sctl status";
-      ctlc = "ctl cat";
-      sctlc = "sctl cat";
-      jtl = "journalctl --user";
-      sjtl = "sudo journalctl";
-      jtlu = "jtl -u";
-      sjtlu = "sjtl -u";
-      jtleu = "jtl -e -u";
-      sjtleu = "sjtl -e -u";
-      jtlb = "jtl -b";
-      sjtlb = "sjtl -b";
     };
     initContent = ''
-      eval "$(direnv hook zsh)"
       export PATH=$PATH:${envs.envs.SCRIPT_DIR}:${envs.envs.SCRIPT_DIR}/linux
 
       # nix-zshell
@@ -107,13 +91,9 @@ in
       }
 
       _zz() {
-        if [ "$#" -lt 2 ]; then
-          echo "Need an arg."
-          return 1
-        fi
         local cmd="$1"
-        shift
-        z "$1" && "$cmd"
+        shift || return
+        zi "$@" && "$cmd"
       }
 
       zn() { _zz n "$@"; }

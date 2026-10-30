@@ -14,6 +14,7 @@ let
     (import ./zsh.nix { inherit lib host; })
   ]
   ++ (import ./starship.nix { inherit lib host; })
+  ++ (import ./direnv.nix { inherit lib host; })
   ++ (if builtins.pathExists casesFile then import casesFile { inherit lib; } else [ ]);
   pattern = builtins.getEnv "CHECK_CASE";
   cases = lib.filter (case: pattern == "" || builtins.match pattern case.name != null) allCases;

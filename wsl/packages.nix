@@ -12,7 +12,6 @@ in
   imports = [ ../common/packages.nix ];
   environment.systemPackages = with pkgs; [
     cheat
-    direnv
     imagemagick
     renewal
   ];
