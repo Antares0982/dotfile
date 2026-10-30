@@ -105,7 +105,9 @@
       && !(c.age.secrets ? antaresAgentEnv)
       && !(c.age.secrets ? agentRelayRabbitKey)
       && lib.all (r: !(lib.hasInfix "agent_work" r)) c.systemd.tmpfiles.rules
-      && c.systemd.services ? xray;
+      && c.systemd.services ? xray
+      && c.systemd.services ? xray-switch
+      && c.systemd.timers ? xray-switch;
   }
   {
     name = "napcat-dependency";
@@ -206,6 +208,17 @@
         == "/home/agent/agent_work/.agent/xray-speed-test/requests";
   }
   {
+    name = "xray-switch-timer";
+    module = { };
+    check =
+      c:
+      c.systemd.services.xray-switch.serviceConfig.User == "antares"
+      && c.systemd.services.xray-switch.serviceConfig.Group == "xray"
+      && c.systemd.services.xray-switch.serviceConfig.Type == "oneshot"
+      && builtins.elem "timers.target" c.systemd.timers.xray-switch.wantedBy
+      && c.systemd.timers.xray-switch.timerConfig.OnCalendar == "*-*-* 10,22:00:00 Asia/Shanghai";
+  }
+  {
     name = "xray-off";
     module = { lib, ... }: {
       antares.xray.enable = lib.mkForce false;
@@ -215,6 +228,8 @@
       c:
       !(c.systemd.services ? xray)
       && !(c.systemd.services ? xray-sub)
+      && !(c.systemd.services ? xray-switch)
+      && !(c.systemd.timers ? xray-switch)
       && !(c.systemd.services ? xray-helper)
       && !(c.systemd.paths ? xray-helper)
       && !(c.systemd.services ? xray-speed-test)

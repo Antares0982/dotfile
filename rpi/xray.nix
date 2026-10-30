@@ -93,6 +93,26 @@ in
       };
     };
 
+    systemd.services.xray-switch = {
+      description = "Select the fastest Xray node";
+      after = [ "network-online.target" ];
+      wants = [ "network-online.target" ];
+      path = [ "/run/wrappers" ];
+      serviceConfig = {
+        Type = "oneshot";
+        User = "antares";
+        Group = "xray";
+        ExecStart = "${xs}/bin/xs";
+        TimeoutStartSec = "infinity";
+      };
+    };
+
+    systemd.timers.xray-switch = {
+      description = "Switch Xray nodes at 10:00 and 22:00";
+      wantedBy = [ "timers.target" ];
+      timerConfig.OnCalendar = "*-*-* 10,22:00:00 Asia/Shanghai";
+    };
+
     # ── agent-triggered xray actions (bypasses sandbox sudo restriction) ──
     systemd.services.xray-helper = lib.mkIf config.antares.agent.enable {
       description = "Xray Action Helper (triggered by antares-agent)";
