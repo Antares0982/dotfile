@@ -1,6 +1,41 @@
 { lib }:
 [
   {
+    name = "windows-shell-on";
+    module = { };
+    check =
+      c:
+      c.antares.windowsShell.enable
+      && c.system.build ? windowsShell
+      && c.environment.etc ? "windows-shell/env.zsh"
+      && c.environment.etc ? "windows-shell/interactive.zsh"
+      && c.environment.etc ? "windows-shell/starship.toml"
+      && c.environment.etc ? "windows-shell/starship-git.toml";
+  }
+  {
+    name = "windows-shell-off";
+    module.antares.windowsShell.enable = lib.mkForce false;
+    check =
+      c:
+      !(c.system.build ? windowsShell)
+      && !(c.environment.etc ? "windows-shell/env.zsh")
+      && !(c.environment.etc ? "windows-shell/interactive.zsh")
+      && !(c.environment.etc ? "windows-shell/starship.toml")
+      && !(c.environment.etc ? "windows-shell/starship-git.toml")
+      && c.programs.zsh.enable
+      && c.programs.zoxide.enable
+      && c.users.users ? antares;
+  }
+  {
+    name = "windows-shell-without-starship";
+    module.antares.starship.enable = lib.mkForce false;
+    check =
+      c:
+      c.environment.etc ? "windows-shell/env.zsh"
+      && !(c.environment.etc ? "windows-shell/starship.toml")
+      && !(c.environment.etc ? "windows-shell/starship-git.toml");
+  }
+  {
     name = "wsl-host";
     module = { };
     check =

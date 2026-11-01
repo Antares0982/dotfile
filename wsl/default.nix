@@ -5,6 +5,7 @@
   ...
 }:
 {
+  antares.windowsShell.enable = true;
   antares.starship = {
     enable = true;
     settings.palettes.host.color_os = "#00af00";
@@ -17,7 +18,7 @@
   programs.direnv.enable = false;
   nixpkgs.config.allowUnfree = true;
   imports = [
-
+    ../modules/windows-shell.nix
     ./git-sign-unlock.nix
     ./network.nix
     ./packages.nix
