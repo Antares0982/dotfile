@@ -58,8 +58,8 @@ antares.starship = {
 ```
 
 `palettes.host.color_os` colors the OS/username segment and its adjoining
-Powerline separators. PC uses green, macbook pink, servers orange, RPi purple,
-and WSL blue. All use the preset's off-white `color_fg0` (`#fbf1c7`) text.
+Powerline separators. PC and WSL use green, macbook pink, servers orange, and RPi
+purple. All use the preset's off-white `color_fg0` (`#fbf1c7`) text.
 The directory and its read-only marker use the preset's yellow background
 (`color_yellow`, `#d79921`) and off-white text. The remaining layout, icons,
 Git/language modules, clock, and prompt character follow the preset.

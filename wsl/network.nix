@@ -1,7 +1,7 @@
 { config, pkgs, ... }:
 {
   networking = {
-    hostName = "nixos";
+    hostName = "wsl";
     # networkmanager.enable = true;
     firewall = {
       enable = false;

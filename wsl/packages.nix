@@ -3,6 +3,7 @@
   lib,
   pkgs,
   inputs,
+  agenix,
   ...
 }:
 let
@@ -14,5 +15,6 @@ in
     cheat
     imagemagick
     renewal
+    agenix.packages.${pkgs.stdenv.hostPlatform.system}.default
   ];
 }

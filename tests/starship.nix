@@ -8,7 +8,7 @@ let
     hk = "#ff8700";
     gz = "#ff8700";
     sz = "#ff8700";
-    wsl = "#005faf";
+    wsl = "#00af00";
   };
 in
 [

@@ -1,19 +1,35 @@
 #!/usr/bin/env bash
 set -euo pipefail
 sz_key=
-if [[ ${1:-} == --sz-key && $# -ge 2 ]]; then
-	sz_key=$(realpath "$2")
-	shift 2
-fi
-if (($# < 4 || $# > 5)); then
-	echo "Usage: $0 [--sz-key SZ_KEY] ADMIN_KEY RPI_KEY HK_KEY GZ_KEY [BEFORE_SECRETS_DIR]" >&2
+wsl_key=
+wsl_public_key=
+usage() {
+	echo "Usage: $0 [--sz-key SZ_KEY] [--wsl-key WSL_KEY | --wsl-public-key WSL_PUB] ADMIN_KEY RPI_KEY HK_KEY GZ_KEY [BEFORE_SECRETS_DIR]" >&2
 	exit 2
+}
+while [[ ${1:-} == --* ]]; do
+	(($# >= 2)) || usage
+	case $1 in
+	--sz-key) sz_key=$(realpath "$2") ;;
+	--wsl-key) wsl_key=$(realpath "$2") ;;
+	--wsl-public-key) wsl_public_key=$(realpath "$2") ;;
+	*) usage ;;
+	esac
+	shift 2
+done
+[[ -z $wsl_key || -z $wsl_public_key ]] || usage
+if (($# < 4 || $# > 5)); then
+	usage
 fi
 keys=("$(realpath "$1")" "$(realpath "$2")" "$(realpath "$3")" "$(realpath "$4")")
 hosts=(admin rpi5 hk gz)
 if [[ -n $sz_key ]]; then
 	keys+=("$sz_key")
 	hosts+=(sz)
+fi
+if [[ -n $wsl_key ]]; then
+	keys+=("$wsl_key")
+	hosts+=(wsl)
 fi
 before=${5:+$(realpath "$5")}
 cd "$(dirname "$0")/.."
@@ -27,9 +43,15 @@ public=()
 for key in "${keys[@]}"; do
 	public+=("$(cat "$key" | ssh-keygen -y -P '' -f /dev/stdin | awk '{print $1 " " $2}')")
 done
+private_key_count=${#keys[@]}
+if [[ -n $wsl_public_key ]]; then
+	ssh-keygen -lf "$wsl_public_key" >/dev/null
+	public+=("$(awk 'NR == 1 {print $1 " " $2}' "$wsl_public_key")")
+	hosts+=(wsl)
+fi
 expected=$(jq -cn --argjson files "$files" --arg key "${public[0]}" \
 	'$files | map({key: ., value: [$key]}) | from_entries')
-for ((i = 1; i < ${#keys[@]}; i++)); do
+for ((i = 1; i < ${#public[@]}; i++)); do
 	host=${hosts[$i]}
 	used=$(nix eval --offline --no-write-lock-file --json \
 		"./hosts/$host#nixosConfigurations.$host.config.age.secrets" \
@@ -69,7 +91,10 @@ for file in secrets/*.age; do
 		}
 	fi
 done
-printf 'PASS: rules, host permissions and full decryption matrix (%s files)\n' "$(jq length <<<"$files")"
+printf 'PASS: rules and decryption matrix for %s supplied private keys (%s files)\n' "$private_key_count" "$(jq length <<<"$files")"
+if [[ -n $wsl_public_key ]]; then
+	echo 'WSL: recipient rules checked using public key only; verify decryption locally on WSL.'
+fi
 if [[ -n $before ]]; then
 	echo 'PASS: plaintext unchanged'
 fi

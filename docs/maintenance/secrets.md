@@ -7,7 +7,7 @@ remain in the local, ignored `secrets/agenix-rules.nix`. Feature modules declare
 `age.secrets` entries and consume `config.age.secrets.<name>.path`.
 
 The PC management key can decrypt every secret and must not be copied to servers.
-RPi, HK, GZ, and SZ each use their own root-owned, mode 0600 `/etc/ssh/agenix`.
+RPi, HK, GZ, SZ, and WSL each use their own root-owned, mode 0600 `/etc/ssh/agenix`.
 Rules authorize each server only for files declared by its locked configuration;
 shared secrets authorize all their consumers. New files default to PC-only access.
 After changing consumers, update the rules, rekey on PC, and validate before deployment:
@@ -18,7 +18,10 @@ AGE_BIN=/path/to/age bash scripts/check-agenix.sh --sz-key SZ_KEY ADMIN_KEY RPI_
 ```
 Run the script with access to local recovery keys. Do not retrieve other hosts'
 private keys just to run checks; remote checks must decrypt in place and return
-only success/failure. `--sz-key` is optional for pre-SZ recipient rules. An optional fifth argument points
+only success/failure. `--sz-key` is optional for pre-SZ recipient rules. Once WSL
+is authorized, also pass `--wsl-key WSL_KEY`, or `--wsl-public-key WSL_PUB` to
+check its recipient rules without transferring its private key. Public-key-only
+checks do not verify WSL decryption; perform that check locally on WSL. An optional fifth argument points
 to a pre-rekey secrets directory and verifies unchanged plaintext. Private keys
 and plaintext must never enter Git or the Nix store. Keep recovery copies on PC.
 Build HK, GZ, and SZ locally with remote builders disabled, then push their closures;
@@ -29,6 +32,14 @@ with current encrypted secrets before rollback.
 `common/agenix.nix` owns agenix tooling, identity paths, and base account password
 secrets. QQ relay and QQ Codex share the deployment in `rpi/qq-credentials.nix`;
 it remains while either consumer is enabled.
+
+WSL sets its identity path independently and only deploys
+`github-sign-passphrase.age`. Its `antares.gitSignUnlock.enable` feature loads
+`~antares/.ssh/github_sign` and `~antares/.ssh/github_push` into the user's
+OpenSSH agent at login and when that agent restarts. The password is root-only;
+the user service asks the root oneshot service to load both keys. Provision the
+WSL identity and authorize its public key on PC before activating this feature.
+Disabling the feature removes its services and deployed secret, preserving keys.
 
 QQ Codex's `secrets/qq-codex-allowlist.age` keeps its historical filename but
 contains the complete application TOML, including allowlists and optional
