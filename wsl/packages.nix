@@ -13,6 +13,7 @@ in
   imports = [ ../common/packages.nix ];
   environment.systemPackages = with pkgs; [
     cheat
+    codex
     imagemagick
     renewal
     agenix.packages.${pkgs.stdenv.hostPlatform.system}.default

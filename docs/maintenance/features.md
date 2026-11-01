@@ -79,6 +79,7 @@ integration as well as the upstream service.
 | nixos | `services.pipewire.enable`, `hardware.bluetooth.enable`, `i18n.inputMethod.enable`, `services.samba.enable`, `programs.steam.enable`, `programs.ydotool.enable` |
 | nixos | `antares.gpuUnlock.enable` (RTX 3090 at `0000:01:00.0`, enabled by the host) |
 | nixos, wsl | `antares.gitSignUnlock.enable` (desktop startup on PC, user sessions on WSL) |
+| wsl | `antares.windowsShell.enable` ([Windows shell](zsh.md#wsl-as-a-windows-shell), selected per session with `AS_WINDOWS_SHELL=1`) |
 | macbook | `antares.nixShell.enable`, `antares.systemCompiler.enable` |
 
 QQ components use `antares.qq.{napcat,relay,codex}.enable`. HK messaging components

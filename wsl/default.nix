@@ -5,19 +5,23 @@
   ...
 }:
 {
+  antares.windowsShell.enable = true;
   antares.starship = {
     enable = true;
     settings.palettes.host.color_os = "#00af00";
   };
   antares.gitSignUnlock.enable = true;
   programs.ssh.startAgent = true;
+  programs.zsh.shellInit = ''
+    export COLORTERM=truecolor
+  '';
   environment.variables.NIX_DOT_FILES = "${config.users.users.antares.home}/Nix";
   age.identityPaths = [ "/etc/ssh/agenix" ];
   wsl.enable = true;
   programs.direnv.enable = false;
   nixpkgs.config.allowUnfree = true;
   imports = [
-
+    ../modules/windows-shell.nix
     ./git-sign-unlock.nix
     ./network.nix
     ./packages.nix
