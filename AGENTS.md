@@ -6,7 +6,7 @@ Multi-machine Nix configuration flake managing:
 
 - `nixos`: desktop PC (x86_64-linux, niri/Wayland, NVIDIA, home-manager)
 - `hk`: Hong Kong server (x86_64-linux, nginx/mail services)
-- `gz`: Guangzhou VPS (x86_64-linux, Xray and L4D2)
+- `gz`: retiring Guangzhou VPS; configuration retained for historical reference
 - `sz`: Shenzhen VPS (x86_64-linux, UEFI, Xray and L4D2)
 - `rpi5`: Raspberry Pi 5 (aarch64-linux)
 - `wsl`: Windows Subsystem for Linux (x86_64-linux)
@@ -77,7 +77,8 @@ cost without meaningful coverage. Test stable module interfaces, feature
 enable/disable behavior, and resource ownership instead.
 
 For Nix configuration changes, run `bash scripts/check-configs.sh <host> ...`;
-omit hosts for all seven. These checks evaluate locked configurations without
-switching. Stage new Nix files before evaluating Git-backed flakes.
+omit hosts for the six active hosts; pass `gz` explicitly for historical checks.
+These checks evaluate locked configurations without switching.
+Stage new Nix files before evaluating Git-backed flakes.
 Use the relevant guide for feature-specific checks. For documentation-only
 changes, check links and `git diff --check`; no system build is needed.

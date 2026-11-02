@@ -2,7 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 if [ "$#" -eq 0 ]; then
-	set -- nixos hk rpi5 macbook gz sz wsl
+	set -- nixos hk rpi5 macbook sz wsl
 fi
 for host in "$@"; do
 	case "$host" in

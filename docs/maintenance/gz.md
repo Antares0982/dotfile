@@ -1,4 +1,13 @@
-# GZ and SZ servers
+# SZ server and GZ history
+
+GZ will not be renewed. Keep its Nix configuration and lock as historical
+reference; routine deployment and input updates target SZ. GZ's agenix key is
+no longer authorized for current secrets. All eight files formerly available
+to GZ remain in use on SZ or other active hosts, including `xray-template-gz.age`.
+See [secrets and identities](secrets.md) for the limits of recipient revocation
+and cleanup before releasing the server.
+
+## Historical GZ configuration
 
 HK, GZ, and SZ import `server` for fail2ban, sysstat, and firewall activation.
 HK-specific hardware, accounts, packages, and service integrations live in
@@ -17,8 +26,8 @@ restarts the system service through sudo. `sudo systemctl start xray-sub`
 updates subscriptions manually; a timer also runs after boot and daily.
 Updates retain the selected node when available, otherwise test Japan nodes
 before trying all nodes. Failed updates retain the previous configuration.
-GZ's `serverPassword.age`, `xraysub.age`, and `xray-template-gz.age` authorize its existing agenix key
-alongside the PC management key; shared files also authorize their other consumers.
+GZ formerly decrypted `serverPassword.age`, `xraysub.age`, and `xray-template-gz.age`
+with its own agenix key; that recipient has now been removed.
 The GZ template is a snapshot of the PC template with loopback listeners.
 
 ## Deployment
@@ -45,7 +54,7 @@ The factory `_SZ1.pem` key is no longer authorized.
 Build locally with remote builders disabled, then deploy:
 
 ```bash
-bash scripts/check-configs.sh gz sz hk
+bash scripts/check-configs.sh sz hk
 nixos-rebuild switch --flake ./hosts/sz#sz --target-host sz --sudo --option builders ''
 ```
 
@@ -57,6 +66,11 @@ must be 0600 and installed as root:root. Never recursively chmod this tree.
 Run `--phases kexec,disko,install`, inspect `/mnt` permissions, authorized keys,
 secret decryption, SSH configuration, and `/boot/EFI/BOOT/BOOTX64.EFI`, then
 reboot. Preserve SZ's own SSH host keys, never GZ's keys.
+
+### Historical GZ-to-SZ migration
+
+The following procedure records the original migration while GZ was available.
+For future restores, use retained backups instead of relying on GZ.
 
 When restoring game data, temporarily remove `wantedBy` from `l4d2`,
 `l4d2-install`, and `l4d2-update.timer` in the installation configuration.

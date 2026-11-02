@@ -4,7 +4,7 @@ sz_key=
 wsl_key=
 wsl_public_key=
 usage() {
-	echo "Usage: $0 [--sz-key SZ_KEY] [--wsl-key WSL_KEY | --wsl-public-key WSL_PUB] ADMIN_KEY RPI_KEY HK_KEY GZ_KEY [BEFORE_SECRETS_DIR]" >&2
+	echo "Usage: $0 [--sz-key SZ_KEY] [--wsl-key WSL_KEY | --wsl-public-key WSL_PUB] ADMIN_KEY RPI_KEY HK_KEY [BEFORE_SECRETS_DIR]" >&2
 	exit 2
 }
 while [[ ${1:-} == --* ]]; do
@@ -18,11 +18,11 @@ while [[ ${1:-} == --* ]]; do
 	shift 2
 done
 [[ -z $wsl_key || -z $wsl_public_key ]] || usage
-if (($# < 4 || $# > 5)); then
+if (($# < 3 || $# > 4)); then
 	usage
 fi
-keys=("$(realpath "$1")" "$(realpath "$2")" "$(realpath "$3")" "$(realpath "$4")")
-hosts=(admin rpi5 hk gz)
+keys=("$(realpath "$1")" "$(realpath "$2")" "$(realpath "$3")")
+hosts=(admin rpi5 hk)
 if [[ -n $sz_key ]]; then
 	keys+=("$sz_key")
 	hosts+=(sz)
@@ -31,7 +31,7 @@ if [[ -n $wsl_key ]]; then
 	keys+=("$wsl_key")
 	hosts+=(wsl)
 fi
-before=${5:+$(realpath "$5")}
+before=${4:+$(realpath "$4")}
 cd "$(dirname "$0")/.."
 age=${AGE_BIN:-age}
 command -v "$age" >/dev/null

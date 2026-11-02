@@ -81,7 +81,7 @@ restart does not prove external connectivity; clients must also check egress.
 ```bash
 python3 resource/test_xs.py
 python3 resource/test_xray_update.py
-bash scripts/check-configs.sh rpi5 nixos gz sz
+bash scripts/check-configs.sh rpi5 nixos sz
 ```
 
 The tests use local fake tools and do not switch production nodes. They cover
