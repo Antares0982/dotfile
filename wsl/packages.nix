@@ -15,6 +15,7 @@ in
     cheat
     codex
     imagemagick
+    nix-output-monitor
     renewal
     agenix.packages.${pkgs.stdenv.hostPlatform.system}.default
   ];
