@@ -13,4 +13,5 @@
   vtune = pkgs.callPackage ./vtune.nix { };
   xray-speed-test = pkgs.callPackage ./xray-speed-test.nix { inherit myXray; };
   xs = pkgs.callPackage ./xs.nix { inherit myXray; };
+  mihomo-tools = pkgs.callPackage ./mihomo-tools.nix { };
 }

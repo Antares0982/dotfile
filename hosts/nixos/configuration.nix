@@ -16,6 +16,11 @@ in
   antares.monitor.proxy = if config.antares.proxy.enable then config.antares.proxy.httpUrl else null;
   services.antares-rpc-client.enable = true;
   antares.xray.enable = true;
+  antares.mihomo = {
+    enable = true;
+    port = 17891;
+    singapore = true;
+  };
   antares.proxy.enable = true;
   antares.autostart.enable = true;
   services.rabbitmq.enable = true;

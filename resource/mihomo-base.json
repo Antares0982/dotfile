@@ -1,0 +1,63 @@
+{
+  "mode": "rule",
+  "log-level": "info",
+  "tun": {
+    "enable": false,
+    "stack": "system"
+  },
+  "profile": {
+    "store-selected": true
+  },
+  "dns": {
+    "enable": true,
+    "ipv6": false,
+    "enhanced-mode": "redir-host",
+    "default-nameserver": [
+      "223.5.5.5",
+      "119.29.29.29"
+    ],
+    "nameserver": [
+      "https://dns.alidns.com/dns-query",
+      "https://doh.pub/dns-query"
+    ],
+    "proxy-server-nameserver": [
+      "https://dns.alidns.com/dns-query"
+    ]
+  },
+  "proxy-providers": {
+    "subscription": {
+      "type": "http",
+      "path": "./providers/subscription.yaml",
+      "interval": 3600,
+      "health-check": {
+        "enable": true,
+        "url": "https://www.gstatic.com/generate_204",
+        "interval": 300,
+        "lazy": true
+      }
+    }
+  },
+  "rule-providers": {
+    "cn-ip": {
+      "type": "http",
+      "behavior": "ipcidr",
+      "format": "mrs",
+      "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/cn.mrs",
+      "path": "./rules/cn-ip.mrs",
+      "interval": 86400
+    }
+  },
+  "rules": [
+    "DOMAIN,localhost,DIRECT",
+    "DOMAIN-SUFFIX,lan,DIRECT",
+    "DOMAIN-SUFFIX,local,DIRECT",
+    "IP-CIDR,127.0.0.0/8,DIRECT,no-resolve",
+    "IP-CIDR,10.0.0.0/8,DIRECT,no-resolve",
+    "IP-CIDR,172.16.0.0/12,DIRECT,no-resolve",
+    "IP-CIDR,192.168.0.0/16,DIRECT,no-resolve",
+    "IP-CIDR,169.254.0.0/16,DIRECT,no-resolve",
+    "IP-CIDR6,::1/128,DIRECT,no-resolve",
+    "IP-CIDR6,fc00::/7,DIRECT,no-resolve",
+    "IP-CIDR6,fe80::/10,DIRECT,no-resolve"
+  ]
+}

@@ -1,5 +1,19 @@
 { lib }: [
   {
+    name = "mihomo-on";
+    module = { };
+    check =
+      c:
+      c.antares.mihomo.enable
+      && c.antares.mihomo.singapore
+      && !c.antares.mihomo.lan
+      && c.services.mihomo.enable
+      && c.systemd.services.mihomo.serviceConfig.DynamicUser
+      && c.age.secrets.mihomoSubscription.mode == "0400"
+      && !(c.systemd.services ? mihomo-worker)
+      && !(c.systemd.paths ? mihomo-worker);
+  }
+  {
     name = "gpu-unlock-on";
     module = { };
     check =
@@ -62,6 +76,7 @@
     name = "xray-off";
     module = { lib, ... }: {
       antares.xray.enable = lib.mkForce false;
+      antares.mihomo.enable = lib.mkForce false;
       antares.proxy.enable = lib.mkForce false;
       antares.autostart.enable = lib.mkForce false;
     };
@@ -75,7 +90,10 @@
   }
   {
     name = "xray-dependency";
-    module = { lib, ... }: { antares.xray.enable = lib.mkForce false; };
+    module = { lib, ... }: {
+      antares.xray.enable = lib.mkForce false;
+      antares.mihomo.enable = lib.mkForce false;
+    };
     check = c: true;
     valid = false;
   }
@@ -396,6 +414,7 @@
       antares = {
         desktop.enable = lib.mkForce false;
         xray.enable = lib.mkForce false;
+        mihomo.enable = lib.mkForce false;
         proxy.enable = lib.mkForce false;
         autostart.enable = lib.mkForce false;
         waitOnline.enable = lib.mkForce false;

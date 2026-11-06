@@ -28,7 +28,9 @@ in
         '';
         Environment = [
           "PULL_ALL=${pull-all}/bin/pull-all"
-          "XRAY_SUB=${xray-sub}/bin/xray_sub"
+          "XRAY_SUB=${
+            if osConfig.antares.xray.enable then "${xray-sub}/bin/xray_sub" else "${pkgs.coreutils}/bin/true"
+          }"
           "HOME=${envs.userhome}"
           "SCRIPT_DIR=${envs.envs.SCRIPT_DIR}"
           "XRAY_TEMPLATE=${envs.envs.XRAY_TEMPLATE}"

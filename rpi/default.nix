@@ -18,6 +18,7 @@
     ./git-server.nix
     ./user.nix
     ../modules/proxy.nix
+    ../modules/mihomo.nix
     ./xray.nix
     ./napcat.nix
     ./qq.nix
