@@ -57,8 +57,13 @@ in
   antares.qq.relay.enable = true;
   antares.qq.enable = true;
   antares.qq.codex.enable = true;
-  antares.xray.enable = true;
+  antares.xray.enable = false;
+  antares.mihomo = {
+    enable = true;
+    lan = true;
+  };
   antares.proxy.enable = true;
+  antares.proxy.socksUrl = "socks5h://127.0.0.1:1081";
   services.rabbitmq.enable = true;
   services.ssh-probe.enable = true;
   antares.gitServer.enable = true;

@@ -184,6 +184,8 @@ in
     ];
     age.secrets.mihomoSubscription = {
       file = ../secrets/xraysub.age;
+      owner = "root";
+      group = "root";
       mode = "0400";
     };
     services.mihomo = {
@@ -268,6 +270,20 @@ in
       pathConfig = {
         DirectoryNotEmpty = "${queue}/requests";
         PathExistsGlob = "${queue}/processing/*.json";
+      };
+    };
+    systemd.services.mihomo-agent-guide = lib.mkIf agent {
+      description = "Update agent proxy instructions";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "systemd-tmpfiles-setup.service" ];
+      before = [ "antares-agent.service" ];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        User = "agent";
+        Group = "agent";
+        ExecStart = "${pkgs.coreutils}/bin/install -D -m 0644 ${../resource/mihomo-skill/SKILL.md} /home/agent/agent_work/.agents/skills/xray-switch/SKILL.md";
+        NoNewPrivileges = true;
       };
     };
   };

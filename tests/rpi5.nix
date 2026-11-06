@@ -105,9 +105,10 @@
       && !(c.age.secrets ? antaresAgentEnv)
       && !(c.age.secrets ? agentRelayRabbitKey)
       && lib.all (r: !(lib.hasInfix "agent_work" r)) c.systemd.tmpfiles.rules
-      && c.systemd.services ? xray
-      && c.systemd.services ? xray-switch
-      && c.systemd.timers ? xray-switch;
+      && !(c.systemd.services ? mihomo-worker)
+      && !(c.systemd.paths ? mihomo-worker)
+      && !(c.systemd.services ? mihomo-agent-guide)
+      && c.systemd.services ? mihomo;
   }
   {
     name = "napcat-dependency";
@@ -194,34 +195,37 @@
       && c.systemd.services ? qq-napcat-relay;
   }
   {
-    name = "xray-speed-test-user";
+    name = "mihomo-on";
     module = { };
     check =
       c:
-      c.systemd.services.xray-speed-test.serviceConfig.User == "agent"
-      && c.systemd.services.xray-speed-test.serviceConfig.Group == "agent"
-      && c.systemd.services.xray-speed-test.serviceConfig.NoNewPrivileges
-      && c.systemd.services.xray-speed-test.serviceConfig.ProtectSystem == "strict"
-      && !(builtins.elem "agent" c.users.groups.xray.members)
+      c.antares.mihomo.enable
+      && c.antares.mihomo.lan
+      && !c.antares.mihomo.singapore
+      && c.antares.mihomo.port == 1081
+      && c.antares.proxy.socksUrl == "socks5h://127.0.0.1:1081"
+      && c.services.mihomo.enable
+      && c.systemd.services.mihomo-worker.serviceConfig.DynamicUser
+      && c.systemd.services.mihomo-worker.serviceConfig.User == "mihomo-worker"
+      && c.systemd.services.mihomo-worker.serviceConfig.Group == "agent"
+      && c.systemd.services.mihomo-worker.serviceConfig.NoNewPrivileges
+      && c.systemd.services.mihomo-worker.serviceConfig.ProtectSystem == "strict"
       &&
-        c.systemd.paths.xray-speed-test.pathConfig.DirectoryNotEmpty
-        == "/home/agent/agent_work/.agent/xray-speed-test/requests";
-  }
-  {
-    name = "xray-switch-timer";
-    module = { };
-    check =
-      c:
-      c.systemd.services.xray-switch.serviceConfig.User == "antares"
-      && c.systemd.services.xray-switch.serviceConfig.Group == "xray"
-      && c.systemd.services.xray-switch.serviceConfig.Type == "oneshot"
-      && builtins.elem "timers.target" c.systemd.timers.xray-switch.wantedBy
-      && c.systemd.timers.xray-switch.timerConfig.OnCalendar == "*-*-* 10,22:00:00 Asia/Shanghai";
+        c.systemd.paths.mihomo-worker.pathConfig.DirectoryNotEmpty
+        == "/home/agent/agent_work/.agent/mihomo/requests"
+      && c.age.secrets.mihomoSubscription.owner == "root"
+      && c.age.secrets.mihomoSubscription.mode == "0400"
+      && !(c.systemd.services ? xray)
+      && !(c.systemd.services ? xray-sub)
+      && !(c.systemd.timers ? xray-switch)
+      && !(c.age.secrets ? xrayTemplateJson)
+      && lib.elem "mihomo.service" c.systemd.services.antares-agent.after;
   }
   {
     name = "xray-off";
     module = { lib, ... }: {
       antares.xray.enable = lib.mkForce false;
+      antares.mihomo.enable = lib.mkForce false;
       antares.proxy.enable = lib.mkForce false;
     };
     check =
@@ -238,11 +242,21 @@
       && !(c.age.secrets ? xraySubUrl)
       && !(c.environment.variables ? http_proxy)
       && !(c.systemd.services.antares-agent.environment ? http_proxy)
-      && !(lib.elem "xray.service" c.systemd.services.antares-agent.after);
+      && !(lib.elem "xray.service" c.systemd.services.antares-agent.after)
+      && !(lib.elem "mihomo.service" c.systemd.services.antares-agent.after)
+      && !(c.systemd.services ? mihomo)
+      && !(c.systemd.services ? mihomo-config)
+      && !(c.systemd.services ? mihomo-worker)
+      && !(c.systemd.paths ? mihomo-worker)
+      && !(c.systemd.services ? mihomo-agent-guide)
+      && !(c.age.secrets ? mihomoSubscription);
   }
   {
     name = "xray-dependency";
-    module = { lib, ... }: { antares.xray.enable = lib.mkForce false; };
+    module = { lib, ... }: {
+      antares.xray.enable = lib.mkForce false;
+      antares.mihomo.enable = lib.mkForce false;
+    };
     check = c: true;
     valid = false;
   }
@@ -276,6 +290,7 @@
         agent.enable = lib.mkForce false;
         qq.enable = lib.mkForce false;
         xray.enable = lib.mkForce false;
+        mihomo.enable = lib.mkForce false;
         proxy.enable = lib.mkForce false;
         gitServer.enable = lib.mkForce false;
       };

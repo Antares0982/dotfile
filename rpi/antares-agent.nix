@@ -167,7 +167,7 @@ in
       description = "antares-agent: pull and sync the app before starting";
       before = [ "antares-agent.service" ];
       wantedBy = [ "antares-agent.service" ];
-      after = [ "network-online.target" ];
+      after = [ "network-online.target" ] ++ lib.optional config.antares.mihomo.enable "mihomo.service";
       wants = [ "network-online.target" ];
 
       environment = {
@@ -191,7 +191,8 @@ in
         "network-online.target"
         "codex-auth.service"
       ]
-      ++ lib.optional config.antares.xray.enable "xray.service";
+      ++ lib.optional config.antares.xray.enable "xray.service"
+      ++ lib.optional config.antares.mihomo.enable "mihomo.service";
       wants = [ "network-online.target" ];
       requires = [ "codex-auth.service" ];
       partOf = [ "codex-auth.service" ];

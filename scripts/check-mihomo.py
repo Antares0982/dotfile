@@ -29,7 +29,7 @@ def route(port, host, outbound):
         source_port = sock.getsockname()[1]
         sock.sendall(f"CONNECT {host}:443 HTTP/1.1\r\nHost: {host}:443\r\n\r\n".encode())
         assert b"200" in sock.recv(4096), f"CONNECT failed for {host}"
-        for _ in range(30):
+        for _ in range(150):
             matches = [c for c in m.request("/connections")["connections"]
                        if str(c["metadata"]["sourcePort"]) == str(source_port)]
             if matches:

@@ -73,7 +73,11 @@ in
     systemd.services.codex-auth = {
       description = "Shared Codex authentication";
       wantedBy = [ "multi-user.target" ];
-      after = [ "network-online.target" ] ++ lib.optional config.antares.xray.enable "xray.service";
+      after = [
+        "network-online.target"
+      ]
+      ++ lib.optional config.antares.xray.enable "xray.service"
+      ++ lib.optional config.antares.mihomo.enable "mihomo.service";
       wants = [ "network-online.target" ];
       inherit environment;
       serviceConfig = service // {
