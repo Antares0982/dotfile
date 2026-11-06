@@ -17,7 +17,7 @@ SZ and the other Xray consumers retain the legacy tools described below.
 | 17901 | Private loopback bandwidth probes |
 
 Port 1080 is retired. PC listeners are loopback-only. RPi permits proxy and
-dashboard access from `192.168.0.0/24` on `end0`; no public IPv6 listeners.
+dashboard access from `192.168.0.0/24` on `end0`; firewall rules deny public IPv6 access.
 Dashboard URLs: `http://127.0.0.1:17900/ui/` locally and
 `http://192.168.0.3:17900/ui/` for RPi. Run `mihomoctl secret` on the target host
 to obtain its API password. Never put the password in Git or Nix expressions.

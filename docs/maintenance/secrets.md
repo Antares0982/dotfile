@@ -11,6 +11,11 @@ RPi, HK, SZ, and WSL each use their own root-owned, mode 0600 `/etc/ssh/agenix`.
 Rules authorize each active server only for files declared by its locked configuration;
 shared secrets authorize all their consumers. New files default to PC-only access.
 
+RPi retains its existing recipient authorization for `xray-template-json.age`
+for historical rollback. Mihomo no longer deploys that template. The proxy
+migration preserved its ciphertext and recipients; revocation requires explicit
+authorization. The recipient checker includes this one historical exception.
+
 GZ will not be renewed: its key has been removed from the local rules and its
 eight formerly authorized files rekeyed. All eight still have active consumers;
 keep them, including `xray-template-gz.age`, which SZ uses through the shared
