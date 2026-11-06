@@ -26,6 +26,7 @@
   },
   "proxy-providers": {
     "subscription": {
+      "proxy": "DIRECT",
       "type": "http",
       "path": "./providers/subscription.yaml",
       "interval": 3600,

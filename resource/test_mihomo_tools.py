@@ -5,6 +5,7 @@ import io
 import os
 from pathlib import Path
 import tempfile
+from types import SimpleNamespace
 from unittest.mock import patch
 
 spec = importlib.util.spec_from_file_location("mihomo", Path(__file__).with_name("mihomo-tools.py"))
@@ -69,6 +70,18 @@ def check():
                 pass
             else:
                 raise AssertionError("Invalid region selection accepted")
+            def choose(name, node):
+                state[name] = node
+                return {"group": name, "node": node}
+            with patch.object(m, "select", choose), patch.object(m, "connection", return_value={"port": 1081}), \
+                 patch.object(m.subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout="ip=1.2.3.4\nloc=SG\n")):
+                try:
+                    m.execute({"action": "select", "group": "JP", "node": "Japan 2"})
+                except ValueError:
+                    pass
+                else:
+                    raise AssertionError("Wrong egress accepted")
+                assert state["JP"] == "Japan 1"
     print("PASS: request validation, bandwidth ranking, cache and selection isolation")
 
 

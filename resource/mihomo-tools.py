@@ -37,6 +37,10 @@ def publish(path, value):
 def connection():
     credentials = os.environ.get("CREDENTIALS_DIRECTORY")
     path = Path(credentials) / "connection.json" if credentials else CLIENT
+    if credentials and not path.exists():
+        config = json.loads((Path(credentials) / "config.yaml").read_text())
+        return {"api": "http://127.0.0.1:17900", "secret": config["secret"],
+                "port": config["mixed-port"], "test_port": 17901}
     return json.loads(path.read_text())
 
 
@@ -147,7 +151,23 @@ def execute(value):
         proxies = request("/proxies")["proxies"]
         return {n: {"node": proxies[n]["now"], "nodes": proxies[n]["all"]} for n in ("JP", "SG") if n in proxies}
     if action == "select":
-        return select(value["group"], value["node"])
+        name = value["group"]
+        previous = group(name)["now"]
+        result = select(name, value["node"])
+        try:
+            port = connection()["port"] + (3 if name == "SG" else 0)
+            check = subprocess.run([
+                "curl", "-q", "-fsS", "--noproxy", "", "--connect-timeout", "10", "--max-time", "30",
+                "--proxy", f"http://127.0.0.1:{port}", "https://www.cloudflare.com/cdn-cgi/trace",
+            ], capture_output=True, text=True, timeout=35)
+            trace = dict(line.split("=", 1) for line in check.stdout.splitlines() if "=" in line)
+            if check.returncode or trace.get("loc") != name or not trace.get("ip"):
+                raise ValueError("Could not verify regional egress")
+            return result | {"ip": trace["ip"], "country": trace["loc"]}
+        except (OSError, ValueError, subprocess.TimeoutExpired):
+            if previous in group(name)["all"] and previous not in ("REJECT", "COMPATIBLE", "DIRECT"):
+                select(name, previous)
+            raise ValueError("Egress failed; restored previous selection where available") from None
     if action == "speed":
         return measure(value["group"], value["refresh"])
     if action == "update":
@@ -157,6 +177,30 @@ def execute(value):
     else:
         raise ValueError("Unknown action")
     return {"action": action, "ok": True}
+
+
+def ready():
+    deadline = time.monotonic() + 120
+    while True:
+        if time.monotonic() >= deadline:
+            raise ValueError("Mihomo bootstrap timed out")
+        try:
+            proxies = request("/proxies")["proxies"]
+            if proxies["JP"]["all"] == ["REJECT"]:
+                request("/providers/proxies/subscription", "PUT")
+                time.sleep(2)
+                continue
+            rules = request("/providers/rules")["providers"]
+            for name, provider in rules.items():
+                if provider["ruleCount"] == 0:
+                    request("/providers/rules/" + urllib.parse.quote(name, safe=""), "PUT")
+            if not all(p["ruleCount"] > 0 for p in request("/providers/rules")["providers"].values()):
+                raise ValueError("Rules are not ready")
+            return
+        except (OSError, ValueError, KeyError):
+            if time.monotonic() >= deadline:
+                raise ValueError("Mihomo bootstrap timed out") from None
+            time.sleep(2)
 
 
 def valid_request(value, token):
@@ -260,12 +304,15 @@ def main():
         args = parser.parse_args()
         value = {"action": "speed", "group": args.group, "refresh": args.refresh}
     else:
-        parser.add_argument("action", choices=("tui", "status", "select", "update", "secret", "restart", "worker"))
+        parser.add_argument("action", choices=("tui", "status", "select", "update", "secret", "restart", "worker", "ready"))
         parser.add_argument("group", nargs="?", choices=("JP", "SG"))
         parser.add_argument("node", nargs="?")
         args = parser.parse_args()
         if args.action == "worker":
             worker()
+            return
+        if args.action == "ready":
+            ready()
             return
         if args.action in ("secret", "tui"):
             if args.via_worker:

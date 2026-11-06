@@ -15,13 +15,14 @@ in
   services.telegram-output-monitor-bot.enable = true;
   antares.monitor.proxy = if config.antares.proxy.enable then config.antares.proxy.httpUrl else null;
   services.antares-rpc-client.enable = true;
-  antares.xray.enable = true;
+  antares.xray.enable = false;
   antares.mihomo = {
     enable = true;
-    port = 17891;
+    port = 1081;
     singapore = true;
   };
   antares.proxy.enable = true;
+  antares.proxy.socksUrl = "socks5h://127.0.0.1:1081";
   antares.autostart.enable = true;
   services.rabbitmq.enable = true;
   antares.desktop.enable = true;

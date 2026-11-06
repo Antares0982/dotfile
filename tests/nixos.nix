@@ -10,6 +10,9 @@
       && c.services.mihomo.enable
       && c.systemd.services.mihomo.serviceConfig.DynamicUser
       && c.age.secrets.mihomoSubscription.mode == "0400"
+      && c.antares.mihomo.port == 1081
+      && c.antares.proxy.socksUrl == "socks5h://127.0.0.1:1081"
+      && !(c.home-manager.users.antares.systemd.user.services ? xray)
       && !(c.systemd.services ? mihomo-worker)
       && !(c.systemd.paths ? mihomo-worker);
   }
@@ -334,9 +337,7 @@
     name = "autostart-off";
     module = { lib, ... }: { antares.autostart.enable = lib.mkForce false; };
     check =
-      c:
-      !(c.home-manager.users.antares.systemd.user.services ? autostart)
-      && c.home-manager.users.antares.systemd.user.services ? xray;
+      c: !(c.home-manager.users.antares.systemd.user.services ? autostart) && c.systemd.services ? mihomo;
   }
   {
     name = "git-sign-unlock-on";

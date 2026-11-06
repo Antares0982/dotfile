@@ -26,13 +26,14 @@ mihomoctl --via-worker restart
 
 节点名称必须取自 status 或本次测速结果。worker 只允许 JP 组，不扩大地区范围。
 订阅变化导致节点消失时，重新查询或测速一次；仍失败就报告并保留现状。
-指定节点后重新查询 status，并用以下命令验证连通性：
+worker 切换后会检查出口；成功结果包含 ip 和 country，失败时尝试恢复先前节点。
+指定节点后重新查询 status；若需要独立复核，可在允许访问代理的环境中执行：
 
 ```sh
 curl --noproxy '' --proxy http://127.0.0.1:1081 --max-time 20 https://www.cloudflare.com/cdn-cgi/trace
 ```
 
-沙箱若不能连接 localhost，向用户报告尚未确认出口，不绕过沙箱。
+沙箱若不能连接 localhost，使用 worker 返回的出口验证结果，不绕过沙箱。
 宿主 1081 同时支持 HTTP/SOCKS5，国内直连、其余 JP；1082 全局 JP；1083 直连。
 不直接编辑私有配置、不读取 API 密钥，也不直接运行 systemctl。
 请求通过客户端投递到 .agent/mihomo；不要手工拼接队列文件。

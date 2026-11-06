@@ -1,4 +1,69 @@
-# Xray speed tests
+# Proxy management and speed tests
+
+## Mihomo on nixos and rpi5
+
+These hosts use `antares.mihomo.enable`. The shared module owns the native
+Mihomo service, subscription secret, Web UI, management commands and optional
+RPi agent worker. Disable `antares.proxy.enable` when disabling the last proxy.
+SZ and the other Xray consumers retain the legacy tools described below.
+
+| Port | Purpose |
+|---|---|
+| 1081 | HTTP/SOCKS5, ordinary rules with JP egress |
+| 1082 | HTTP/SOCKS5, all traffic through the same JP node |
+| 1083 | HTTP/SOCKS5, direct |
+| 1084 | HTTP/SOCKS5, ordinary rules with SG egress; PC only |
+| 17900 | MetaCubeXD `/ui/` and authenticated control API |
+| 17901 | Private loopback bandwidth probes |
+
+Port 1080 is retired. PC listeners are loopback-only. RPi permits proxy and
+dashboard access from `192.168.0.0/24` on `end0`; no public IPv6 listeners.
+Dashboard URLs: `http://127.0.0.1:17900/ui/` locally and
+`http://192.168.0.3:17900/ui/` for RPi. Run `mihomoctl secret` on the target host
+to obtain its API password. Never put the password in Git or Nix expressions.
+
+```sh
+mihomoctl tui
+mihomoctl status
+mihomoctl select JP 'exact node name'
+mihomoctl update
+mihomo-speed-test --refresh JP > results.json
+mihomo-speed-test SG
+curl --noproxy '' -x socks5h://127.0.0.1:1081 https://www.cloudflare.com/cdn-cgi/trace
+```
+
+In clashtui, press `3`, use `j/k` to select JP or SG, `l` to expand, and Enter
+to select a node. `h` returns to the group, `r` refreshes, `q` exits. Keep Rule
+mode. Web UI and TUI use the same API; saved node choices survive restarts.
+Nix owns ports and routing: edit the shared module and rebuild. Do not apply
+clashtui File profiles to replace the managed daemon configuration.
+
+Subscriptions update hourly, rules daily. Downloads bootstrap subscriptions
+through DIRECT, then fetch missing rules through JP. Empty region groups reject
+connections. There is no automatic bandwidth-based selection timer.
+The API credential persists under `/var/lib/mihomo-config`; node/provider
+caches and selections use the native service's private state directory.
+Disabling the feature preserves these files and old Xray data for rollback.
+
+Bandwidth tests use BENCH and port 17901 without touching JP or SG selections.
+They sample every candidate for up to three seconds, then the best three for
+five seconds each. Only successful final downloads enter the ranking. JSON
+version 1 reports `node`, `mbps`, bytes and timing; failures exit nonzero.
+Successful results are cached for ten minutes, invalidated by subscription
+updates. Tests share a host-wide lock. Downloads consume subscription traffic.
+
+RPi agents use `mihomoctl --via-worker status/select/update/restart` and
+`mihomo-speed-test --via-worker --refresh JP`. A sandboxed dynamic-user worker
+reads fixed action requests under `.agent/mihomo`, with its API credential
+provided by systemd. The agent cannot read that credential or select outside JP.
+The existing `xray-switch` skill entry is updated for this protocol.
+
+Validation: `python3 resource/test_mihomo_tools.py`,
+`python3 scripts/check-mihomo.py` on each deployed host, and
+`bash scripts/check-configs.sh`. The live check verifies both protocols, egress
+regions, direct routing, forced routing, domain blocking and API authentication.
+
+## Legacy Xray speed tests
 
 `xray-speed-test [FILTER]` measures nodes without selecting one or restarting
 Xray. `FILTER` is a case-sensitive literal filename substring, defaults to

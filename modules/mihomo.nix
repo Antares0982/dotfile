@@ -218,6 +218,8 @@ in
       serviceConfig = {
         Restart = "on-failure";
         RestartSec = "3s";
+        ExecStartPost = "${tools}/bin/mihomoctl ready";
+        TimeoutStartSec = "180s";
       };
     };
     systemd.tmpfiles.rules = [
