@@ -3,8 +3,9 @@ set -euo pipefail
 sz_key=
 wsl_key=
 wsl_public_key=
+mac_public_key=
 usage() {
-	echo "Usage: $0 [--sz-key SZ_KEY] [--wsl-key WSL_KEY | --wsl-public-key WSL_PUB] ADMIN_KEY RPI_KEY HK_KEY [BEFORE_SECRETS_DIR]" >&2
+	echo "Usage: $0 [--sz-key SZ_KEY] [--wsl-key WSL_KEY | --wsl-public-key WSL_PUB] [--mac-public-key MAC_PUB] ADMIN_KEY RPI_KEY HK_KEY [BEFORE_SECRETS_DIR]" >&2
 	exit 2
 }
 while [[ ${1:-} == --* ]]; do
@@ -13,6 +14,7 @@ while [[ ${1:-} == --* ]]; do
 	--sz-key) sz_key=$(realpath "$2") ;;
 	--wsl-key) wsl_key=$(realpath "$2") ;;
 	--wsl-public-key) wsl_public_key=$(realpath "$2") ;;
+	--mac-public-key) mac_public_key=$(realpath "$2") ;;
 	*) usage ;;
 	esac
 	shift 2
@@ -49,12 +51,19 @@ if [[ -n $wsl_public_key ]]; then
 	public+=("$(awk 'NR == 1 {print $1 " " $2}' "$wsl_public_key")")
 	hosts+=(wsl)
 fi
+if [[ -n $mac_public_key ]]; then
+	ssh-keygen -lf "$mac_public_key" >/dev/null
+	public+=("$(awk 'NR == 1 {print $1 " " $2}' "$mac_public_key")")
+	hosts+=(macbook)
+fi
 expected=$(jq -cn --argjson files "$files" --arg key "${public[0]}" \
 	'$files | map({key: ., value: [$key]}) | from_entries')
 for ((i = 1; i < ${#public[@]}; i++)); do
 	host=${hosts[$i]}
+	configuration=nixosConfigurations
+	[[ $host != macbook ]] || configuration=darwinConfigurations
 	used=$(nix eval --offline --no-write-lock-file --json \
-		"./hosts/$host#nixosConfigurations.$host.config.age.secrets" \
+		"./hosts/$host#$configuration.$host.config.age.secrets" \
 		--apply 's: builtins.attrValues (builtins.mapAttrs (_: v: builtins.baseNameOf v.file) s)' | jq 'unique')
 	expected=$(jq -cn --argjson expected "$expected" --argjson used "$used" \
 		--arg key "${public[$i]}" \
@@ -94,6 +103,9 @@ done
 printf 'PASS: rules and decryption matrix for %s supplied private keys (%s files)\n' "$private_key_count" "$(jq length <<<"$files")"
 if [[ -n $wsl_public_key ]]; then
 	echo 'WSL: recipient rules checked using public key only; verify decryption locally on WSL.'
+fi
+if [[ -n $mac_public_key ]]; then
+	echo 'MacBook: recipient rules checked using public key only; verify decryption locally on MacBook.'
 fi
 if [[ -n $before ]]; then
 	echo 'PASS: plaintext unchanged'

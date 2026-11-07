@@ -61,6 +61,7 @@ in
   antares.mihomo = {
     enable = true;
     lan = true;
+    dashboardOrigins = [ "http://192.168.0.3:17900" ];
   };
   antares.proxy.enable = true;
   antares.proxy.socksUrl = "socks5h://127.0.0.1:1081";

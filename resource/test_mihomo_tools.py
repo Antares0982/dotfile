@@ -48,7 +48,7 @@ def check():
         real_open = open
 
         def open_lock(path, *args, **kwargs):
-            return real_open(lock if path == "/run/lock/mihomo-speed-test.lock" else path, *args, **kwargs)
+            return real_open(lock if path == m.LOCK else path, *args, **kwargs)
 
         with patch.dict(os.environ, {"XDG_CACHE_HOME": directory}), patch.object(m, "request", request), \
              patch.object(m, "sample", sample), patch("builtins.open", open_lock), patch("sys.stderr", io.StringIO()):

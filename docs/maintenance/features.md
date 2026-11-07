@@ -72,8 +72,7 @@ integration as well as the upstream service.
 |---|---|
 | all seven hosts | `antares.starship.enable` ([settings](zsh.md#starship)) |
 | nixos, hk, rpi5 | `services.telegram-output-monitor-bot.enable`, `services.antares-rpc-client.enable`, `services.rabbitmq.enable` |
-| nixos, rpi5 | `antares.mihomo.enable`, `antares.proxy.enable` |
-| macbook | `antares.xray.enable`, `antares.proxy.enable` |
+| nixos, rpi5, macbook | `antares.mihomo.enable`, `antares.proxy.enable` |
 | rpi5 | `services.antares-runners.instances.<name>.enable`, `antares.agent.enable`, `antares.qq.enable`, `antares.gitServer.enable`, `services.ssh-probe.enable` |
 | hk | `antares.blog.enable`, `antares.blog.metrics.enable`, `antares.messaging.enable`, `mailserver.enable`, `services.mysql.enable`, `services.nginx.enable`, `antares.acme.enable`, `services.xray.enable` |
 | nixos | `antares.desktop.enable`, `antares.wallpaper.enable`, `antares.rust.enable`, `antares.autostart.enable`, `antares.waitOnline.enable`, `services.mcp-nixos.enable` |
@@ -103,6 +102,8 @@ resume. Kernel/driver updates also require a new hardware check.
 - Blog metrics require MySQL. The host ties MySQL backup activation to MySQL.
 - The local proxy environment requires Mihomo or Xray. Desktop autostart skips
   legacy subscription updates when Xray is disabled.
+- Mihomo shares routing configuration across NixOS and Darwin. Darwin owns
+  its launchd supervisor and PF anchor; only its dashboard is reachable on LAN.
 - Agent proxy actions require both agent and the corresponding proxy feature.
 - Remote broker endpoints and external application scripts remain external
   runtime dependencies; local service ordering does not establish ownership.

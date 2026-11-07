@@ -9,6 +9,10 @@
       url = "github:nix-darwin/nix-darwin/master";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    agenix = {
+      url = "github:ryantm/agenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     myXray = {
       url = "github:Antares0982/rules-dat-xray-flake";
       inputs.nixpkgs.follows = "nixpkgs-old";

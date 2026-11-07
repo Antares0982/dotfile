@@ -1,6 +1,6 @@
 # Proxy management and speed tests
 
-## Mihomo on nixos and rpi5
+## Mihomo on nixos, rpi5 and macbook
 
 These hosts use `antares.mihomo.enable`. The shared module owns the native
 Mihomo service, subscription secret, Web UI, management commands and optional
@@ -12,7 +12,7 @@ SZ and the other Xray consumers retain the legacy tools described below.
 | 1081 | HTTP/SOCKS5, ordinary rules with JP egress |
 | 1082 | HTTP/SOCKS5, all traffic through the same JP node |
 | 1083 | HTTP/SOCKS5, direct |
-| 1084 | HTTP/SOCKS5, ordinary rules with SG egress; PC only |
+| 1084 | HTTP/SOCKS5, ordinary rules with SG egress; PC and MacBook |
 | 17900 | MetaCubeXD `/ui/` and authenticated control API |
 | 17901 | Private loopback bandwidth probes |
 
@@ -21,6 +21,13 @@ dashboard access from `192.168.0.0/24` on `end0`; firewall rules deny public IPv
 Dashboard URLs: `http://127.0.0.1:17900/ui/` locally and
 `http://192.168.0.3:17900/ui/` for RPi. Run `mihomoctl secret` on the target host
 to obtain its API password. Never put the password in Git or Nix expressions.
+
+MacBook uses `http://192.168.0.5:17900/ui/` on the home LAN. Its proxy ports
+remain loopback-only; the control API listens on IPv4, with a dedicated PF
+anchor permitting only loopback and `192.168.0.0/24`. `dashboardLan` controls
+dashboard exposure independently of `lan`, which controls proxy listeners.
+`dashboardOrigins` declares additional Web UI origins. In the dashboard setup,
+use the API address without `/ui/` and the target host's `mihomoctl secret`.
 
 ```sh
 mihomoctl tui
@@ -45,6 +52,17 @@ The API credential persists under `/var/lib/mihomo-config`; node/provider
 caches and selections use the native service's private state directory.
 Disabling the feature preserves these files and old Xray data for rollback.
 
+On MacBook, `org.nixos.mihomo` supervises the core under launchd. The supervisor
+sets up PF and the application firewall before starting Mihomo as `antares`;
+the core never runs as root. Exit cleanup removes only this service's firewall
+entries and PF enable reference. State, credentials and the bandwidth lock live
+under `~/Library/Application Support/mihomo`, with private directory/file modes.
+The supervisor waits for agenix on boot and retries failed startups through
+launchd. Logs are in `/var/log/mihomo.log` (root-only). Mac configuration updates
+require `sudo darwin-rebuild switch --flake ./hosts/macbook#macbook`; preserve the
+previous system closure for rollback. `opencode` is temporarily omitted on Mac
+until its Darwin build is fixed.
+
 Bandwidth tests use BENCH and port 17901 without touching JP or SG selections.
 They sample every candidate for up to three seconds, then the best three for
 five seconds each. Only successful final downloads enter the ranking. JSON
@@ -59,6 +77,7 @@ provided by systemd. The agent cannot read that credential or select outside JP.
 The existing `xray-switch` skill entry is updated for this protocol.
 
 Validation: `python3 resource/test_mihomo_tools.py`,
+`python3 resource/test_mihomo_darwin.py`,
 `python3 scripts/check-mihomo.py` on each deployed host, and
 `bash scripts/check-configs.sh`. The live check verifies both protocols, egress
 regions, direct routing, forced routing, domain blocking and API authentication.

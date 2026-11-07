@@ -23,8 +23,9 @@ def write_json(path, value):
 
 def prepare(template, subscription):
     os.umask(0o077)
-    directory = Path("/var/lib/mihomo-config")
-    directory.mkdir(mode=0o700, exist_ok=True)
+    darwin = sys.platform == "darwin"
+    directory = Path.home() / "Library/Application Support/mihomo" if darwin else Path("/var/lib/mihomo-config")
+    directory.mkdir(mode=0o700, parents=True, exist_ok=True)
     url = Path(subscription).read_text().strip()
     parsed = urlsplit(url)
     if parsed.scheme != "https" or not parsed.hostname or any(c.isspace() for c in url):
@@ -36,16 +37,21 @@ def prepare(template, subscription):
     config["secret"] = secret_file.read_text().strip()
     config["proxy-providers"]["subscription"]["url"] = url
     write_json(directory / "config.json", config)
-    client_dir = Path("/run/mihomo-client")
+    client_dir = directory / "client" if darwin else Path("/run/mihomo-client")
     client_dir.mkdir(mode=0o700, exist_ok=True)
     user = pwd.getpwnam("antares")
-    os.chown(client_dir, user.pw_uid, user.pw_gid)
+    if os.geteuid() == 0:
+        os.chown(client_dir, user.pw_uid, user.pw_gid)
     client_file = client_dir / "connection.json"
     write_json(client_file, {
         "api": "http://127.0.0.1:17900", "secret": config["secret"],
         "port": config["mixed-port"], "test_port": 17901,
     })
-    os.chown(client_file, user.pw_uid, user.pw_gid)
+    if os.geteuid() == 0:
+        os.chown(client_file, user.pw_uid, user.pw_gid)
+    if darwin:
+        (directory / "data").mkdir(mode=0o700, exist_ok=True)
+        (directory / "speed-test.lock").touch(mode=0o600, exist_ok=True)
 
 
 if __name__ == "__main__":

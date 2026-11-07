@@ -11,7 +11,6 @@ in
   environment.systemPackages = with pkgs; [
     codex
     cmake
-    opencode
     renewal
   ];
 }

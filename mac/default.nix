@@ -14,6 +14,7 @@
     ./proxy.nix
     ./stdenv.nix
     ./xray.nix
+    ./mihomo.nix
     ../common/zsh.nix
   ]
   ++ [

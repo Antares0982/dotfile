@@ -16,7 +16,9 @@ import urllib.parse
 import urllib.request
 import uuid
 
-CLIENT = Path("/run/mihomo-client/connection.json")
+STATE = Path.home() / "Library/Application Support/mihomo"
+CLIENT = STATE / "client/connection.json" if sys.platform == "darwin" else Path("/run/mihomo-client/connection.json")
+LOCK = STATE / "speed-test.lock" if sys.platform == "darwin" else Path("/run/lock/mihomo-speed-test.lock")
 QUEUE = Path("/home/agent/agent_work/.agent/mihomo")
 URL = "https://speed.cloudflare.com/__down?bytes=100000000"
 PARAMS = {"quick_seconds": 3, "final_seconds": 5, "connect_seconds": 2, "finalists": 3}
@@ -106,7 +108,7 @@ def measure(region, refresh=False):
     cache_dir = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "mihomo-speed-test"
     cache_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
     # Host-wide lock prevents overlapping bandwidth measurements.
-    with open("/run/lock/mihomo-speed-test.lock", "r+") as lock:
+    with open(LOCK, "r+") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         candidates = sorted(n for n in group(region)["all"] if n not in ("REJECT", "COMPATIBLE", "DIRECT"))
         if not candidates:
@@ -186,7 +188,7 @@ def ready():
             raise ValueError("Mihomo bootstrap timed out")
         try:
             proxies = request("/proxies")["proxies"]
-            if proxies["JP"]["all"] == ["REJECT"]:
+            if any(proxies[name]["all"] == ["REJECT"] for name in ("JP", "SG") if name in proxies):
                 request("/providers/proxies/subscription", "PUT")
                 time.sleep(2)
                 continue
@@ -284,7 +286,7 @@ def tui():
         "core": {"config_dir": str(directory / "unused-core"),
                  "config_path": str(directory / "unused-core/config.json"),
                  "bin_path": os.environ["MIHOMO_BIN"]},
-        "core_service": {"service_name": "mihomo", "is_user": False},
+        "core_service": {"service_name": "org.nixos.mihomo" if sys.platform == "darwin" else "mihomo", "is_user": False},
     }})
     publish(directory / "mihomo/core_override_config.yaml", {
         "external-controller": "127.0.0.1:17900", "secret": client["secret"], "mixed-port": client["port"],

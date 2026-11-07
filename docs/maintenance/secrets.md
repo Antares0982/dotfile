@@ -11,6 +11,13 @@ RPi, HK, SZ, and WSL each use their own root-owned, mode 0600 `/etc/ssh/agenix`.
 Rules authorize each active server only for files declared by its locked configuration;
 shared secrets authorize all their consumers. New files default to PC-only access.
 
+MacBook uses its existing root-owned `/etc/ssh/ssh_host_ed25519_key` through
+agenix's Darwin module. Its public key authorizes only `xraysub.age`.
+Mihomo waits for agenix to decrypt the subscription, including after reboot;
+the decrypted file is owned by `antares:staff`, mode 0400. Never copy a private
+identity between hosts. Reauthorize the subscription before replacing the Mac
+SSH host key.
+
 `xray-template-json.age` is retained for recovery with PC-only access. RPi's
 historical recipient authorization was removed after the Mihomo migration.
 Old ciphertext in Git history remains decryptable by the former recipients.
@@ -27,7 +34,7 @@ After changing consumers, update the rules, rekey on PC, and validate before dep
 ```bash
 AGENIX_RULES=secrets/agenix-rules.nix agenix -i /etc/ssh/agenix -r
 AGENIX_RULES=secrets/agenix-rules.nix agenix -c
-AGE_BIN=/path/to/age bash scripts/check-agenix.sh --sz-key SZ_KEY ADMIN_KEY RPI_KEY HK_KEY
+AGE_BIN=/path/to/age bash scripts/check-agenix.sh --sz-key SZ_KEY --mac-public-key MAC_PUB ADMIN_KEY RPI_KEY HK_KEY
 ```
 Run the script with access to local recovery keys. Do not retrieve other hosts'
 private keys just to run checks; remote checks must decrypt in place and return
@@ -35,7 +42,9 @@ only success/failure. Supply `--sz-key` for the current recipient rules. Once WS
 is authorized, also pass `--wsl-key WSL_KEY`, or `--wsl-public-key WSL_PUB` to
 check its recipient rules without transferring its private key. Public-key-only
 checks do not verify WSL decryption; perform that check locally on WSL. An optional fourth argument points
-to a pre-rekey secrets directory and verifies unchanged plaintext. Private keys
+to a pre-rekey secrets directory and verifies unchanged plaintext. Likewise,
+`--mac-public-key MAC_PUB` checks MacBook recipients without retrieving its
+private key; actual decryption is checked on MacBook after activation. Private keys
 and plaintext must never enter Git or the Nix store. Keep recovery copies on PC.
 Build HK and SZ locally with remote builders disabled, then push their closures;
 build RPi on an aarch64 host. Validate actual activation using only the server key
