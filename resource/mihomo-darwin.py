@@ -1,4 +1,4 @@
-"""Launch an unprivileged core behind a private PF anchor."""
+"""Supervise unprivileged Mihomo behind PF."""
 
 import os
 from pathlib import Path
@@ -34,7 +34,7 @@ def enable_pf(rules):
 
 
 def disable_pf():
-    run(PF, "-a", ANCHOR, "-F", "all")
+    run(PF, "-a", ANCHOR, "-F", "rules")
     if TOKEN.exists():
         run(PF, "-X", str(int(TOKEN.read_text())))
         TOKEN.unlink()
@@ -51,7 +51,7 @@ def start(template, subscription, prepare, core, ctl, rules):
         if time.monotonic() >= deadline:
             raise ValueError("Subscription decryption timed out")
         time.sleep(1)
-    # Preparation errors must not reveal subscription contents.
+    # Keep subscription errors private.
     run(sys.executable, prepare, template, subscription, **child_args)
     child = None
     firewall_added = False

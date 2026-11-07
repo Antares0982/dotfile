@@ -1,4 +1,4 @@
-"""Check private preparation, firewall ordering and privilege separation."""
+"""Check private state, firewall and privileges."""
 
 import importlib.util
 import json
@@ -55,6 +55,8 @@ def check():
             daemon.disable_pf()
             assert not token.exists()
             assert (daemon.PF, "-X", "17") in [call.args for call in run.call_args_list]
+            assert [call.args for call in run.call_args_list if "-F" in call.args] == [
+                (daemon.PF, "-a", daemon.ANCHOR, "-F", "rules")]
 
         events = []
         child = Mock()
