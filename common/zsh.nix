@@ -64,6 +64,9 @@ in
           enableSyntaxHighlighting = true;
           enableAutosuggestions = true;
           interactiveShellInit = ''
+            # SSH sessions may lack a locale; ZLE then counts UTF-8 prompt bytes as columns.
+            export LANG="''${LANG:-en_US.UTF-8}"
+
             export ZSH=${pkgs.oh-my-zsh}/share/oh-my-zsh
             ZSH_THEME=""
             ZSH_CACHE_DIR="$HOME/.cache/oh-my-zsh"

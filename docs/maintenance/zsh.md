@@ -11,6 +11,15 @@ Run `CHECK_CASE='zsh-base|starship-.*' bash scripts/check-configs.sh` for the sh
 The `ctl`/`sctl` and `jtl`/`sjtl` alias families are shared by all six Linux
 hosts. macOS does not define these systemd aliases.
 
+macOS interactive Zsh defaults an unset or empty `LANG` to `en_US.UTF-8` before
+loading Oh My Zsh and the prompt. SSH sessions can otherwise fall back to the
+ASCII `C` locale: ZLE counts the three UTF-8 bytes of the Starship `` marker as
+three columns, leaving two ghost characters when completion redraws the input.
+Existing `LANG` and `LC_*` settings are preserved. An explicit non-UTF-8
+`LC_ALL` or `LC_CTYPE` still takes precedence; inspect `locale` in the affected
+session if the problem persists. See the
+[Oh My Zsh completion FAQ](https://github.com/ohmyzsh/ohmyzsh/wiki/FAQ#i-see-duplicate-typed-characters-after-i-complete-a-command).
+
 ## WSL as a Windows shell
 
 WSL enables `antares.windowsShell.enable` in `wsl/default.nix`. The feature lives
