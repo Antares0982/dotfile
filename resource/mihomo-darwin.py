@@ -1,10 +1,12 @@
 """Supervise unprivileged Mihomo behind PF."""
 
 import os
+import json
 from pathlib import Path
 import pwd
 import re
 import signal
+import socket
 import subprocess
 import sys
 import time
@@ -40,6 +42,21 @@ def disable_pf():
         TOKEN.unlink()
 
 
+def wait_ports(ports):
+    deadline = time.monotonic() + 120
+    while True:
+        try:
+            for address, port, protocol in ports:
+                with socket.socket(socket.AF_INET, protocol) as probe:
+                    probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    probe.bind((address, port))
+            return
+        except OSError:
+            if time.monotonic() >= deadline:
+                raise ValueError("Mihomo ports are still occupied") from None
+            time.sleep(1)
+
+
 def start(template, subscription, prepare, core, ctl, rules):
     os.umask(0o077)
     user = pwd.getpwnam("antares")
@@ -53,6 +70,13 @@ def start(template, subscription, prepare, core, ctl, rules):
         time.sleep(1)
     # Keep subscription errors private.
     run(sys.executable, prepare, template, subscription, **child_args)
+    settings = json.loads(Path(template).read_text())
+    listeners = [{"listen": "127.0.0.1", "port": settings["mixed-port"], "udp": True}] + settings["listeners"]
+    ports = [(entry["listen"], entry["port"], socket.SOCK_STREAM) for entry in listeners]
+    ports += [(entry["listen"], entry["port"], socket.SOCK_DGRAM) for entry in listeners if entry.get("udp")]
+    ports.append(("0.0.0.0" if rules else "127.0.0.1", 17900, socket.SOCK_STREAM))
+    # Darwin loads replacements before unloading removed jobs.
+    wait_ports(ports)
     child = None
     firewall_added = False
     try:

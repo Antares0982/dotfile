@@ -3,6 +3,7 @@
 import importlib.util
 import json
 import os
+import socket
 from pathlib import Path
 import tempfile
 from types import SimpleNamespace
@@ -25,7 +26,7 @@ def check():
         subscription = root / "subscription"
         subscription.write_text("https://example.invalid/subscription")
         template = root / "template.json"
-        template.write_text(json.dumps({"proxy-providers": {"subscription": {}}, "mixed-port": 1081}))
+        template.write_text(json.dumps({"proxy-providers": {"subscription": {}}, "mixed-port": 1081, "listeners": []}))
         state = root / "Library/Application Support/mihomo"
         with patch.object(prepare.sys, "platform", "darwin"), patch.object(prepare.Path, "home", return_value=root), \
              patch.object(prepare.pwd, "getpwnam", return_value=user), patch.object(prepare.os, "geteuid", return_value=501):
@@ -59,6 +60,18 @@ def check():
                 (daemon.PF, "-a", daemon.ANCHOR, "-F", "rules")]
 
         events = []
+        with socket.socket() as occupied:
+            occupied.bind(("127.0.0.1", 0))
+            occupied.listen()
+            ports = [("127.0.0.1", occupied.getsockname()[1], socket.SOCK_STREAM)]
+            with patch.object(daemon.time, "monotonic", side_effect=[0, 121]):
+                try:
+                    daemon.wait_ports(ports)
+                except ValueError:
+                    pass
+                else:
+                    raise AssertionError("Occupied port accepted")
+        daemon.wait_ports(ports)
         child = Mock()
         child.poll.return_value = None
         child.wait.return_value = 0
@@ -75,6 +88,7 @@ def check():
             return child
 
         with patch.object(daemon.pwd, "getpwnam", return_value=user), patch.object(daemon, "run", run), \
+             patch.object(daemon, "wait_ports") as wait_ports, \
              patch.object(daemon, "enable_pf") as enable, patch.object(daemon, "disable_pf") as disable, \
              patch.object(daemon.subprocess, "Popen", spawn):
             try:
@@ -84,11 +98,13 @@ def check():
             else:
                 raise AssertionError("Bootstrap failure ignored")
             enable.assert_called_once_with("rules")
+            wait_ports.assert_called_once()
             disable.assert_called_once_with()
             child.terminate.assert_called_once_with()
             assert events[-1] == (daemon.FIREWALL, "--remove", "core")
 
         with patch.object(daemon.pwd, "getpwnam", return_value=user), patch.object(daemon, "run", run), \
+             patch.object(daemon, "wait_ports"), \
              patch.object(daemon, "enable_pf", side_effect=ValueError("PF unavailable")), \
              patch.object(daemon, "disable_pf"), patch.object(daemon.subprocess, "Popen") as spawn:
             try:
