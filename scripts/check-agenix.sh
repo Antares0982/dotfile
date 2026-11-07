@@ -56,10 +56,6 @@ for ((i = 1; i < ${#public[@]}; i++)); do
 	used=$(nix eval --offline --no-write-lock-file --json \
 		"./hosts/$host#nixosConfigurations.$host.config.age.secrets" \
 		--apply 's: builtins.attrValues (builtins.mapAttrs (_: v: builtins.baseNameOf v.file) s)' | jq 'unique')
-	# Preserve historical RPi rollback access.
-	if [[ $host == rpi5 ]]; then
-		used=$(jq -c '. + ["xray-template-json.age"] | unique' <<<"$used")
-	fi
 	expected=$(jq -cn --argjson expected "$expected" --argjson used "$used" \
 		--arg key "${public[$i]}" \
 		'$expected | reduce $used[] as $file (. ; .[$file] += [$key])')
