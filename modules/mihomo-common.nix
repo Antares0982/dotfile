@@ -11,27 +11,39 @@ let
     "tld-cn"
     "category-games@cn"
     "category-ads-all"
+    "category-ai-!cn"
+    "telegram"
+    "netflix"
+    "youtube"
   ];
+  provider = kind: name: {
+    type = "http";
+    behavior = if kind == "geosite" then "domain" else "ipcidr";
+    format = "mrs";
+    url = "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/${kind}/${name}.mrs";
+    path = "./rules/${name}${lib.optionalString (kind == "geoip") "-ip"}.mrs";
+    interval = 86400;
+    proxy = "JP";
+  };
   providers =
     builtins.listToAttrs (
       map (name: {
         inherit name;
-        value = {
-          type = "http";
-          behavior = "domain";
-          format = "mrs";
-          url = "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/${name}.mrs";
-          path = "./rules/${name}.mrs";
-          interval = 86400;
-          proxy = "JP";
-        };
+        value = provider "geosite" name;
       }) domains
     )
-    // {
-      cn-ip = base.rule-providers.cn-ip // {
-        proxy = "JP";
-      };
-    };
+    // builtins.listToAttrs (
+      map
+        (name: {
+          name = "${name}-ip";
+          value = provider "geoip" name;
+        })
+        [
+          "cn"
+          "telegram"
+          "netflix"
+        ]
+    );
   blocked = [
     "config.cmpassport.com"
     "www.cmpassport.com"
@@ -54,14 +66,27 @@ let
     "onepass.geetest.com"
   ];
   rules =
-    region:
-    [
-      "DOMAIN-KEYWORD,claude,${region}"
-      "DOMAIN-KEYWORD,chatgpt,${region}"
+    base.rules
+    ++ [
       "RULE-SET,category-ads-all,REJECT"
     ]
     ++ map (domain: "DOMAIN-KEYWORD,${domain},REJECT") blocked
-    ++ map (name: "RULE-SET,${name},DIRECT") (lib.remove "category-ads-all" domains)
+    ++ [
+      "RULE-SET,category-ai-!cn,AI"
+      "RULE-SET,telegram,Telegram"
+      "RULE-SET,telegram-ip,Telegram,no-resolve"
+      "RULE-SET,netflix,Netflix"
+      "RULE-SET,netflix-ip,Netflix,no-resolve"
+      "RULE-SET,youtube,YouTube"
+      "RULE-SET,private,DIRECT"
+    ]
+    ++ map (name: "RULE-SET,${name},国内") [
+      "cn"
+      "apple-cn"
+      "google-cn"
+      "tld-cn"
+      "category-games@cn"
+    ]
     ++ map (keyword: "DOMAIN-KEYWORD,${keyword},DIRECT") [
       "torrent"
       "peer_id="
@@ -71,19 +96,50 @@ let
       "BitTorrent"
       "announce_peer"
     ]
-    ++ lib.filter (
-      rule:
-      lib.hasPrefix "IP-CIDR" rule || lib.hasPrefix "DOMAIN," rule || lib.hasPrefix "DOMAIN-SUFFIX," rule
-    ) base.rules
     ++ [
-      "RULE-SET,cn-ip,DIRECT"
-      "MATCH,${region}"
+      "RULE-SET,cn-ip,国内"
+      "MATCH,其他"
     ];
   regionGroup = name: filter: {
     inherit name filter;
     type = "select";
-    use = [ "subscription" ];
+    include-all = true;
     empty-fallback = "REJECT";
+  };
+  regions = [ "JP" ] ++ lib.optional cfg.singapore "SG";
+  choices = regions ++ [ "全部节点" ];
+  selectGroup = name: proxies: {
+    inherit name proxies;
+    type = "select";
+  };
+  groups = [
+    (selectGroup "其他" choices)
+    (selectGroup "Telegram" (
+      (lib.reverseList regions)
+      ++ [
+        "其他"
+        "全部节点"
+      ]
+    ))
+    (selectGroup "AI" ([ "其他" ] ++ choices))
+    (selectGroup "Netflix" ([ "其他" ] ++ choices))
+    (selectGroup "YouTube" ([ "其他" ] ++ choices))
+    (selectGroup "国内" ([ "DIRECT" ] ++ choices))
+    (regionGroup "JP" "(?i)Japan|日本|🇯🇵|\\bJP\\b")
+  ]
+  ++ lib.optional cfg.singapore (regionGroup "SG" "(?i)Singapore|新加坡|狮城|🇸🇬|\\bSG\\b")
+  ++ [ (regionGroup "全部节点" ".*") ];
+  policy = {
+    proxy-groups = groups ++ [
+      (
+        (selectGroup "GLOBAL" ((map (group: group.name) groups) ++ [ "DIRECT" ]))
+        // {
+          default-selected = if cfg.singapore then "SG" else "JP";
+        }
+      )
+    ];
+    rule-providers = providers;
+    inherit rules;
   };
   listener = name: port: proxy: {
     inherit name port proxy;
@@ -100,6 +156,7 @@ let
       "rule-providers"
       "rules"
     ]
+    // policy
     // {
       allow-lan = cfg.lan;
       bind-address = address;
@@ -117,13 +174,9 @@ let
         ++ cfg.dashboardOrigins;
         allow-private-network = true;
       };
-      proxy-groups = [
-        (regionGroup "JP" "(?i)Japan|日本|🇯🇵|\\bJP\\b")
-      ]
-      ++ lib.optional cfg.singapore (regionGroup "SG" "(?i)Singapore|新加坡|狮城|🇸🇬|\\bSG\\b")
-      ++ [ ((regionGroup "BENCH" ".*") // { hidden = true; }) ];
+      proxy-groups = policy.proxy-groups ++ [ ((regionGroup "BENCH" ".*") // { hidden = true; }) ];
       listeners = [
-        (listener "global-jp" (cfg.port + 1) "JP")
+        (listener "global" (cfg.port + 1) "GLOBAL")
         (listener "direct" (cfg.port + 2) "DIRECT")
         (
           (listener "bandwidth-test" 17901 "BENCH")
@@ -132,18 +185,7 @@ let
             udp = false;
           }
         )
-      ]
-      ++ lib.optional cfg.singapore {
-        name = "singapore";
-        type = "mixed";
-        listen = address;
-        port = cfg.port + 3;
-        rule = "singapore";
-        udp = true;
-      };
-      rules = rules "JP";
-      sub-rules = lib.optionalAttrs cfg.singapore { singapore = rules "SG"; };
-      rule-providers = providers;
+      ];
     };
 in
 {
@@ -153,7 +195,7 @@ in
       type = lib.types.port;
       default = 1081;
     };
-    singapore = lib.mkEnableOption "separate Singapore proxy entrance";
+    singapore = lib.mkEnableOption "Singapore nodes for service policy groups";
     lan = lib.mkEnableOption "proxy access from the home LAN";
     dashboardLan = lib.mkOption {
       type = lib.types.bool;
@@ -171,15 +213,21 @@ in
       readOnly = true;
       default = settings;
     };
+    policy = lib.mkOption {
+      type = lib.types.attrs;
+      internal = true;
+      readOnly = true;
+      default = policy;
+    };
   };
 
   config = lib.mkIf cfg.enable {
     assertions = [
       {
         assertion =
-          cfg.port <= 65532
-          && !(builtins.elem 17900 (lib.range cfg.port (cfg.port + 3)))
-          && !(builtins.elem 17901 (lib.range cfg.port (cfg.port + 3)));
+          cfg.port <= 65533
+          && !(builtins.elem 17900 (lib.range cfg.port (cfg.port + 2)))
+          && !(builtins.elem 17901 (lib.range cfg.port (cfg.port + 2)));
         message = "Mihomo proxy ports must not overlap control or test ports.";
       }
     ];

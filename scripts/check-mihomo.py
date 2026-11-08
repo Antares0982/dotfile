@@ -50,8 +50,19 @@ def check():
     for name in regions:
         assert proxies[name]["now"] in proxies[name]["all"]
         assert not {"DIRECT", "COMPATIBLE", "REJECT"}.intersection(proxies[name]["all"])
+        result = m.probe_node(proxies[name]["now"])
+        assert result["loc"] == name, (name, result["loc"])
+        print(f"{name} selected node: {result['loc']}")
+    def outbound(name):
+        seen = set()
+        while name not in (*regions, "DIRECT", "REJECT") and "now" in proxies.get(name, {}):
+            assert name not in seen, "Cyclic policy group"
+            seen.add(name)
+            name = proxies[name]["now"]
+        return name
     rules = m.request("/providers/rules")["providers"]
-    assert len(rules) == 8 and all(r["ruleCount"] > 0 for r in rules.values())
+    assert {"category-ai-!cn", "telegram", "telegram-ip", "netflix", "netflix-ip", "youtube", "cn", "cn-ip"} <= rules.keys()
+    assert all(r["ruleCount"] > 0 for r in rules.values())
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
     with opener.open(client["api"] + "/ui/", timeout=10) as response:
         assert b"MetaCubeXD" in response.read()
@@ -61,19 +72,26 @@ def check():
         assert error.code == 401
     else:
         raise AssertionError("Missing API authentication")
-    direct = trace()["loc"]
-    for offset, country in enumerate(["JP", "JP", direct] + (["SG"] if "SG" in regions else [])):
+    countries = {name: name for name in regions}
+    countries["DIRECT"] = trace()["loc"]
+    for offset, target in enumerate([outbound("其他"), outbound("GLOBAL"), "DIRECT"]):
+        if target not in countries:
+            countries[target] = m.probe_node(target)["loc"]
+        country = countries[target]
         port = client["port"] + offset
         for protocol in ("http", "socks5h"):
             result = trace(f"{protocol}://127.0.0.1:{port}")
             assert result["loc"] == country, (port, result["loc"], country)
             print(f"{port} {protocol}: {result['loc']} {result['ip']}")
-    route(client["port"], "www.baidu.com", "DIRECT")
-    route(client["port"], "claude.ai", "JP")
-    route(client["port"] + 1, "www.baidu.com", "JP")
-    if "SG" in regions:
-        route(client["port"] + 3, "www.baidu.com", "DIRECT")
-        route(client["port"] + 3, "chatgpt.com", "SG")
+    route(client["port"], "www.baidu.com", outbound("国内"))
+    route(client["port"], "claude.ai", outbound("AI"))
+    route(client["port"], "chatgpt.com", outbound("AI"))
+    route(client["port"], "www.youtube.com", outbound("YouTube"))
+    route(client["port"], "api.telegram.org", outbound("Telegram"))
+    route(client["port"], "149.154.167.51", outbound("Telegram"))
+    route(client["port"] + 1, "www.baidu.com", outbound("GLOBAL"))
+    with socket.socket() as sock:
+        assert sock.connect_ex(("127.0.0.1", client["port"] + 3)) != 0, "Retired port still listening"
     rejected = subprocess.run(["curl", "-q", "-fsS", "--max-time", "10", "--noproxy", "",
                                "--proxy", f"http://127.0.0.1:{client['port']}", "https://id6.me"], capture_output=True)
     assert rejected.returncode != 0, "Carrier authentication domain was not blocked"

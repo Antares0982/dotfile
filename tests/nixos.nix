@@ -11,10 +11,54 @@
       && c.systemd.services.mihomo.serviceConfig.DynamicUser
       && c.age.secrets.mihomoSubscription.mode == "0400"
       && c.antares.mihomo.port == 1081
+      &&
+        map (entry: entry.port) c.antares.mihomo.settings.listeners == [
+          1082
+          1083
+          17901
+        ]
+      && !(c.antares.mihomo.settings ? sub-rules)
+      && (builtins.head c.antares.mihomo.settings.listeners).proxy == "GLOBAL"
+      &&
+        (lib.findFirst (g: g.name == "GLOBAL") { } c.antares.mihomo.policy.proxy-groups).default-selected
+        == "SG"
+      && lib.elem "RULE-SET,telegram-ip,Telegram,no-resolve" c.antares.mihomo.policy.rules
+      &&
+        (lib.findFirst (g: g.name == "Telegram") { } c.antares.mihomo.policy.proxy-groups).proxies == [
+          "SG"
+          "JP"
+          "其他"
+          "全部节点"
+        ]
       && c.antares.proxy.socksUrl == "socks5h://127.0.0.1:1081"
       && !(c.home-manager.users.antares.systemd.user.services ? xray)
       && !(c.systemd.services ? mihomo-worker)
       && !(c.systemd.paths ? mihomo-worker);
+  }
+  {
+    name = "mihomo-mobile-on";
+    module = { };
+    check =
+      c:
+      c.systemd.services.mihomo-mobile-rules.serviceConfig.DynamicUser
+      && c.systemd.services.mihomo-mobile-rules.serviceConfig.ProtectHome
+      && !(lib.elem 18080 c.networking.firewall.allowedTCPPorts)
+      && lib.hasInfix "-s 192.168.0.0/24 -p tcp --dport 18080" c.networking.firewall.extraCommands;
+  }
+  {
+    name = "mihomo-mobile-off";
+    module = { lib, ... }: { antares.mihomo.mobileRules.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.systemd.services ? mihomo-mobile-rules)
+      && !(lib.hasInfix "18080" c.networking.firewall.extraCommands)
+      && c.services.mihomo.enable;
+  }
+  {
+    name = "mihomo-mobile-port-conflict";
+    module = { lib, ... }: { antares.mihomo.mobileRules.port = lib.mkForce 1081; };
+    check = c: true;
+    valid = false;
   }
   {
     name = "gpu-unlock-on";
@@ -86,6 +130,8 @@
     check =
       c:
       !(c.home-manager.users.antares.systemd.user.services ? xray)
+      && !(c.systemd.services ? mihomo-mobile-rules)
+      && !(lib.hasInfix "18080" c.networking.firewall.extraCommands)
       && !(c.home-manager.users.antares.systemd.user.services ? autostart)
       && !(c.home-manager.users.antares.home.sessionVariables ? http_proxy)
       && !(c.systemd.services.nix-daemon.environment ? http_proxy)

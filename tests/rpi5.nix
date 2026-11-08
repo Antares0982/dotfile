@@ -203,6 +203,23 @@
       && c.antares.mihomo.lan
       && !c.antares.mihomo.singapore
       && c.antares.mihomo.port == 1081
+      &&
+        map (entry: entry.port) c.antares.mihomo.settings.listeners == [
+          1082
+          1083
+          17901
+        ]
+      && !(c.antares.mihomo.settings ? sub-rules)
+      && (builtins.head c.antares.mihomo.settings.listeners).proxy == "GLOBAL"
+      &&
+        (lib.findFirst (g: g.name == "GLOBAL") { } c.antares.mihomo.policy.proxy-groups).default-selected
+        == "JP"
+      &&
+        (lib.findFirst (g: g.name == "Telegram") { } c.antares.mihomo.policy.proxy-groups).proxies == [
+          "JP"
+          "其他"
+          "全部节点"
+        ]
       && c.antares.proxy.socksUrl == "socks5h://127.0.0.1:1081"
       && c.services.mihomo.enable
       && c.systemd.services.mihomo-worker.serviceConfig.DynamicUser

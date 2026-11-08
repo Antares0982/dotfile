@@ -13,7 +13,27 @@ m = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(m)
 
 
+def check_service_home():
+    with patch("sys.platform", "linux"), patch.object(Path, "home", side_effect=RuntimeError("No home")):
+        service = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(service)
+        assert service.CLIENT == Path("/run/mihomo-client/connection.json")
+        assert service.LOCK == Path("/run/lock/mihomo-speed-test.lock")
+        with patch.object(service, "request", side_effect=[
+            {"proxies": {"JP": {"all": ["Japan 1"]}}},
+            {"providers": {"cn": {"ruleCount": 1}}},
+            {"providers": {"cn": {"ruleCount": 1}}},
+        ]):
+            service.ready()
+    with patch("sys.platform", "darwin"), patch.object(Path, "home", return_value=Path("/Users/tester")):
+        darwin = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(darwin)
+        assert darwin.CLIENT == Path("/Users/tester/Library/Application Support/mihomo/client/connection.json")
+        assert darwin.LOCK == Path("/Users/tester/Library/Application Support/mihomo/speed-test.lock")
+
+
 def check():
+    check_service_home()
     token = "a" * 32
     for action in ("status", "update", "restart"):
         assert m.valid_request({"id": token, "action": action}, token)
@@ -73,8 +93,8 @@ def check():
             def choose(name, node):
                 state[name] = node
                 return {"group": name, "node": node}
-            with patch.object(m, "select", choose), patch.object(m, "connection", return_value={"port": 1081}), \
-                 patch.object(m.subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout="ip=1.2.3.4\nloc=SG\n")):
+            with patch.object(m, "select", choose), patch.object(m, "connection", return_value={"test_port": 17901}), \
+                 patch.object(m.subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout="ip=1.2.3.4\nloc=SG\n")) as run:
                 try:
                     m.execute({"action": "select", "group": "JP", "node": "Japan 2"})
                 except ValueError:
@@ -82,7 +102,13 @@ def check():
                 else:
                     raise AssertionError("Wrong egress accepted")
                 assert state["JP"] == "Japan 1"
-    print("PASS: request validation, bandwidth ranking, cache and selection isolation")
+                assert state["BENCH"] == "Japan 2"
+                assert "http://127.0.0.1:17901" in run.call_args.args[0]
+                run.return_value = SimpleNamespace(returncode=0, stdout="ip=1.2.3.4\nloc=JP\n")
+                result = m.execute({"action": "select", "group": "JP", "node": "Japan 3"})
+                assert result["country"] == "JP" and state["JP"] == "Japan 3"
+                assert state["BENCH"] == "Japan 2" and state["SG"] == "Singapore 1"
+    print("PASS: home-less service readiness, Darwin paths, requests, bandwidth ranking, cache and selection isolation")
 
 
 if __name__ == "__main__":

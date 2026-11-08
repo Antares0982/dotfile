@@ -34,6 +34,6 @@ curl --noproxy '' --proxy http://127.0.0.1:1081 --max-time 20 https://www.cloudf
 ```
 
 沙箱若不能连接 localhost，使用 worker 返回的出口验证结果，不绕过沙箱。
-宿主 1081 同时支持 HTTP/SOCKS5，国内直连、其余 JP；1082 全局 JP；1083 直连。
+宿主 1081 同时支持 HTTP/SOCKS5，国内直连、其余 JP；1082 跟随 GLOBAL（RPi 默认 JP）；1083 直连。
 不直接编辑私有配置、不读取 API 密钥，也不直接运行 systemctl。
 请求通过客户端投递到 .agent/mihomo；不要手工拼接队列文件。

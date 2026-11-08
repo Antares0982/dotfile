@@ -16,7 +16,7 @@ import urllib.parse
 import urllib.request
 import uuid
 
-STATE = Path.home() / "Library/Application Support/mihomo"
+STATE = Path.home() / "Library/Application Support/mihomo" if sys.platform == "darwin" else None
 CLIENT = STATE / "client/connection.json" if sys.platform == "darwin" else Path("/run/mihomo-client/connection.json")
 LOCK = STATE / "speed-test.lock" if sys.platform == "darwin" else Path("/run/lock/mihomo-speed-test.lock")
 QUEUE = Path("/home/agent/agent_work/.agent/mihomo")
@@ -147,6 +147,24 @@ def measure(region, refresh=False):
         return result
 
 
+def probe_node(node):
+    with open(LOCK, "r+") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        previous = group("BENCH")["now"]
+        try:
+            select("BENCH", node)
+            check = subprocess.run([
+                "curl", "-q", "-fsS", "--noproxy", "", "--connect-timeout", "10", "--max-time", "30",
+                "--proxy", f"http://127.0.0.1:{connection()['test_port']}", "https://www.cloudflare.com/cdn-cgi/trace",
+            ], capture_output=True, text=True, timeout=35)
+            if check.returncode:
+                raise ValueError("Could not verify node egress")
+            return dict(line.split("=", 1) for line in check.stdout.splitlines() if "=" in line)
+        finally:
+            if previous in group("BENCH")["all"]:
+                select("BENCH", previous)
+
+
 def execute(value):
     action = value["action"]
     if action == "status":
@@ -157,13 +175,8 @@ def execute(value):
         previous = group(name)["now"]
         result = select(name, value["node"])
         try:
-            port = connection()["port"] + (3 if name == "SG" else 0)
-            check = subprocess.run([
-                "curl", "-q", "-fsS", "--noproxy", "", "--connect-timeout", "10", "--max-time", "30",
-                "--proxy", f"http://127.0.0.1:{port}", "https://www.cloudflare.com/cdn-cgi/trace",
-            ], capture_output=True, text=True, timeout=35)
-            trace = dict(line.split("=", 1) for line in check.stdout.splitlines() if "=" in line)
-            if check.returncode or trace.get("loc") != name or not trace.get("ip"):
+            trace = probe_node(value["node"])
+            if trace.get("loc") != name or not trace.get("ip"):
                 raise ValueError("Could not verify regional egress")
             return result | {"ip": trace["ip"], "country": trace["loc"]}
         except (OSError, ValueError, subprocess.TimeoutExpired):

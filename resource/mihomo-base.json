@@ -38,16 +38,6 @@
       }
     }
   },
-  "rule-providers": {
-    "cn-ip": {
-      "type": "http",
-      "behavior": "ipcidr",
-      "format": "mrs",
-      "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/cn.mrs",
-      "path": "./rules/cn-ip.mrs",
-      "interval": 86400
-    }
-  },
   "rules": [
     "DOMAIN,localhost,DIRECT",
     "DOMAIN-SUFFIX,lan,DIRECT",

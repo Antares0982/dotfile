@@ -20,6 +20,10 @@ in
     enable = true;
     port = 1081;
     singapore = true;
+    mobileRules = {
+      enable = true;
+      address = "192.168.0.2";
+    };
   };
   antares.proxy.enable = true;
   antares.proxy.socksUrl = "socks5h://127.0.0.1:1081";

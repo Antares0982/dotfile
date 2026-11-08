@@ -8,6 +8,24 @@
       && c.antares.mihomo.singapore
       && !c.antares.mihomo.lan
       && c.antares.mihomo.settings.mixed-port == 1081
+      &&
+        map (entry: entry.port) c.antares.mihomo.settings.listeners == [
+          1082
+          1083
+          17901
+        ]
+      && !(c.antares.mihomo.settings ? sub-rules)
+      && (builtins.head c.antares.mihomo.settings.listeners).proxy == "GLOBAL"
+      &&
+        (lib.findFirst (g: g.name == "GLOBAL") { } c.antares.mihomo.policy.proxy-groups).default-selected
+        == "SG"
+      &&
+        (lib.findFirst (g: g.name == "Telegram") { } c.antares.mihomo.policy.proxy-groups).proxies == [
+          "SG"
+          "JP"
+          "其他"
+          "全部节点"
+        ]
       && c.antares.mihomo.settings.bind-address == "127.0.0.1"
       && c.antares.mihomo.settings.external-controller == "0.0.0.0:17900"
       && lib.all (listener: listener.listen == "127.0.0.1") c.antares.mihomo.settings.listeners
