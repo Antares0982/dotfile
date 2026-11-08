@@ -49,10 +49,10 @@ in
     launchd.daemons.mihomo = {
       command = lib.escapeShellArgs [
         "${pkgs.python3}/bin/python3"
-        (toString ../resource/mihomo-darwin.py)
+        "${../resource/mihomo-darwin.py}"
         template
         config.age.secrets.mihomoSubscription.path
-        (toString ../resource/mihomo-prepare.py)
+        "${../resource/mihomo-prepare.py}"
         "${pkgs.mihomo}/bin/mihomo"
         "${tools}/bin/mihomoctl"
         (if cfg.dashboardLan then firewall else "")

@@ -31,6 +31,12 @@
       && lib.all (listener: listener.listen == "127.0.0.1") c.antares.mihomo.settings.listeners
       && c.launchd.daemons.mihomo.serviceConfig.RunAtLoad
       && c.launchd.daemons.mihomo.serviceConfig.KeepAlive
+      && lib.any (lib.hasSuffix "-mihomo-darwin.py") (
+        builtins.attrNames (builtins.getContext c.launchd.daemons.mihomo.command)
+      )
+      && lib.any (lib.hasSuffix "-mihomo-prepare.py") (
+        builtins.attrNames (builtins.getContext c.launchd.daemons.mihomo.command)
+      )
       && !(c.launchd.daemons ? xray)
       && c.age.secrets.mihomoSubscription.owner == "antares"
       && c.age.secrets.mihomoSubscription.group == "staff"

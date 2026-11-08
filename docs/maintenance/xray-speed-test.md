@@ -86,6 +86,11 @@ require `sudo darwin-rebuild switch --flake ./hosts/macbook#macbook`; preserve t
 previous system closure for rollback. `opencode` is temporarily omitted on Mac
 until its Darwin build is fixed.
 
+Keep launchd script paths in the system closure using Nix path interpolation.
+`toString` on a source path loses its dependency context; garbage collection can
+then remove the scripts while launchd still references them. Mac checks verify
+that both supervisor and preparation scripts retain their dependency context.
+
 Bandwidth tests use BENCH and port 17901 without touching JP or SG selections.
 They sample every candidate for up to three seconds, then the best three for
 five seconds each. Only successful final downloads enter the ranking. JSON
