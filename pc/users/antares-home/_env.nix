@@ -18,9 +18,6 @@ rec {
     HTTPS_PROXY = https_proxy;
     GITHUB_DIR = localFileDef.githubDir;
     SCRIPT_DIR = localFileDef.scriptDir;
-    XRAY_CONF_DIR = localFileDef.xrayConfDir;
-    XRAY_CONFIG_PATH = localFileDef.xrayConfPath;
-    XRAY_TEMPLATE = localFileDef.xrayConfTemplatePath;
     GPG_TTY = "$TTY";
     NIX_BUILD_SHELL = "${nix-zshell}/bin/nix-zshell";
     NIX_DOT_FILES = "${localFileDef.githubDir}/Nix";

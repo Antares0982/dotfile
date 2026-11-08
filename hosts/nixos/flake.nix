@@ -29,10 +29,6 @@
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    myXray = {
-      url = "github:Antares0982/rules-dat-xray-flake";
-      inputs.nixpkgs.follows = "nixpkgs-old";
-    };
     # antares-monitor's uv2nix python stack (follows kept to pin against this
     # host's nixpkgs so the venv build dedups with the rest of the system).
     pyproject-nix = {

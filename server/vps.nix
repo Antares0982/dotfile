@@ -1,13 +1,27 @@
 {
   config,
+  lib,
   pkgs,
   modulesPath,
   ...
 }:
+let
+  proxyEnv = lib.optionalAttrs config.antares.proxy.enable {
+    http_proxy = config.antares.proxy.httpUrl;
+    https_proxy = config.antares.proxy.httpUrl;
+    HTTP_PROXY = config.antares.proxy.httpUrl;
+    HTTPS_PROXY = config.antares.proxy.httpUrl;
+    all_proxy = config.antares.proxy.socksUrl;
+    ALL_PROXY = config.antares.proxy.socksUrl;
+    no_proxy = "localhost,127.0.0.1,::1";
+    NO_PROXY = "localhost,127.0.0.1,::1";
+  };
+in
 {
   imports = [
     (modulesPath + "/profiles/qemu-guest.nix")
-    ./xray-client.nix
+    ../modules/proxy.nix
+    ../modules/mihomo.nix
     ../common/nix.nix
     ../common/ssh.nix
     ../common/sudo.nix
@@ -15,6 +29,9 @@
     ../common/zsh.nix
     ../common/packages.nix
   ];
+
+  environment.variables = proxyEnv;
+  systemd.services.nix-daemon.environment = proxyEnv;
 
   boot = {
     loader.grub.enable = true;

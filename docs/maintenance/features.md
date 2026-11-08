@@ -72,9 +72,9 @@ integration as well as the upstream service.
 |---|---|
 | all seven hosts | `antares.starship.enable` ([settings](zsh.md#starship)) |
 | nixos, hk, rpi5 | `services.telegram-output-monitor-bot.enable`, `services.antares-rpc-client.enable`, `services.rabbitmq.enable` |
-| nixos, rpi5, macbook | `antares.mihomo.enable`, `antares.proxy.enable` |
+| nixos, hk, sz, gz, rpi5, macbook | `antares.mihomo.enable`, `antares.proxy.enable` |
 | rpi5 | `services.antares-runners.instances.<name>.enable`, `antares.agent.enable`, `antares.qq.enable`, `antares.gitServer.enable`, `services.ssh-probe.enable` |
-| hk | `antares.blog.enable`, `antares.blog.metrics.enable`, `antares.messaging.enable`, `mailserver.enable`, `services.mysql.enable`, `services.nginx.enable`, `antares.acme.enable`, `services.xray.enable` |
+| hk | `antares.blog.enable`, `antares.blog.metrics.enable`, `antares.messaging.enable`, `mailserver.enable`, `services.mysql.enable`, `services.nginx.enable`, `antares.acme.enable` |
 | nixos | `antares.desktop.enable`, `antares.wallpaper.enable`, `antares.rust.enable`, `antares.autostart.enable`, `antares.waitOnline.enable`, `services.mcp-nixos.enable` |
 | nixos | `services.pipewire.enable`, `hardware.bluetooth.enable`, `i18n.inputMethod.enable`, `services.samba.enable`, `programs.steam.enable`, `programs.ydotool.enable` |
 | nixos | `antares.gpuUnlock.enable` (RTX 3090 at `0000:01:00.0`, enabled by the host) |
@@ -100,10 +100,12 @@ resume. Kernel/driver updates also require a new hardware check.
 - QQ relay and QQ Codex require NapCat. Alice requires agent file exchange.
 - Web features require nginx; configured certificates require ACME.
 - Blog metrics require MySQL. The host ties MySQL backup activation to MySQL.
-- The local proxy environment requires Mihomo or Xray. Desktop autostart skips
-  legacy subscription updates when Xray is disabled.
+- The local proxy environment requires Mihomo. Its provider updates subscriptions.
+  Desktop autostart owns only repository updates and existing desktop housekeeping.
 - Mihomo shares routing configuration across NixOS and Darwin. Darwin owns
   its launchd supervisor and PF anchor; only its dashboard is reachable on LAN.
+  HK/SZ disable the WebUI with `antares.mihomo.dashboard = false` and keep all
+  proxy and API listeners on loopback.
 - Agent proxy actions require both agent and the corresponding proxy feature.
 - Remote broker endpoints and external application scripts remain external
   runtime dependencies; local service ordering does not establish ownership.

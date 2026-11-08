@@ -97,10 +97,6 @@
       && !(c.systemd.services ? antares-agent)
       && !(c.systemd.services ? antares-agent-relay)
       && !(c.systemd.services ? antares-agent-update)
-      && !(c.systemd.services ? xray-helper)
-      && !(c.systemd.paths ? xray-helper)
-      && !(c.systemd.services ? xray-speed-test)
-      && !(c.systemd.paths ? xray-speed-test)
       && !(c.systemd.generators ? antares-agent-mounts)
       && !(c.age.secrets ? antaresAgentEnv)
       && !(c.age.secrets ? agentRelayRabbitKey)
@@ -232,34 +228,18 @@
         == "/home/agent/agent_work/.agent/mihomo/requests"
       && c.age.secrets.mihomoSubscription.owner == "root"
       && c.age.secrets.mihomoSubscription.mode == "0400"
-      && !(c.systemd.services ? xray)
-      && !(c.systemd.services ? xray-sub)
-      && !(c.systemd.timers ? xray-switch)
-      && !(c.age.secrets ? xrayTemplateJson)
       && lib.elem "mihomo.service" c.systemd.services.antares-agent.after;
   }
   {
-    name = "xray-off";
+    name = "mihomo-off";
     module = { lib, ... }: {
-      antares.xray.enable = lib.mkForce false;
       antares.mihomo.enable = lib.mkForce false;
       antares.proxy.enable = lib.mkForce false;
     };
     check =
       c:
-      !(c.systemd.services ? xray)
-      && !(c.systemd.services ? xray-sub)
-      && !(c.systemd.services ? xray-switch)
-      && !(c.systemd.timers ? xray-switch)
-      && !(c.systemd.services ? xray-helper)
-      && !(c.systemd.paths ? xray-helper)
-      && !(c.systemd.services ? xray-speed-test)
-      && !(c.systemd.paths ? xray-speed-test)
-      && !(c.users.groups ? xray)
-      && !(c.age.secrets ? xraySubUrl)
-      && !(c.environment.variables ? http_proxy)
+      !(c.environment.variables ? http_proxy)
       && !(c.systemd.services.antares-agent.environment ? http_proxy)
-      && !(lib.elem "xray.service" c.systemd.services.antares-agent.after)
       && !(lib.elem "mihomo.service" c.systemd.services.antares-agent.after)
       && !(c.systemd.services ? mihomo)
       && !(c.systemd.services ? mihomo-config)
@@ -269,9 +249,8 @@
       && !(c.age.secrets ? mihomoSubscription);
   }
   {
-    name = "xray-dependency";
+    name = "mihomo-dependency";
     module = { lib, ... }: {
-      antares.xray.enable = lib.mkForce false;
       antares.mihomo.enable = lib.mkForce false;
     };
     check = c: true;
@@ -306,7 +285,6 @@
       antares = {
         agent.enable = lib.mkForce false;
         qq.enable = lib.mkForce false;
-        xray.enable = lib.mkForce false;
         mihomo.enable = lib.mkForce false;
         proxy.enable = lib.mkForce false;
         gitServer.enable = lib.mkForce false;

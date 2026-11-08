@@ -191,7 +191,6 @@ in
         "network-online.target"
         "codex-auth.service"
       ]
-      ++ lib.optional config.antares.xray.enable "xray.service"
       ++ lib.optional config.antares.mihomo.enable "mihomo.service";
       wants = [ "network-online.target" ];
       requires = [ "codex-auth.service" ];

@@ -3,7 +3,6 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    nixpkgs-old.url = "github:NixOS/nixpkgs/nixos-26.05";
 
     flake-compat.url = "github:edolstra/flake-compat";
 
@@ -16,10 +15,6 @@
       inputs = {
         nixpkgs.follows = "nixpkgs";
       };
-    };
-    myXray = {
-      url = "github:Antares0982/rules-dat-xray-flake";
-      inputs.nixpkgs.follows = "nixpkgs-old";
     };
     antares-monitor = {
       url = "github:antares0982/telegram-output-monitor-bot";

@@ -37,7 +37,6 @@
       && lib.any (lib.hasSuffix "-mihomo-prepare.py") (
         builtins.attrNames (builtins.getContext c.launchd.daemons.mihomo.command)
       )
-      && !(c.launchd.daemons ? xray)
       && c.age.secrets.mihomoSubscription.owner == "antares"
       && c.age.secrets.mihomoSubscription.group == "staff"
       && c.age.secrets.mihomoSubscription.mode == "0400"
@@ -52,8 +51,7 @@
     };
     check =
       c:
-      !(c.launchd.daemons ? xray)
-      && !(c.launchd.daemons ? mihomo)
+      !(c.launchd.daemons ? mihomo)
       && !(c.age.secrets ? mihomoSubscription)
       && !(c.launchd.daemons.nix-daemon.environment ? http_proxy)
       && !(c.launchd.daemons.nix-daemon.environment ? all_proxy);
@@ -88,7 +86,6 @@
   {
     name = "all-features-off";
     module = { lib, ... }: {
-      antares.xray.enable = lib.mkForce false;
       antares.mihomo.enable = lib.mkForce false;
       antares.proxy.enable = lib.mkForce false;
       antares.nixShell.enable = lib.mkForce false;
@@ -96,8 +93,7 @@
     };
     check =
       c:
-      !(c.launchd.daemons ? xray)
-      && !(c.launchd.daemons ? mihomo)
+      !(c.launchd.daemons ? mihomo)
       && !(c.age.secrets ? mihomoSubscription)
       && !(c.environment.variables ? NIX_BUILD_SHELL);
   }

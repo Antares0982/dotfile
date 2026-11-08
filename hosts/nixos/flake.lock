@@ -151,26 +151,6 @@
         "type": "github"
       }
     },
-    "myXray": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs-old"
-        ]
-      },
-      "locked": {
-        "lastModified": 1793461259,
-        "narHash": "sha256-IVU7+7lxNAtLRg+1sMTGHLeqf8lt3Vl0Ne3xFC9xSvk=",
-        "owner": "Antares0982",
-        "repo": "rules-dat-xray-flake",
-        "rev": "d3ddf69c4f014ca273b961929e3d34e93d7ea571",
-        "type": "github"
-      },
-      "original": {
-        "owner": "Antares0982",
-        "repo": "rules-dat-xray-flake",
-        "type": "github"
-      }
-    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1793341285,
@@ -430,7 +410,6 @@
         "antares-rpc-client": "antares-rpc-client",
         "home-manager": "home-manager",
         "mcp-nixos": "mcp-nixos",
-        "myXray": "myXray",
         "nixpkgs": "nixpkgs",
         "nixpkgs-old": "nixpkgs-old",
         "pull-all": "pull-all",

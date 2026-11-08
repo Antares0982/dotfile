@@ -18,14 +18,18 @@
     };
     proxy = {
       enable = true;
-      socksUrl = "socks5h://127.0.0.1:1080";
+      socksUrl = "socks5h://127.0.0.1:1081";
     };
   };
-  services.xray.enable = true;
+  antares.mihomo = {
+    enable = true;
+    singapore = true;
+    lan = false;
+    dashboard = false;
+    dashboardLan = false;
+  };
   _module.args = {
     l4d2-addons = inputs.l4d2-plugins.packages.${pkgs.stdenv.hostPlatform.system}.default;
-    myXray = inputs.myXray.packages.${pkgs.stdenv.hostPlatform.system}.default;
-    xray-sub = inputs.myXray.packages.${pkgs.stdenv.hostPlatform.system}.xray_sub;
   };
   system.stateVersion = "26.11";
 }

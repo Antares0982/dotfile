@@ -19,7 +19,7 @@
         MCP_NIXOS_HOST = "127.0.0.1";
         MCP_NIXOS_PORT = "61080";
         # Outbound queries to the NixOS search/elasticsearch APIs go through the
-        # local xray proxy, consistent with the rest of this host.
+        # local proxy proxy, consistent with the rest of this host.
         http_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
         https_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
         # Cache dir lives under the service's CacheDirectory.

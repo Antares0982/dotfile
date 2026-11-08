@@ -8,17 +8,13 @@
     };
     socksUrl = lib.mkOption {
       type = lib.types.str;
-      default = "socks5://127.0.0.1:1080";
+      default = "socks5h://127.0.0.1:1081";
     };
   };
   config.assertions = [
     {
-      assertion =
-        !config.antares.proxy.enable
-        || (config.antares.xray.enable or false)
-        || (config.antares.mihomo.enable or false)
-        || (config.services.xray.enable or false);
-      message = "The local proxy environment requires Xray or Mihomo; disable antares.proxy.enable for direct access.";
+      assertion = !config.antares.proxy.enable || (config.antares.mihomo.enable or false);
+      message = "The local proxy environment requires Mihomo; disable antares.proxy.enable for direct access.";
     }
   ];
 }

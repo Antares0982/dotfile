@@ -1,10 +1,8 @@
 {
   config,
   pkgs,
-  myXray,
   antares-rpc-client,
   pull-all,
-  xray-sub,
   ...
 }:
 {
@@ -23,10 +21,8 @@
     users.antares = import ./antares-home;
     extraSpecialArgs = {
       inherit
-        myXray
         antares-rpc-client
         pull-all
-        xray-sub
         ;
     };
   };

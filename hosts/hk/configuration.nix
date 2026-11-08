@@ -14,7 +14,13 @@ in
   };
   services.telegram-output-monitor-bot.enable = true;
   services.antares-rpc-client.enable = true;
-  services.xray.enable = true;
+  antares.mihomo = {
+    enable = true;
+    singapore = true;
+    lan = false;
+    dashboard = false;
+    dashboardLan = false;
+  };
   services.nginx.enable = true;
   antares.acme.enable = true;
   networking.firewall.allowedUDPPorts = [
@@ -58,7 +64,6 @@ in
     export PATH=$PATH:$HOME/scripts:$HOME/scripts/linux
   '';
   _module.args = {
-    myXray = inputs.myXray.packages.${system}.default;
     antares-rpc-client = inputs.antares-rpc-client.packages.${system}.default;
     visitor-badge = inputs.visitor-badge.packages.${system}.default;
     blog = inputs.blog;

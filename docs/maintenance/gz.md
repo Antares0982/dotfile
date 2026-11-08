@@ -2,8 +2,8 @@
 
 GZ will not be renewed. Keep its Nix configuration and lock as historical
 reference; routine deployment and input updates target SZ. GZ's agenix key is
-no longer authorized for current secrets. All eight files formerly available
-to GZ remain in use on SZ or other active hosts, including `xray-template-gz.age`.
+no longer authorized for current secrets. Formerly authorized encrypted files remain available for active consumers
+or PC-only recovery; obsolete proxy templates have no active consumers.
 See [secrets and identities](secrets.md) for the limits of recipient revocation
 and cleanup before releasing the server.
 
@@ -12,23 +12,20 @@ and cleanup before releasing the server.
 HK, GZ, and SZ import `server` for fail2ban, sysstat, and firewall activation.
 HK-specific hardware, accounts, packages, and service integrations live in
 `server/hk`; host-specific configuration lives in `server/gz` and `server/sz`.
-Both VPS hosts import `server/vps.nix` and `server/xray-client.nix`. GZ deploys
-`serverPassword` and its enabled Xray secrets with its dedicated
-`/etc/ssh/agenix` identity. The local SSH
+Both VPS hosts import `server/vps.nix`, which imports the shared Mihomo and proxy
+modules. The retained GZ declaration follows SZ but must not be deployed; its
+`/etc/ssh/agenix` identity has no current secret access. The local SSH
 alias `gz` uses `antares` and `~/.ssh/gz`; root SSH is disabled. Its disko layout
 targets `/dev/vda` with BIOS GRUB and ext4. Installation erases that disk;
 ordinary rebuilds do not repartition it.
 
-GZ uses `services.xray.enable` and `antares.proxy.enable`. Its native Xray
-service reads `/var/xray/config.json`; proxy variables cover login shells and
-the Nix daemon. All proxy listeners are loopback-only. `xs` selects nodes and
-restarts the system service through sudo. `sudo systemctl start xray-sub`
-updates subscriptions manually; a timer also runs after boot and daily.
-Updates retain the selected node when available, otherwise test Japan nodes
-before trying all nodes. Failed updates retain the previous configuration.
-GZ formerly decrypted `serverPassword.age`, `xraysub.age`, and `xray-template-gz.age`
-with its own agenix key; that recipient has now been removed.
-The GZ template is a snapshot of the PC template with loopback listeners.
+SZ uses `antares.mihomo.enable` and `antares.proxy.enable`. Mihomo supplies
+HTTP/SOCKS5 on 1081, GLOBAL on 1082, and DIRECT on 1083. All listeners and the
+authenticated control API are loopback-only, with no WebUI. Use `mihomoctl tui`
+for policy and node selection, `mihomoctl update` for subscription refresh, and
+`mihomo-speed-test JP` or `SG` for bandwidth measurements. Subscriptions refresh
+hourly and rule providers daily. Shells and the Nix daemon use 1081.
+See [proxy management](proxy.md) for routing and acceptance checks.
 
 ## Deployment
 

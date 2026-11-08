@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Live acceptance for the installed Mihomo service."""
 
+import argparse
 import importlib.util
 import json
 from pathlib import Path
@@ -40,7 +41,7 @@ def route(port, host, outbound):
         raise AssertionError(f"No active connection found for {host}")
 
 
-def check():
+def check(webui=True):
     client = m.connection()
     config = m.request("/configs")
     assert config["mode"] == "rule"
@@ -64,8 +65,18 @@ def check():
     assert {"category-ai-!cn", "telegram", "telegram-ip", "netflix", "netflix-ip", "youtube", "cn", "cn-ip"} <= rules.keys()
     assert all(r["ruleCount"] > 0 for r in rules.values())
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
-    with opener.open(client["api"] + "/ui/", timeout=10) as response:
-        assert b"MetaCubeXD" in response.read()
+    if webui:
+        with opener.open(client["api"] + "/ui/", timeout=10) as response:
+            assert b"MetaCubeXD" in response.read()
+    else:
+        request = urllib.request.Request(client["api"] + "/ui/",
+                                         headers={"Authorization": "Bearer " + client["secret"]})
+        try:
+            opener.open(request, timeout=10)
+        except urllib.error.HTTPError as error:
+            assert error.code == 404
+        else:
+            raise AssertionError("Unexpected WebUI on headless host")
     try:
         opener.open(client["api"] + "/proxies", timeout=10)
     except urllib.error.HTTPError as error:
@@ -95,8 +106,10 @@ def check():
     rejected = subprocess.run(["curl", "-q", "-fsS", "--max-time", "10", "--noproxy", "",
                                "--proxy", f"http://127.0.0.1:{client['port']}", "https://id6.me"], capture_output=True)
     assert rejected.returncode != 0, "Carrier authentication domain was not blocked"
-    print("PASS: protocols, regions, routing, rule providers, Web UI and API authentication")
+    print("PASS: protocols, regions, routing, rule providers, dashboard policy and API authentication")
 
 
 if __name__ == "__main__":
-    check()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--no-webui", action="store_true", help="expect no WebUI (HK/SZ)")
+    check(webui=not parser.parse_args().no_webui)

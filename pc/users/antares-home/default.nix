@@ -2,7 +2,6 @@
   config,
   pkgs,
   lib,
-  myXray,
   ...
 }:
 let
@@ -18,7 +17,6 @@ in
     ./niri.nix
     ./wait-online.nix
     ./xdg-mime.nix
-    ./xray.nix
     ./yazi.nix
   ];
   programs.home-manager.enable = true;

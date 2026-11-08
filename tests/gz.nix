@@ -4,6 +4,35 @@
 }:
 [
   {
+    name = "mihomo-headless";
+    module = { };
+    check =
+      c:
+      c.services.mihomo.enable
+      && c.services.mihomo.webui == null
+      && !(c.systemd.services.mihomo.environment ? SAFE_PATHS)
+      && c.antares.mihomo.singapore
+      && c.antares.mihomo.settings.mixed-port == 1081
+      && !c.antares.mihomo.settings.allow-lan
+      && c.antares.mihomo.settings.bind-address == "127.0.0.1"
+      && c.antares.mihomo.settings.external-controller == "127.0.0.1:17900"
+      && lib.all (entry: entry.listen == "127.0.0.1") c.antares.mihomo.settings.listeners
+      && lib.all (port: !(lib.elem port c.networking.firewall.allowedTCPPorts)) [
+        1081
+        1082
+        1083
+        17900
+        17901
+      ]
+      &&
+        (lib.findFirst (g: g.name == "GLOBAL") { } c.antares.mihomo.policy.proxy-groups).default-selected
+        == "SG"
+      && c.age.secrets.mihomoSubscription.owner == "root"
+      && c.age.secrets.mihomoSubscription.mode == "0400"
+      && lib.any (p: lib.getName p == "mihomo-tools") c.environment.systemPackages
+      && lib.any (p: lib.getName p == "clashtui") c.environment.systemPackages;
+  }
+  {
     name = "base";
     module = { };
     check =
@@ -37,9 +66,8 @@
           "l4d2-files-htpasswd"
           "l4d2-private"
           "l4d2-rcon"
+          "mihomoSubscription"
           "serverPassword"
-          "xraySubUrl"
-          "xrayTemplateJson"
         ]
       && c.age.identityPaths == [ "/etc/ssh/agenix" ]
       && c.users.users.antares.hashedPasswordFile == c.age.secrets.serverPassword.path
@@ -70,24 +98,14 @@
         ]
       && c.networking.firewall.allowedUDPPorts == [ 27015 ]
       && c.networking.firewall.allowedTCPPortRanges == [ ]
-      && c.services.xray.enable
-      && c.services.xray.settingsFile == "/var/xray/config.json"
-      && c.systemd.services.xray.serviceConfig.DynamicUser
-      && c.systemd.services.xray.serviceConfig.LoadCredential == "config.json:/var/xray/config.json"
-      && c.systemd.services.xray.unitConfig.ConditionPathExists == "/var/xray/config.json"
-      && c.systemd.services.xray-sub.serviceConfig.User == "antares"
-      && lib.hasInfix "/run/wrappers/bin" c.systemd.services.xray-sub.environment.PATH
-      && c.systemd.timers.xray-sub.timerConfig.OnCalendar == "daily"
-      && c.systemd.timers.xray-sub.timerConfig.Persistent
-      && c.age.secrets.xraySubUrl.owner == "antares"
-      && c.age.secrets.xraySubUrl.mode == "0400"
-      && c.age.secrets.xrayTemplateJson.mode == "0400"
-      && lib.hasSuffix "/xraysub.age" (toString c.age.secrets.xraySubUrl.file)
-      && lib.hasSuffix "/xray-template-gz.age" (toString c.age.secrets.xrayTemplateJson.file)
-      && lib.any (p: lib.getName p == "xs") c.environment.systemPackages
+      && c.services.mihomo.enable
+      && c.systemd.services.mihomo.serviceConfig.DynamicUser
+      && c.age.secrets.mihomoSubscription.owner == "root"
+      && c.age.secrets.mihomoSubscription.mode == "0400"
+      && lib.any (p: lib.getName p == "mihomo-tools") c.environment.systemPackages
       && c.environment.variables.http_proxy == "http://127.0.0.1:1081"
       && c.environment.variables.HTTPS_PROXY == c.environment.variables.http_proxy
-      && c.environment.variables.ALL_PROXY == "socks5h://127.0.0.1:1080"
+      && c.environment.variables.ALL_PROXY == "socks5h://127.0.0.1:1081"
       && c.environment.variables.NO_PROXY == "localhost,127.0.0.1,::1"
       && c.systemd.services.nix-daemon.environment.http_proxy == c.environment.variables.http_proxy
       && c.systemd.services.nix-daemon.environment.ALL_PROXY == c.environment.variables.ALL_PROXY;
@@ -97,23 +115,22 @@
     module = { lib, ... }: { antares.proxy.enable = lib.mkForce false; };
     check =
       c:
-      c.services.xray.enable
+      c.services.mihomo.enable
       && !(c.environment.variables ? http_proxy)
       && !(c.environment.variables ? ALL_PROXY)
       && !(c.systemd.services.nix-daemon.environment ? http_proxy)
       && !(c.systemd.services.nix-daemon.environment ? ALL_PROXY);
   }
   {
-    name = "xray-off";
+    name = "mihomo-off";
     module = { lib, ... }: {
-      services.xray.enable = lib.mkForce false;
+      antares.mihomo.enable = lib.mkForce false;
       antares.proxy.enable = lib.mkForce false;
     };
     check =
       c:
-      !(c.systemd.services ? xray)
-      && !(c.systemd.services ? xray-sub)
-      && !(c.systemd.timers ? xray-sub)
+      !(c.systemd.services ? mihomo)
+      && !(c.systemd.services ? mihomo-config)
       &&
         builtins.attrNames c.age.secrets == [
           "cloudflareEnv"
@@ -123,7 +140,7 @@
           "l4d2-rcon"
           "serverPassword"
         ]
-      && !(lib.any (p: lib.getName p == "xs") c.environment.systemPackages)
+      && !(lib.any (p: lib.getName p == "mihomo-tools") c.environment.systemPackages)
       && !(c.environment.variables ? http_proxy)
       && !(c.systemd.services.nix-daemon.environment ? http_proxy)
       && c.users.users ? antares;
@@ -239,9 +256,9 @@
     check = c: c.antares.l4d2.fileServer.enable && !c.services.nginx.enable;
   }
   {
-    name = "xray-dependency";
-    module = { lib, ... }: { services.xray.enable = lib.mkForce false; };
+    name = "mihomo-dependency";
+    module = { lib, ... }: { antares.mihomo.enable = lib.mkForce false; };
     valid = false;
-    check = c: !(c.systemd.services ? xray) && c.antares.proxy.enable;
+    check = c: !(c.systemd.services ? mihomo) && c.antares.proxy.enable;
   }
 ]

@@ -182,26 +182,6 @@
         "type": "github"
       }
     },
-    "myXray": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs-old"
-        ]
-      },
-      "locked": {
-        "lastModified": 1793292487,
-        "narHash": "sha256-P6gN04qkanJOLWTLMorOADjSEB5pDZ4XzalVpW2ynho=",
-        "owner": "Antares0982",
-        "repo": "rules-dat-xray-flake",
-        "rev": "4aec08b56ac5964a85debda92cfa78e438827de5",
-        "type": "github"
-      },
-      "original": {
-        "owner": "Antares0982",
-        "repo": "rules-dat-xray-flake",
-        "type": "github"
-      }
-    },
     "nixos-mailserver": {
       "inputs": {
         "blobs": "blobs",
@@ -242,22 +222,6 @@
       "original": {
         "owner": "NixOS",
         "ref": "nixos-unstable",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
-    "nixpkgs-old": {
-      "locked": {
-        "lastModified": 1793294725,
-        "narHash": "sha256-loLMnbbS4KhmG2ln9EY6f0YMNCA273Yx02oWYQ9IMeE=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "6f06d204d8f2d8761d9da78778745974a3216381",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "ref": "nixos-26.05",
         "repo": "nixpkgs",
         "type": "github"
       }
@@ -317,10 +281,8 @@
         "flake-compat": "flake-compat",
         "git-hooks": "git-hooks",
         "home-manager": "home-manager",
-        "myXray": "myXray",
         "nixos-mailserver": "nixos-mailserver",
         "nixpkgs": "nixpkgs",
-        "nixpkgs-old": "nixpkgs-old",
         "pyproject-build-systems": "pyproject-build-systems",
         "pyproject-nix": "pyproject-nix",
         "uv2nix": "uv2nix",

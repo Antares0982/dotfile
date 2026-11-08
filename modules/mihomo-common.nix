@@ -197,9 +197,14 @@ in
     };
     singapore = lib.mkEnableOption "Singapore nodes for service policy groups";
     lan = lib.mkEnableOption "proxy access from the home LAN";
+    dashboard = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Install the WebUI; the authenticated control API remains available.";
+    };
     dashboardLan = lib.mkOption {
       type = lib.types.bool;
-      default = cfg.lan;
+      default = cfg.dashboard && cfg.lan;
       description = "Listen for dashboard connections on IPv4 interfaces.";
     };
     dashboardOrigins = lib.mkOption {

@@ -20,26 +20,6 @@
         "type": "github"
       }
     },
-    "myXray": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs-old"
-        ]
-      },
-      "locked": {
-        "lastModified": 1793985428,
-        "narHash": "sha256-GajElcAU7AO/yPJ3/jZr5AcbSZOIyeh3HuR9WBK4/Hw=",
-        "owner": "Antares0982",
-        "repo": "rules-dat-xray-flake",
-        "rev": "db85a552b36ac4c9644a28f75ebff710c80efc16",
-        "type": "github"
-      },
-      "original": {
-        "owner": "Antares0982",
-        "repo": "rules-dat-xray-flake",
-        "type": "github"
-      }
-    },
     "nix-darwin": {
       "inputs": {
         "nixpkgs": [
@@ -77,22 +57,6 @@
         "type": "github"
       }
     },
-    "nixpkgs-old": {
-      "locked": {
-        "lastModified": 1793865203,
-        "narHash": "sha256-/cpdPHaySDIyCgZI6EWngiM6jK3YLUNzv1b7lTzy6Bk=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "c56a87d8e41ce69bd2af57eb35dcc117a9dfca33",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "ref": "nixos-26.05",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
     "renewal": {
       "inputs": {
         "nixpkgs": [
@@ -116,10 +80,8 @@
     "root": {
       "inputs": {
         "agenix": "agenix",
-        "myXray": "myXray",
         "nix-darwin": "nix-darwin",
         "nixpkgs": "nixpkgs",
-        "nixpkgs-old": "nixpkgs-old",
         "renewal": "renewal"
       }
     }

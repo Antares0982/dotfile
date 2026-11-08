@@ -9,7 +9,6 @@
   imports = [
     ../modules/proxy.nix
     ../modules/mihomo.nix
-    ./xray.nix
     ./autostart.nix
     ./wait-online.nix
     ./audio.nix

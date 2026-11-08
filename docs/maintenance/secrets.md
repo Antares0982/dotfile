@@ -18,14 +18,15 @@ the decrypted file is owned by `antares:staff`, mode 0400. Never copy a private
 identity between hosts. Reauthorize the subscription before replacing the Mac
 SSH host key.
 
-`xray-template-json.age` is retained for recovery with PC-only access. RPi's
-historical recipient authorization was removed after the Mihomo migration.
-Old ciphertext in Git history remains decryptable by the former recipients.
+`xraysub.age` keeps its historical filename and supplies Mihomo on PC, RPi,
+MacBook, HK and SZ. HK's recipient must be added before deploying Mihomo.
+`xray-template-json.age` and `xray-template-gz.age` are encrypted recovery
+archives with PC-only access; no host configuration consumes them. Disabling
+or retiring a proxy does not delete encrypted sources or persistent data.
 
 GZ will not be renewed: its key has been removed from the local rules and its
-eight formerly authorized files rekeyed. All eight still have active consumers;
-keep them, including `xray-template-gz.age`, which SZ uses through the shared
-Xray module. The historical GZ configuration does not grant recipient access.
+formerly authorized files rekeyed. The historical GZ configuration does not
+grant recipient access.
 Rekeying does not revoke old ciphertext or credentials already deployed to GZ.
 Before releasing the server, remove its deployed secrets and keys; rotate shared
 credentials at their providers and active consumers if old copies must be invalidated.

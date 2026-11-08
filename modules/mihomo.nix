@@ -67,7 +67,7 @@ in
     services.mihomo = {
       enable = true;
       package = apps.mihomo;
-      webui = apps.metacubexd;
+      webui = if cfg.dashboard then apps.metacubexd else null;
       configFile = "/var/lib/mihomo-config/config.json";
     };
     systemd.services.mihomo-config = {
@@ -92,7 +92,7 @@ in
         template
         config.age.secrets.mihomoSubscription.file
       ];
-      environment.SAFE_PATHS = "${apps.metacubexd}";
+      environment = lib.optionalAttrs cfg.dashboard { SAFE_PATHS = "${apps.metacubexd}"; };
       serviceConfig = {
         Restart = "on-failure";
         RestartSec = "3s";
@@ -183,7 +183,7 @@ in
         RemainAfterExit = true;
         User = "agent";
         Group = "agent";
-        ExecStart = "${pkgs.coreutils}/bin/install -D -m 0644 ${../resource/mihomo-skill/SKILL.md} /home/agent/agent_work/.agents/skills/xray-switch/SKILL.md";
+        ExecStart = "${pkgs.coreutils}/bin/install -D -m 0644 ${../resource/mihomo-skill/SKILL.md} /home/agent/agent_work/.agents/skills/mihomo/SKILL.md";
         NoNewPrivileges = true;
       };
     };

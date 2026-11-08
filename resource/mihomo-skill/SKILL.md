@@ -1,11 +1,11 @@
 ---
-name: xray-switch
+name: mihomo
 description: 管理 rpi5 的 Mihomo 代理，按请求测速、选择 JP 节点、更新订阅或重启。名称保留以兼容旧技能入口。
 ---
 
 # Mihomo 节点管理
 
-本机已迁移到 Mihomo；不再调用 xs、xray-speed-test 或旧 xray-trigger。
+本机使用 Mihomo，通过下列受限接口管理代理。
 唯一配置源是 Antares0982/dotfile 的 modules/mihomo.nix 和 resource/mihomo-tools.py。
 
 所有沙箱操作通过宿主 worker：

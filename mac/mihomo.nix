@@ -11,7 +11,7 @@ let
   template = pkgs.writeText "mihomo-base.json" (
     builtins.toJSON (
       cfg.settings
-      // {
+      // lib.optionalAttrs cfg.dashboard {
         external-ui = "${pkgs.metacubexd}";
       }
     )
@@ -58,10 +58,10 @@ in
         (if cfg.dashboardLan then firewall else "")
       ];
       environment = {
-        SAFE_PATHS = "${pkgs.metacubexd}";
         # Restart when encrypted subscription changes.
         MIHOMO_SUBSCRIPTION_SOURCE = toString config.age.secrets.mihomoSubscription.file;
-      };
+      }
+      // lib.optionalAttrs cfg.dashboard { SAFE_PATHS = "${pkgs.metacubexd}"; };
       serviceConfig = {
         RunAtLoad = true;
         KeepAlive = true;

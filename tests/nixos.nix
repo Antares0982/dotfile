@@ -31,7 +31,6 @@
           "全部节点"
         ]
       && c.antares.proxy.socksUrl == "socks5h://127.0.0.1:1081"
-      && !(c.home-manager.users.antares.systemd.user.services ? xray)
       && !(c.systemd.services ? mihomo-worker)
       && !(c.systemd.paths ? mihomo-worker);
   }
@@ -120,16 +119,17 @@
       && c.users.users ? antares;
   }
   {
-    name = "xray-off";
+    name = "mihomo-off";
     module = { lib, ... }: {
-      antares.xray.enable = lib.mkForce false;
       antares.mihomo.enable = lib.mkForce false;
       antares.proxy.enable = lib.mkForce false;
       antares.autostart.enable = lib.mkForce false;
     };
     check =
       c:
-      !(c.home-manager.users.antares.systemd.user.services ? xray)
+      !(c.systemd.services ? mihomo)
+      && !(c.systemd.services ? mihomo-config)
+      && !(c.age.secrets ? mihomoSubscription)
       && !(c.systemd.services ? mihomo-mobile-rules)
       && !(lib.hasInfix "18080" c.networking.firewall.extraCommands)
       && !(c.home-manager.users.antares.systemd.user.services ? autostart)
@@ -138,9 +138,8 @@
       && !(lib.any (p: p.from == 1080) c.networking.firewall.allowedTCPPortRanges);
   }
   {
-    name = "xray-dependency";
+    name = "mihomo-dependency";
     module = { lib, ... }: {
-      antares.xray.enable = lib.mkForce false;
       antares.mihomo.enable = lib.mkForce false;
     };
     check = c: true;
@@ -460,7 +459,6 @@
     module = { lib, ... }: {
       antares = {
         desktop.enable = lib.mkForce false;
-        xray.enable = lib.mkForce false;
         mihomo.enable = lib.mkForce false;
         proxy.enable = lib.mkForce false;
         autostart.enable = lib.mkForce false;

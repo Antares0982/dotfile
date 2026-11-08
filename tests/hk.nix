@@ -1,5 +1,34 @@
 { lib }: [
   {
+    name = "mihomo-headless";
+    module = { };
+    check =
+      c:
+      c.services.mihomo.enable
+      && c.services.mihomo.webui == null
+      && !(c.systemd.services.mihomo.environment ? SAFE_PATHS)
+      && c.antares.mihomo.singapore
+      && c.antares.mihomo.settings.mixed-port == 1081
+      && !c.antares.mihomo.settings.allow-lan
+      && c.antares.mihomo.settings.bind-address == "127.0.0.1"
+      && c.antares.mihomo.settings.external-controller == "127.0.0.1:17900"
+      && lib.all (entry: entry.listen == "127.0.0.1") c.antares.mihomo.settings.listeners
+      && lib.all (port: !(lib.elem port c.networking.firewall.allowedTCPPorts)) [
+        1081
+        1082
+        1083
+        17900
+        17901
+      ]
+      &&
+        (lib.findFirst (g: g.name == "GLOBAL") { } c.antares.mihomo.policy.proxy-groups).default-selected
+        == "SG"
+      && c.age.secrets.mihomoSubscription.owner == "root"
+      && c.age.secrets.mihomoSubscription.mode == "0400"
+      && lib.any (p: lib.getName p == "mihomo-tools") c.environment.systemPackages
+      && lib.any (p: lib.getName p == "clashtui") c.environment.systemPackages;
+  }
+  {
     name = "server-base";
     module = { };
     check =
@@ -26,9 +55,14 @@
       && c.users.users ? alice;
   }
   {
-    name = "xray-off";
-    module = { lib, ... }: { services.xray.enable = lib.mkForce false; };
-    check = c: !(c.systemd.services ? xray) && c.users.users ? alice;
+    name = "mihomo-off";
+    module = { lib, ... }: { antares.mihomo.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.systemd.services ? mihomo)
+      && !(c.systemd.services ? mihomo-config)
+      && !(c.age.secrets ? mihomoSubscription)
+      && c.users.users ? alice;
   }
   {
     name = "web-dependency";
@@ -211,7 +245,7 @@
       mailserver.enable = lib.mkForce false;
       services.mysql.enable = lib.mkForce false;
       services.nginx.enable = lib.mkForce false;
-      services.xray.enable = lib.mkForce false;
+      antares.mihomo.enable = lib.mkForce false;
       services.rabbitmq.enable = lib.mkForce false;
       services.telegram-output-monitor-bot.enable = lib.mkForce false;
       services.antares-rpc-client.enable = lib.mkForce false;

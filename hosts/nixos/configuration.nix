@@ -15,7 +15,6 @@ in
   services.telegram-output-monitor-bot.enable = true;
   antares.monitor.proxy = if config.antares.proxy.enable then config.antares.proxy.httpUrl else null;
   services.antares-rpc-client.enable = true;
-  antares.xray.enable = false;
   antares.mihomo = {
     enable = true;
     port = 1081;
@@ -57,8 +56,6 @@ in
       cudaSupport = true;
       cudaPackages = pkgs.cudaPackages;
     };
-    myXray = inputs.myXray.packages.${system}.default;
-    xray-sub = inputs.myXray.packages.${system}.xray_sub;
     antares-rpc-client = inputs.antares-rpc-client.packages.${system}.default;
     pull-all = inputs.pull-all.packages.${system}.default;
     rust-overlay = inputs.rust-overlay.overlays.default;

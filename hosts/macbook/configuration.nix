@@ -1,18 +1,8 @@
 {
-  config,
-  inputs,
-  pkgs,
-  ...
-}:
-let
-  system = pkgs.stdenv.hostPlatform.system;
-in
-{
   antares.starship = {
     enable = true;
     settings.palettes.host.color_os = "#ff5faf";
   };
-  antares.xray.enable = false;
   antares.mihomo = {
     enable = true;
     singapore = true;
@@ -25,7 +15,4 @@ in
   antares.nixShell.enable = true;
   antares.systemCompiler.enable = true;
   imports = [ ../../mac ];
-  _module.args = {
-    myXray = inputs.myXray.packages.${system}.default;
-  };
 }

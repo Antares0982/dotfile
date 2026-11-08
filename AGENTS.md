@@ -7,7 +7,7 @@ Multi-machine Nix configuration flake managing:
 - `nixos`: desktop PC (x86_64-linux, niri/Wayland, NVIDIA, home-manager)
 - `hk`: Hong Kong server (x86_64-linux, nginx/mail services)
 - `gz`: retiring Guangzhou VPS; configuration retained for historical reference
-- `sz`: Shenzhen VPS (x86_64-linux, UEFI, Xray and L4D2)
+- `sz`: Shenzhen VPS (x86_64-linux, UEFI, Mihomo and L4D2)
 - `rpi5`: Raspberry Pi 5 (aarch64-linux)
 - `wsl`: Windows Subsystem for Linux (x86_64-linux)
 - `macbook`: macOS (aarch64-darwin, nix-darwin)
@@ -53,17 +53,16 @@ Keep universal rules here and put new specialist details in the matching guide.
 | Build, switch, deploy, update flake inputs, or choose configuration checks | [Build and deployment](docs/maintenance/build.md) |
 | Add, disable, or migrate features; change module composition, options, dependencies, accounts, or feature tests | [Feature modules](docs/maintenance/features.md) |
 | Secrets, passwords, agenix recipients/identities, secret consumers, or installation key staging | [Secrets and identities](docs/maintenance/secrets.md) |
-| GZ/SZ hosts, SSH, disks, or Xray: `hosts/{gz,sz}/`, `server/{gz,sz}/`, `server/vps.nix`, `server/xray-client.nix`, `{gz,sz}.nix` | [GZ and SZ servers](docs/maintenance/gz.md) |
+| GZ/SZ hosts, SSH, or disks: `hosts/{gz,sz}/`, `server/{gz,sz}/`, `server/vps.nix`, `{gz,sz}.nix` | [GZ and SZ servers](docs/maintenance/gz.md) |
 | L4D2 server, addons, downloads, RCON, or related auth: `modules/l4d2*.nix`, `resource/l4d2/`, L4D2 scripts/secrets/options | [L4D2](docs/maintenance/l4d2.md); maintain plugin code and packaging in `$GITHUB_DIR/l4d2-plugins` first |
 | Wallpaper, we-layerd assets, period configs, or wallpaper checks | [PC wallpaper](docs/maintenance/wallpaper.md) |
-| Mihomo, proxy speed tests, `xs`, or RPi node management | [Proxy management](docs/maintenance/xray-speed-test.md) |
+| Mihomo, proxy speed tests, or RPi node management | [Proxy management](docs/maintenance/proxy.md) |
 | Zsh, prompts, shell environment, completion, or fzf integration | [Zsh](docs/maintenance/zsh.md) |
 
 ## Custom packages
 
 `packages/default.nix` is the explicit package entry point. Import it with
-`{ inherit pkgs; }`, adding `myXray` when selecting `xs`. Configure `xs` variants
-with `.override`. Package selection stays lazy so platform-specific packages
+`{ inherit pkgs; }`. Package selection stays lazy so platform-specific packages
 are evaluated only by their consumers. Do not add directory discovery or a
 second package registry.
 

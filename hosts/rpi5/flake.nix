@@ -3,7 +3,6 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    nixpkgs-old.url = "github:NixOS/nixpkgs/nixos-26.05";
 
     flake-compat.url = "github:edolstra/flake-compat";
     flake-utils.url = "github:numtide/flake-utils";
@@ -37,10 +36,6 @@
     qq-codex-agent = {
       url = "github:Antares0982/qq-codex-agent";
       flake = false;
-    };
-    myXray = {
-      url = "github:Antares0982/rules-dat-xray-flake";
-      inputs.nixpkgs.follows = "nixpkgs-old";
     };
     antares-monitor = {
       url = "github:antares0982/telegram-output-monitor-bot";

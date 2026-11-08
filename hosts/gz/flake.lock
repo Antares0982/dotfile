@@ -81,26 +81,6 @@
         "type": "github"
       }
     },
-    "myXray": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs-old"
-        ]
-      },
-      "locked": {
-        "lastModified": 1792766978,
-        "narHash": "sha256-LVr41MhPYpA+w7iFhPZVJVIUpDg2JxKdzz9CTVw/BVQ=",
-        "owner": "Antares0982",
-        "repo": "rules-dat-xray-flake",
-        "rev": "de1dee2f25a5660a5f102084aea3251fc3164931",
-        "type": "github"
-      },
-      "original": {
-        "owner": "Antares0982",
-        "repo": "rules-dat-xray-flake",
-        "type": "github"
-      }
-    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1792502884,
@@ -117,31 +97,13 @@
         "type": "github"
       }
     },
-    "nixpkgs-old": {
-      "locked": {
-        "lastModified": 1792615934,
-        "narHash": "sha256-MlvRfa1O5Cqc2/a+gG+l9TSuowEoCKCmrJ1d9oAVm0I=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "da6dc0e7b26060f2f71ce3ef7088fb56ee44fa36",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "ref": "nixos-26.05",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
     "root": {
       "inputs": {
         "agenix": "agenix",
         "disko": "disko",
         "home-manager": "home-manager",
         "l4d2-plugins": "l4d2-plugins",
-        "myXray": "myXray",
-        "nixpkgs": "nixpkgs",
-        "nixpkgs-old": "nixpkgs-old"
+        "nixpkgs": "nixpkgs"
       }
     }
   },

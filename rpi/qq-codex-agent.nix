@@ -170,7 +170,6 @@ in
         "napcat.service"
         "qq-codex-auth.service"
       ]
-      ++ lib.optional config.antares.xray.enable "xray.service"
       ++ lib.optional config.antares.mihomo.enable "mihomo.service";
       requires = [ "qq-codex-auth.service" ];
       restartTriggers = [

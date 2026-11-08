@@ -57,7 +57,6 @@ in
   antares.qq.relay.enable = true;
   antares.qq.enable = true;
   antares.qq.codex.enable = true;
-  antares.xray.enable = false;
   antares.mihomo = {
     enable = true;
     lan = true;
@@ -74,8 +73,6 @@ in
     export PATH=$PATH:$HOME/scripts:$HOME/scripts/linux
   '';
   _module.args = {
-    myXray = inputs.myXray.packages.${system}.default;
-    xray-sub = inputs.myXray.packages.${system}.xray_sub;
     antares-rpc-client = inputs.antares-rpc-client.packages.${system}.default;
     napcat = inputs.napcat-nix.packages.${system}.default;
   };

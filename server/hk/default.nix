@@ -5,7 +5,8 @@
     ./mysql.nix
     ./packages.nix
     ./user.nix
-    ./xrayService.nix
+    ../../modules/proxy.nix
+    ../../modules/mihomo.nix
     ../../common/env.nix
     ../../common/nix.nix
     ../../common/rabbitmq.nix

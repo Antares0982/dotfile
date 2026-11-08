@@ -1,11 +1,11 @@
 # Proxy management and speed tests
 
-## Mihomo on nixos, rpi5 and macbook
+## Shared Mihomo configuration
 
-These hosts use `antares.mihomo.enable`. The shared module owns the native
+PC, RPi, MacBook, HK and SZ use `antares.mihomo.enable`. The shared module owns the native
 Mihomo service, subscription secret, Web UI, management commands and optional
 RPi agent worker. Disable `antares.proxy.enable` when disabling the last proxy.
-SZ and the other Xray consumers retain the legacy tools described below.
+The retained GZ configuration uses the same modules, without deployment or secret access.
 
 | Port | Purpose |
 |---|---|
@@ -28,6 +28,13 @@ dashboard exposure independently of `lan`, which controls proxy listeners.
 `dashboardOrigins` declares additional Web UI origins. In the dashboard setup,
 use the API address without `/ui/` and the target host's `mihomoctl secret`.
 
+HK and SZ set `dashboard = false`, `dashboardLan = false`, and `lan = false`.
+They install no WebUI and bind every proxy listener and the authenticated API
+to `127.0.0.1`; no proxy ports are opened in their firewalls. CLI and TUI use
+that API locally as `antares`. HK retains its direct system environment; SZ
+exports proxy variables to shells and the Nix daemon, using 1081 for HTTP/SOCKS5.
+Use `python3 scripts/check-mihomo.py --no-webui` after eventual deployment.
+
 ```sh
 mihomoctl tui
 mihomoctl status
@@ -45,7 +52,7 @@ Nix owns ports and routing: edit `modules/mihomo-common.nix` and rebuild. Do not
 clashtui File profiles to replace the managed daemon configuration.
 
 Service groups are `Telegram`, `AI`, `Netflix`, `YouTube`, `国内` and `其他`.
-On PC/Mac/mobile, Telegram defaults to SG; AI, Netflix and YouTube follow `其他`,
+On PC/Mac/HK/SZ/mobile, Telegram defaults to SG; AI, Netflix and YouTube follow `其他`,
 which defaults to JP. `国内` defaults to DIRECT. RPi retains JP as its only
 dedicated region group. `singapore` enables the SG group, without adding a listener.
 Private networks always go DIRECT; advertisements and carrier authentication
@@ -56,7 +63,7 @@ rules through native listener targets.
 1082 follows the GLOBAL selector even in Rule mode. Select SG, JP or DIRECT in
 GLOBAL using the Web UI or TUI; 1081 keeps its service rules in Rule mode.
 Global mode also sends 1081 through GLOBAL. The shared config defaults GLOBAL
-to SG on PC/Mac/mobile and JP on RPi. Mihomo otherwise auto-generates GLOBAL
+to SG on PC/Mac/HK/SZ/mobile and JP on RPi. Mihomo otherwise auto-generates GLOBAL
 with DIRECT first. Saved selections override the configured default; existing
 devices that saved DIRECT must select the desired region once. Restarts and
 subscription updates retain that choice.
@@ -73,7 +80,7 @@ through DIRECT, then fetch missing rules through JP. Empty region groups reject
 connections. There is no automatic bandwidth-based selection timer.
 The API credential persists under `/var/lib/mihomo-config`; node/provider
 caches and selections use the native service's private state directory.
-Disabling the feature preserves these files and old Xray data for rollback.
+Disabling the feature preserves persistent files, including retired proxy data.
 
 On MacBook, `org.nixos.mihomo` supervises the core under launchd. The supervisor
 sets up PF and the application firewall before starting Mihomo as `antares`;
@@ -104,7 +111,7 @@ RPi agents use `mihomoctl --via-worker status/select/update/restart` and
 `mihomo-speed-test --via-worker --refresh JP`. A sandboxed dynamic-user worker
 reads fixed action requests under `.agent/mihomo`, with its API credential
 provided by systemd. The agent cannot read that credential or select outside JP.
-The existing `xray-switch` skill entry is updated for this protocol.
+The agent guide is installed at `.agents/skills/mihomo/SKILL.md`.
 
 Validation: `python3 resource/test_mihomo_tools.py`,
 `python3 resource/test_mihomo_darwin.py`,
@@ -156,106 +163,3 @@ Validate a generated override against public settings with
 `python3 resource/test_mihomo_mobile.py GENERATED_YAML PUBLIC_JSON` (with PyYAML), and run
 `bash scripts/check-configs.sh nixos rpi5`. After switching, fetch the URL from
 another LAN device and run the normal live proxy check.
-
-## Legacy Xray speed tests
-
-`xray-speed-test [FILTER]` measures nodes without selecting one or restarting
-Xray. `FILTER` is a case-sensitive literal filename substring, defaults to
-`XS_FILTER` or `Japan`, and can be empty to match all nodes. Use `-- FILTER` for
-filters starting with a dash. `XRAY_CONF_DIR` selects the parent of
-`subscriptions/` unless a host-specific Nix package override supplies it.
-
-```bash
-xray-speed-test --refresh -- Japan > results.json
-jq '.results[] | {file, mbps: (.bytes_per_second * 8 / 1000000)}' results.json
-```
-
-Each candidate receives a sequential quick download with a three-second request
-limit. The best three successful candidates receive sequential five-second final
-downloads. Only successful final samples enter the final ranking. Fewer than
-three quick successes means fewer final samples; failed finals are not replaced
-with quick-only candidates. Connections time out after two seconds. The default
-URL is Cloudflare's 100 MB download endpoint; `XS_TEST_URL` can override it for
-ordinary command-line use. A timed-out sample is accepted only after HTTP 200,
-positive downloaded bytes and at least one second of transfer time.
-
-Successful results are cached for 600 seconds below
-`$XDG_CACHE_HOME/xray-speed-test` (default `~/.cache/xray-speed-test`). The key
-includes the subscription directory, candidate names and content hashes, filter,
-URL and test parameters. `--refresh` bypasses reuse. Cached responses have
-`cached: true`; `wall_seconds` describes the original measurement. Legacy
-`speed_test.json` files are ignored. A per-cache-directory lock serializes tests
-across filters. Temporary configuration files and processes are cleaned up on
-normal completion and interruption; node configurations are never printed.
-
-The version-2 JSON includes `parameters`, `created_at`, `cached`, `quick`,
-`final`, `results` and `wall_seconds`. Samples contain `file`, `valid`,
-`wall_seconds`, and, when available, curl status, HTTP status, bytes, download
-seconds, time to first byte and bytes per second. Invalid samples include an
-`error`. Empty final results produce exit status 1 and an empty ranking; callers
-must check the exit status before selecting a node.
-
-`xs` uses this same command. Fresh measurements select the best final sample;
-cached calls cycle through the final ranking, containing at most three nodes.
-Its filter and Nix override interfaces remain unchanged. It still changes the
-active link and restarts Xray, so agents must not use it inside their sandbox.
-
-## RPi agent transport
-
-The agent's isolated network cannot directly probe node endpoints. On rpi5,
-`xray-speed-test.service` runs the same command outside that network namespace
-with `User=agent`, `Group=agent`, no new privileges, and read-only system files.
-It has no write permission to the Xray configuration. Both agent and Xray
-features must be enabled. No broadening of agent sandbox networking is needed.
-
-```bash
-xray-speed-test --via-worker --refresh -- Japan > results.json
-```
-
-The client atomically publishes a UUID-named JSON request under
-`/home/agent/agent_work/.agent/xray-speed-test/requests/`. The request has exactly
-`id` (32 lowercase hex characters), `filter` (string) and `refresh` (boolean).
-The worker claims it by renaming it into `processing/`, then atomically publishes
-`results/<id>.json` with the matching `id` and either `measurement` or `error`.
-Only complete requests wake the path unit. No command, path, URL or timeout is
-accepted from a request. Cloudflare and the packaged test parameters are fixed.
-
-The client prints a waiting message every ten seconds and uses a bounded wait
-based on candidate count plus startup, download and cleanup allowances. A timeout
-never authorizes switching or reusing another request's result. Requests and
-results are separate from the privileged `.agent/xray-trigger/` protocol. The
-worker serializes requests, resumes claimed work after interruption, and removes
-abandoned results older than a day when it next runs. Its cache lives below
-`.agent/xray-speed-test/cache/`. A request queued behind other work can time out;
-retry after the active test completes rather than starting competing probes.
-
-Clients can select from `results` and use the existing `switch:<filename>`
-trigger. The privileged switch helper
-rejects missing files, node symlinks, paths and `active.json`, atomically replaces
-the active symlink, and restores the previous link if restart fails. Successful
-restart does not prove external connectivity; clients must also check egress.
-
-## Validation and timing
-
-```bash
-python3 resource/test_xs.py
-python3 resource/test_xray_update.py
-bash scripts/check-configs.sh rpi5 nixos sz
-```
-
-The tests use local fake tools and do not switch production nodes. They cover
-ranking, cache invalidation, errors, interruption, transport and restart rollback.
-
-The pre-change RPi cache from 2026-10-20 contained 16 successful Japan samples,
-each taking approximately 10 seconds: about 160 seconds of downloads, excluding
-failed nodes and process startup. The new download budget for the same 16
-candidates is 63 seconds (16 × 3 + 3 × 5), about 61% less. This is a budget,
-not a measured end-to-end improvement or a guarantee of identical ranking.
-
-After deployment, force a worker run and record candidate count, per-stage
-`wall_seconds`, total wall time and downloaded bytes. Compare the final three
-against isolated ten-second reference probes using the same URL and nodes,
-without switching between measurements or probing concurrently. Complete one
-trigger-based switch and verify its link and external connectivity. This live
-acceptance requires deployment; package builds and mocked checks alone do not
-establish it.

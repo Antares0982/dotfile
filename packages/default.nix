@@ -1,7 +1,4 @@
-{
-  pkgs,
-  myXray ? null,
-}:
+{ pkgs }:
 {
   plangothic = pkgs.callPackage ./plangothic.nix { };
   nix-zshell = pkgs.callPackage ./nix-zshell.nix { };
@@ -11,7 +8,5 @@
   blender-mcp = pkgs.callPackage ./blender-mcp.nix { };
   steam-workshop-ts = pkgs.callPackage ./steam-workshop-ts.nix { };
   vtune = pkgs.callPackage ./vtune.nix { };
-  xray-speed-test = pkgs.callPackage ./xray-speed-test.nix { inherit myXray; };
-  xs = pkgs.callPackage ./xs.nix { inherit myXray; };
   mihomo-tools = pkgs.callPackage ./mihomo-tools.nix { };
 }

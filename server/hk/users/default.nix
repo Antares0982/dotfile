@@ -1,7 +1,6 @@
 {
   config,
   pkgs,
-  myXray,
   antares-rpc-client,
   ...
 }:
@@ -32,6 +31,6 @@ in
       alice = import ./alice;
     };
     backupFileExtension = "backup";
-    extraSpecialArgs = { inherit myXray antares-rpc-client; };
+    extraSpecialArgs = { inherit antares-rpc-client; };
   };
 }
