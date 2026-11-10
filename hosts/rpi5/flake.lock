@@ -292,11 +292,11 @@
     "qq-codex-agent": {
       "flake": false,
       "locked": {
-        "lastModified": 1793723024,
-        "narHash": "sha256-GMMKiIexBE2ONvP/6s8VqJKbXvsvPvTTJBfoZ58KrJg=",
+        "lastModified": 1794324023,
+        "narHash": "sha256-7zjTZWdTZAIr0nWOIvWQk36P9EQOKwRWJjKVWdcXdew=",
         "owner": "Antares0982",
         "repo": "qq-codex-agent",
-        "rev": "a5fc478764245add0ff898df28885cad72b4adf8",
+        "rev": "c3f18ba4efcfaead245c69e3c1d4cab84972b38a",
         "type": "github"
       },
       "original": {
@@ -340,8 +340,29 @@
         "pyproject-nix": "pyproject-nix",
         "qq-codex-agent": "qq-codex-agent",
         "renewal": "renewal",
+        "simple-moderation": "simple-moderation",
         "uv2nix": "uv2nix",
         "vscode-server": "vscode-server"
+      }
+    },
+    "simple-moderation": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794322796,
+        "narHash": "sha256-am6iwlqD6hx5k5KRnxtQIMtNCTrnB8NBVay1Sz12EVE=",
+        "owner": "Antares0982",
+        "repo": "simple-moderation",
+        "rev": "ee3ae4c8ee75d236e93450c17030c4bf6b5c39d6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Antares0982",
+        "repo": "simple-moderation",
+        "type": "github"
       }
     },
     "systems": {

@@ -33,6 +33,10 @@
         flake-utils.follows = "flake-utils";
       };
     };
+    simple-moderation = {
+      url = "github:Antares0982/simple-moderation";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     qq-codex-agent = {
       url = "github:Antares0982/qq-codex-agent";
       flake = false;

@@ -1,5 +1,30 @@
 { lib }: [
   {
+    name = "simple-moderation";
+    module = { };
+    check =
+      c:
+      c.services.simple-moderation.enable
+      && c.services.simple-moderation.host == "127.0.0.1"
+      && c.services.simple-moderation.port == 18765
+      && c.services.simple-moderation.apiKeyFile == c.age.secrets.simpleModerationKey.path
+      && c.age.secrets.simpleModerationKey.owner == "root"
+      && c.age.secrets.simpleModerationKey.mode == "0400"
+      && c.systemd.services.simple-moderation.serviceConfig.DynamicUser
+      && builtins.elem "deepseek-api-key:${c.age.secrets.simpleModerationKey.path}" c.systemd.services.simple-moderation.serviceConfig.LoadCredential
+      && builtins.elem "simple-moderation.service" c.systemd.services.qq-codex-agent.after
+      && !(builtins.elem 18765 c.networking.firewall.allowedTCPPorts);
+  }
+  {
+    name = "simple-moderation-off";
+    module = { lib, ... }: { services.simple-moderation.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.systemd.services ? simple-moderation)
+      && !(c.age.secrets ? simpleModerationKey)
+      && !(builtins.elem "simple-moderation.service" c.systemd.services.qq-codex-agent.after);
+  }
+  {
     name = "codex-auth";
     module = { };
     check =
@@ -169,6 +194,8 @@
       && !(c.systemd.services ? napcat)
       && !(c.systemd.services ? qq-napcat-relay)
       && !(c.systemd.services ? qq-codex-agent)
+      && !(c.systemd.services ? simple-moderation)
+      && !(c.age.secrets ? simpleModerationKey)
       && !(c.systemd.services ? qq-codex-auth)
       && !(c.systemd.services ? qq-codex-login)
       && !(c.system.activationScripts ? qqCodexRestart)
@@ -183,6 +210,8 @@
     check =
       c:
       !(c.systemd.services ? qq-codex-agent)
+      && !(c.systemd.services ? simple-moderation)
+      && !(c.age.secrets ? simpleModerationKey)
       && !(c.systemd.services ? qq-codex-auth)
       && !(c.systemd.services ? qq-codex-login)
       && !(c.age.secrets ? qqCodexGhToken)

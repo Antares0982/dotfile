@@ -23,6 +23,7 @@
     ./qq.nix
     ./qq-credentials.nix
     ./qq-relay.nix
+    ./simple-moderation.nix
     ./qq-codex-agent.nix
     ./codex-auth.nix
   ]

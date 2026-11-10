@@ -170,7 +170,9 @@ in
         "napcat.service"
         "qq-codex-auth.service"
       ]
-      ++ lib.optional config.antares.mihomo.enable "mihomo.service";
+      ++ lib.optional config.antares.mihomo.enable "mihomo.service"
+      ++ lib.optional config.services.simple-moderation.enable "simple-moderation.service";
+      wants = lib.optional config.services.simple-moderation.enable "simple-moderation.service";
       requires = [ "qq-codex-auth.service" ];
       restartTriggers = [
         config.age.secrets.qqRelayEnv.file

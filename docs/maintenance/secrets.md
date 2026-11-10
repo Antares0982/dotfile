@@ -103,3 +103,18 @@ preserves these directory permissions on the installed system.
 
 Run `bash scripts/check-install-files.sh EXTRA_FILES_ROOT` before installation.
 The copied tree root must also be 0755; keep its parent private (0700).
+
+## QQ image moderation
+
+RPi's `simple-moderation-key.age` contains only the DeepSeek API key and authorizes
+PC management plus RPi identities. Its dedicated feature owns the root-only agenix
+secret; the service receives it through systemd `LoadCredential`. QQ Codex does not
+mount the key. Encrypt the original key file directly without printing or staging
+plaintext, and validate decryption by exit status only.
+
+The existing encrypted QQ TOML sets the top-level `moderation_url` to
+`http://127.0.0.1:18765/moderate`. Keep all other parsed configuration unchanged.
+Publish both application repositories before updating their RPi flake inputs and
+switching on Pi. The moderation service follows QQ Codex enablement, binds only
+loopback, and opens no firewall port. After activation, check both services and
+submit a harmless image to the local endpoint without displaying credentials.
