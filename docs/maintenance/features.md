@@ -74,7 +74,7 @@ integration as well as the upstream service.
 | nixos, hk, rpi5 | `services.telegram-output-monitor-bot.enable`, `services.antares-rpc-client.enable`, `services.rabbitmq.enable` |
 | nixos, hk, sz, gz, rpi5, macbook | `antares.mihomo.enable`, `antares.proxy.enable` |
 | rpi5 | `services.antares-runners.instances.<name>.enable`, `antares.agent.enable`, `antares.qq.enable`, `antares.gitServer.enable`, `services.ssh-probe.enable` |
-| hk | `antares.blog.enable`, `antares.blog.metrics.enable`, `antares.messaging.enable`, `mailserver.enable`, `services.mysql.enable`, `services.nginx.enable`, `antares.acme.enable` |
+| hk | `antares.blog.enable`, `antares.blog.metrics.enable`, `antares.messaging.enable`, `mailserver.enable`, `services.mysql.enable`, `services.nginx.enable`, `services.forgejo.enable`, `antares.acme.enable` |
 | nixos | `antares.desktop.enable`, `antares.wallpaper.enable`, `antares.rust.enable`, `antares.autostart.enable`, `antares.waitOnline.enable`, `services.mcp-nixos.enable` |
 | nixos | `services.pipewire.enable`, `hardware.bluetooth.enable`, `i18n.inputMethod.enable`, `services.samba.enable`, `programs.steam.enable`, `programs.ydotool.enable` |
 | nixos | `antares.gpuUnlock.enable` (RTX 3090 at `0000:01:00.0`, enabled by the host) |
@@ -120,6 +120,16 @@ HK retains the explicit `couch.chr.fan` certificate and legacy UDP ports in its
 host configuration. Mail owns its certificates independently of the blog.
 Nginx virtual hosts use `acmeRoot = null` to retain Cloudflare DNS challenges.
 Historical database backups remain when blog metrics are disabled.
+
+HK Forgejo uses the locked nixpkgs LTS package, SQLite, and the dedicated
+`git:git` system account with home and state in `/var/lib/forgejo`.
+`git.chr.fan` requires login and disables registration. Nginx terminates HTTPS;
+Forgejo listens on `127.0.0.1:3000` and uses system OpenSSH on port 22.
+Upload Git SSH keys through Forgejo; the old direct-login key is removed.
+Disabling `services.forgejo.enable` removes its account, group, services,
+package and virtual host declarations, preserving all persistent data.
+The old `/home/git` repository is not migrated or automatically deleted.
+See [administrator setup](build.md#hk-forgejo) after the first deployment.
 
 RPi runners use the host flake's nixpkgs, independently of the Raspberry Pi
 system nixpkgs. Preserve existing unit names, users, homes, registration data,

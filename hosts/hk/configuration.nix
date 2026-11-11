@@ -22,6 +22,7 @@ in
     dashboardLan = false;
   };
   services.nginx.enable = true;
+  services.forgejo.enable = true;
   antares.acme.enable = true;
   networking.firewall.allowedUDPPorts = [
     53

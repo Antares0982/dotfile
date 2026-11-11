@@ -40,6 +40,61 @@
       && c.networking.firewall.enable;
   }
   {
+    name = "forgejo";
+    module = { };
+    check =
+      c:
+      c.systemd.services.forgejo.serviceConfig.User == "git"
+      && c.systemd.services.forgejo.serviceConfig.Group == "git"
+      && c.users.users.git.isSystemUser
+      && !c.users.users.git.isNormalUser
+      && c.users.users.git.home == "/var/lib/forgejo"
+      && c.users.users.git.group == "git"
+      && c.users.users.git.openssh.authorizedKeys.keys == [ ]
+      && c.users.users.git.hashedPasswordFile == null
+      && c.services.forgejo.database.type == "sqlite3"
+      && c.services.forgejo.settings.server.ROOT_URL == "https://git.chr.fan/"
+      && c.services.forgejo.settings.server.HTTP_ADDR == "127.0.0.1"
+      && c.services.forgejo.settings.server.LANDING_PAGE == "login"
+      && c.services.forgejo.settings.server.SSH_DOMAIN == "git.chr.fan"
+      && c.services.forgejo.settings.server.SSH_PORT == 22
+      && !c.services.forgejo.settings.server.START_SSH_SERVER
+      && c.services.forgejo.settings.service.DISABLE_REGISTRATION
+      && c.services.forgejo.settings.service.REQUIRE_SIGNIN_VIEW
+      && c.services.forgejo.settings.session.COOKIE_SECURE
+      && !(lib.elem 3000 c.networking.firewall.allowedTCPPorts)
+      && c.services.nginx.virtualHosts."git.chr.fan".forceSSL
+      && c.services.nginx.virtualHosts."git.chr.fan".locations."/".proxyPass == "http://127.0.0.1:3000"
+      && c.security.acme.certs ? "git.chr.fan";
+  }
+  {
+    name = "forgejo-off";
+    module = { lib, ... }: { services.forgejo.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.systemd.services ? forgejo)
+      && !(c.systemd.services ? forgejo-secrets)
+      && !(c.users.users ? git)
+      && !(c.users.groups ? git)
+      && !(c.services.nginx.virtualHosts ? "git.chr.fan")
+      && !(c.security.acme.certs ? "git.chr.fan")
+      && !(lib.any (p: lib.getName p == "forgejo-lts") c.environment.systemPackages)
+      && c.users.users ? antares
+      && c.users.users ? alice
+      && c.services.nginx.enable
+      && c.services.openssh.enable;
+  }
+  {
+    name = "forgejo-web-dependency";
+    module = { lib, ... }: {
+      antares.messaging.enable = lib.mkForce false;
+      antares.blog.enable = lib.mkForce false;
+      services.nginx.enable = lib.mkForce false;
+    };
+    check = c: true;
+    valid = false;
+  }
+  {
     name = "monitor-off";
     module = { lib, ... }: { services.telegram-output-monitor-bot.enable = lib.mkForce false; };
     check =
@@ -195,6 +250,7 @@
     module = { lib, ... }: {
       antares.messaging.enable = lib.mkForce false;
       antares.blog.enable = lib.mkForce false;
+      services.forgejo.enable = lib.mkForce false;
       services.nginx.enable = lib.mkForce false;
     };
     check =
@@ -240,6 +296,7 @@
     module = { lib, ... }: {
       antares.blog.enable = lib.mkForce false;
       antares.messaging.enable = lib.mkForce false;
+      services.forgejo.enable = lib.mkForce false;
       antares.acme.enable = lib.mkForce false;
       security.acme.certs = lib.mkForce { };
       mailserver.enable = lib.mkForce false;
@@ -253,6 +310,8 @@
     check =
       c:
       c.users.users ? alice
+      && !(c.users.users ? git)
+      && !(c.users.groups ? git)
       &&
         builtins.attrNames c.age.secrets == [
           "password"

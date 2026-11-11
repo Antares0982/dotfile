@@ -20,6 +20,7 @@
     ./alice.nix
     ./rabbitmq.nix
     ./web.nix
+    ./forgejo.nix
     ../../modules/acme.nix
     ./blog.nix
     ./site-metrics.nix

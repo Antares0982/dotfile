@@ -34,6 +34,9 @@ sudo nixos-rebuild switch --flake ./hosts/wsl#wsl
 
 # Deploy SZ with its dedicated key
 nixos-rebuild switch --flake ./hosts/sz#sz --target-host sz --sudo --option builders ''
+
+# Deploy HK
+nixos-rebuild switch --flake ./hosts/hk#hk --target-host hk --sudo --option builders ''
 ```
 
 **macOS** (nix-darwin):
@@ -58,3 +61,30 @@ Checks cover individual shutdown, shared resources, invalid dependencies, and
 complete business-feature shutdown. They do not decrypt secrets or activate
 configurations. Continue to build only on matching platforms or explicitly
 configured remote builders.
+
+## HK Forgejo
+
+After the first deployment, create the administrator once over SSH on HK.
+Check for an existing account before running the creation command; subsequent
+deployments preserve accounts and passwords.
+
+```bash
+sudo -H -u git forgejo --work-path /var/lib/forgejo \
+  --config /var/lib/forgejo/custom/conf/app.ini admin user list --admin
+sudo sh -c 'umask 077; sudo -H -u git forgejo --work-path /var/lib/forgejo \
+  --config /var/lib/forgejo/custom/conf/app.ini admin user create \
+  --username Antares0982 --email antares0982@gmail.com --admin \
+  --random-password --random-password-length 32 --must-change-password \
+  > /root/forgejo-initial-admin.txt'
+```
+
+Read the initial credentials with
+`ssh hk 'sudo cat /root/forgejo-initial-admin.txt'`, then sign in at
+<https://git.chr.fan> and change the password. Remove the initial credential
+file after changing it. Never put credentials in Git, the Nix store, or
+systemd unit arguments. Forgejo generates its application secrets at runtime.
+
+Validate HTTPS and the login requirement, then test clone and push over both
+HTTPS and SSH using a temporary account and repository. Confirm existing web,
+mail and administrative SSH services still work. No mail integration, runner
+or scheduled backup is configured; persistent state is `/var/lib/forgejo`.
