@@ -292,11 +292,11 @@
     "qq-codex-agent": {
       "flake": false,
       "locked": {
-        "lastModified": 1794324023,
-        "narHash": "sha256-7zjTZWdTZAIr0nWOIvWQk36P9EQOKwRWJjKVWdcXdew=",
+        "lastModified": 1794489674,
+        "narHash": "sha256-nSfMCvaIEZgmN0JyLjgDLaVhH9dFjatYTuZt875A43o=",
         "owner": "Antares0982",
         "repo": "qq-codex-agent",
-        "rev": "c3f18ba4efcfaead245c69e3c1d4cab84972b38a",
+        "rev": "b0ad6b2b0d866c27a0aab2b2210cbc8842c1c4fd",
         "type": "github"
       },
       "original": {
@@ -352,11 +352,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794322796,
-        "narHash": "sha256-am6iwlqD6hx5k5KRnxtQIMtNCTrnB8NBVay1Sz12EVE=",
+        "lastModified": 1794491654,
+        "narHash": "sha256-lvxgRU4FUTz0rpfoCf1KKTKJY1mnIDh/uTB73ASA0io=",
         "owner": "Antares0982",
         "repo": "simple-moderation",
-        "rev": "ee3ae4c8ee75d236e93450c17030c4bf6b5c39d6",
+        "rev": "e0ca6a89868749d446fbb2e0dc3b0f85eb7c60fd",
         "type": "github"
       },
       "original": {
