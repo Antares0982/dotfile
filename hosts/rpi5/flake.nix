@@ -27,7 +27,7 @@
       inputs.flake-parts.follows = "flake-parts";
     };
     napcat-nix = {
-      url = "github:Antares0982/napcat.nix";
+      url = "github:Antares0982/napcat.nix/ddeb30e659ef9e45c702def65feb36c6bfa22f9c";
       inputs = {
         nixpkgs.follows = "nixpkgs";
         flake-utils.follows = "flake-utils";
