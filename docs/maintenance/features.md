@@ -8,14 +8,15 @@
 point. Each host explicitly imports its role modules, selects features, and
 provides host-specific package arguments through `_module.args`.
 
-`systemMap.nix` constructs NixOS systems and selects the Raspberry Pi builder
-when required. Its `specialArgs` are `inputs`, `currentDevice`, and `agenix`.
-It imports platform modules, Home Manager, and agenix; feature activation and
-business package selection belong to host or feature modules.
+Each NixOS host flake constructs its system directly and explicitly lists its
+platform modules, Cachix, agenix, and Home Manager where used. RPi uses the
+Raspberry Pi builder; the other NixOS hosts use `nixpkgs.lib.nixosSystem`.
+Their `specialArgs` remain `inputs`, `currentDevice`, and `agenix`. Feature
+activation and business package selection belong to host or feature modules.
 
-The macbook flake uses `nix-darwin.lib.darwinSystem` directly. WSL keeps its
-existing flake and `configuration.nix` dispatch path and is outside this
-refactoring.
+The macbook flake uses `nix-darwin.lib.darwinSystem` directly. WSL constructs its
+system in its own flake while retaining the root `configuration.nix` dispatch
+path; its feature composition remains outside the feature refactoring.
 
 Use `inputs` for upstream module imports. `_module.args` is for ordinary
 package dependencies, never for choosing imports. Imports stay static;

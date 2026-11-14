@@ -76,11 +76,24 @@
   # Shared code lives at the repo root. The whole repo is copied to the store
   # as one source path, so `import ../../<file>` reaches it directly — no
   # `shared` path input needed.
-  outputs = inputs: {
-    nixosConfigurations.nixos =
-      (import ../../systemMap.nix inputs (import ../../pc.nix)).extendModules
-        {
-          modules = [ ./configuration.nix ];
+  outputs =
+    inputs:
+    let
+      currentDevice = import ../../pc.nix;
+    in
+    {
+      nixosConfigurations.nixos = inputs.nixpkgs.lib.nixosSystem {
+        inherit (currentDevice) system;
+        specialArgs = {
+          inherit inputs currentDevice;
+          inherit (inputs) agenix;
         };
-  };
+        modules = [
+          ../../common/cachix.nix
+          inputs.agenix.nixosModules.default
+          inputs.home-manager.nixosModules.home-manager
+          ./configuration.nix
+        ];
+      };
+    };
 }

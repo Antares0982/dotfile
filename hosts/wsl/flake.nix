@@ -23,7 +23,24 @@
     };
   };
 
-  outputs = inputs: {
-    nixosConfigurations.wsl = import ../../systemMap.nix inputs (import ../../wsl.nix);
-  };
+  outputs =
+    inputs:
+    let
+      currentDevice = import ../../wsl.nix;
+    in
+    {
+      nixosConfigurations.wsl = inputs.nixpkgs.lib.nixosSystem {
+        inherit (currentDevice) system;
+        specialArgs = {
+          inherit inputs currentDevice;
+          inherit (inputs) agenix;
+        };
+        modules = [
+          ../../common/cachix.nix
+          inputs.agenix.nixosModules.default
+          ../../configuration.nix
+          inputs.wsl.nixosModules.wsl
+        ];
+      };
+    };
 }

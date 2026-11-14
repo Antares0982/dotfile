@@ -78,9 +78,24 @@
     };
   };
 
-  outputs = inputs: {
-    nixosConfigurations.hk = (import ../../systemMap.nix inputs (import ../../hk.nix)).extendModules {
-      modules = [ ./configuration.nix ];
+  outputs =
+    inputs:
+    let
+      currentDevice = import ../../hk.nix;
+    in
+    {
+      nixosConfigurations.hk = inputs.nixpkgs.lib.nixosSystem {
+        inherit (currentDevice) system;
+        specialArgs = {
+          inherit inputs currentDevice;
+          inherit (inputs) agenix;
+        };
+        modules = [
+          ../../common/cachix.nix
+          inputs.agenix.nixosModules.default
+          inputs.home-manager.nixosModules.home-manager
+          ./configuration.nix
+        ];
+      };
     };
-  };
 }

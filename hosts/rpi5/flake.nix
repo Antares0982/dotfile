@@ -75,11 +75,25 @@
     };
   };
 
-  outputs = inputs: {
-    nixosConfigurations.rpi5 =
-      (import ../../systemMap.nix inputs (import ../../rpi5.nix)).extendModules
-        {
-          modules = [ ./configuration.nix ];
+  outputs =
+    inputs:
+    let
+      currentDevice = import ../../rpi5.nix;
+    in
+    {
+      nixosConfigurations.rpi5 = inputs.nixos-raspberrypi.lib.nixosSystem {
+        inherit (currentDevice) system;
+        specialArgs = {
+          inherit inputs currentDevice;
+          inherit (inputs) agenix;
         };
-  };
+        modules = [
+          ../../common/cachix.nix
+          inputs.agenix.nixosModules.default
+          inputs.nixos-raspberrypi.nixosModules.raspberry-pi-5.base
+          inputs.nixos-raspberrypi.nixosModules.raspberry-pi-5.bluetooth
+          ./configuration.nix
+        ];
+      };
+    };
 }

@@ -23,12 +23,24 @@
     };
   };
 
-  outputs = inputs: {
-    nixosConfigurations.gz = (import ../../systemMap.nix inputs (import ../../gz.nix)).extendModules {
-      modules = [
-        inputs.disko.nixosModules.disko
-        ./configuration.nix
-      ];
+  outputs =
+    inputs:
+    let
+      currentDevice = import ../../gz.nix;
+    in
+    {
+      nixosConfigurations.gz = inputs.nixpkgs.lib.nixosSystem {
+        inherit (currentDevice) system;
+        specialArgs = {
+          inherit inputs currentDevice;
+          inherit (inputs) agenix;
+        };
+        modules = [
+          ../../common/cachix.nix
+          inputs.agenix.nixosModules.default
+          inputs.disko.nixosModules.disko
+          ./configuration.nix
+        ];
+      };
     };
-  };
 }
