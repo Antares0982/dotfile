@@ -10,19 +10,16 @@ let
 in
 {
   nixpkgs.config.allowUnfree = true;
+  documentation.doc.enable = false;
   environment.systemPackages =
     with pkgs;
     [
       bat
       cachix
-      clang-tools
-      cmake
       delta
       fd
       file
       find-nix-gc-roots
-      gcc
-      gdb
       gh
       git
       gnupg
@@ -32,7 +29,6 @@ in
       neovim
       net-tools
       nixfmt
-      nix-prefetch-scripts
       p7zip
       python3
       ripgrep

@@ -12,6 +12,9 @@ in
   imports = [ ../common/packages.nix ];
   environment.systemPackages = with pkgs; [
     clang-tools
+    cmake
+    gcc
+    gdb
     nix-output-monitor
     pinentry-curses
     renewal

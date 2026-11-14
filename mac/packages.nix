@@ -9,8 +9,11 @@ let
 in
 {
   environment.systemPackages = with pkgs; [
+    clang-tools
     codex
     cmake
+    gcc
+    gdb
     renewal
   ];
 }

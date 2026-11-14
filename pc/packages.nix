@@ -20,10 +20,14 @@ in
     blender
     blender-mcp
     cheat
+    clang-tools
+    cmake
     codex
     # discord
     element-desktop
     ffmpeg
+    gcc
+    gdb
     gdu
     google-chrome
     haruna

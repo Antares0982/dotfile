@@ -13,7 +13,10 @@ in
   imports = [ ../common/packages.nix ];
   environment.systemPackages = with pkgs; [
     cheat
+    cmake
     codex
+    gcc
+    gdb
     imagemagick
     nix-output-monitor
     renewal
