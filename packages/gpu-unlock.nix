@@ -19,9 +19,9 @@ let
     url = "https://download.nvidia.com/XFree86/NVIDIA-kernel-module-source/NVIDIA-kernel-module-source-610.43.03.tar.xz";
     hash = "sha256-fhGJI8eiPtw2EU1jJzpG4+BOmvmGlaQiA+esLf6fwdw=";
   };
-  nvidiaUtils = fetchurl {
-    url = "https://archive.cachyos.org/archive/cachyos-v3/nvidia-utils-610.43.03-1-x86_64_v3.pkg.tar.zst";
-    hash = "sha256-4X58ku7/oXiw/h9A6xekcJX4/Dzkp3vxFc9b1aTfhuk=";
+  nvidiaInstaller = fetchurl {
+    url = "https://download.nvidia.com/XFree86/Linux-x86_64/610.43.03/NVIDIA-Linux-x86_64-610.43.03-no-compat32.run";
+    hash = "sha256-4IRFHbcwpt8p09dPZVdJxNI248lF99lLUgXoQxj+L5A=";
   };
   firmware = stdenv.mkDerivation {
     pname = "gpu-unlock-firmware";
@@ -32,12 +32,40 @@ let
       python3
       zstd
     ];
+    postPatch = ''
+      substituteInPlace firmware/NOTICE.md \
+        --replace-fail '610.43.03 package in `artifacts-610.43.03.json`.' \
+          '610.43.03 official installer, with hashes from `artifacts-610.43.03.json`.' \
+        --replace-fail "that package's complete" "the installer's complete" \
+        --replace-fail '`usr/share/licenses/nvidia-utils/LICENSE`' '`LICENSE`'
+    '';
     buildPhase = ''
       runHook preBuild
-      mkdir inputs
-      ln -s ${nvidiaSource} inputs/${nvidiaSource.name}
-      ln -s ${nvidiaUtils} inputs/${nvidiaUtils.name}
-      make firmware INPUTS="$PWD/inputs" ASSETS="$PWD/assets"
+      sh ${nvidiaInstaller} --extract-only --target installer
+      PYTHONPATH=firmware python3 - <<'PY'
+      import json
+      from pathlib import Path
+      import generate_v67 as v67
+
+      manifest = json.loads(v67.MANIFEST.read_text())
+      assets = Path("assets")
+      assets.mkdir()
+      for name, data, expected in (
+          ("gsp_ga10x.bin", Path("installer/firmware/gsp_ga10x.bin").read_bytes(), v67.GSP_SHA256),
+          ("NVIDIA-LICENSE", Path("installer/LICENSE").read_bytes(),
+           manifest["source_artifacts"][2]["notice"]["sha256"]),
+          (manifest["generated_payload"]["filename"], v67.build_payload(), v67.PAYLOAD_SHA256),
+          (v67.AD102_PAYLOAD_NAME, v67.build_ad102_payload(), v67.AD102_PAYLOAD_SHA256),
+      ):
+          if v67.sha256(data) != expected:
+              raise ValueError(f"SHA-256 mismatch: {name}")
+          (assets / name).write_bytes(data)
+      PY
+      mkdir assets.src
+      tar -xf ${nvidiaSource} -C assets.src
+      sourceDir="$PWD/assets.src/NVIDIA-kernel-module-source-610.43.03"
+      python3 firmware/extract_boot_assets.py "$sourceDir" "$PWD/assets"
+      python3 firmware/extract_boot_assets.py "$sourceDir" "$PWD/assets" --chip ad102
       runHook postBuild
     '';
     doCheck = true;
