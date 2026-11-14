@@ -24,7 +24,8 @@ let
   run =
     case:
     let
-      evaluated = system.extendModules { modules = [ case.module ]; };
+      evaluated =
+        if case.module == { } then system else system.extendModules { modules = [ case.module ]; };
       checked = case.check evaluated.config;
       valid = lib.all (entry: entry.assertion) evaluated.config.assertions;
     in
