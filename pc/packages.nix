@@ -52,7 +52,6 @@ in
     typora
     umu-launcher
     unar
-    vscode.fhs
     xarchiver
   ];
 }
