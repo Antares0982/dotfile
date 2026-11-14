@@ -19,6 +19,7 @@ in
       cmake
       delta
       fd
+      file
       find-nix-gc-roots
       gcc
       gdb
