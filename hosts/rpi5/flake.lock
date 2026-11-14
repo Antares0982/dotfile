@@ -342,8 +342,7 @@
         "qq-codex-agent": "qq-codex-agent",
         "renewal": "renewal",
         "simple-moderation": "simple-moderation",
-        "uv2nix": "uv2nix",
-        "vscode-server": "vscode-server"
+        "uv2nix": "uv2nix"
       }
     },
     "simple-moderation": {
@@ -401,26 +400,6 @@
       "original": {
         "owner": "pyproject-nix",
         "repo": "uv2nix",
-        "type": "github"
-      }
-    },
-    "vscode-server": {
-      "inputs": {
-        "flake-parts": [
-          "flake-parts"
-        ]
-      },
-      "locked": {
-        "lastModified": 1794081290,
-        "narHash": "sha256-vJCjuYXp06XZ9rufttvv/W3mkzQzefYxEvmmsZfUmvw=",
-        "owner": "nix-community",
-        "repo": "nixos-vscode-server",
-        "rev": "e8aac40ed8d76486859741b1608badeca3475943",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nix-community",
-        "repo": "nixos-vscode-server",
         "type": "github"
       }
     }

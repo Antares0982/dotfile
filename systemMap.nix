@@ -23,7 +23,6 @@ builder {
     inputs.wsl.nixosModules.wsl
   ]
   ++ lib.optionals currentDevice.rpi [
-    inputs.vscode-server.nixosModules.default
     inputs.nixos-raspberrypi.nixosModules.raspberry-pi-5.base
     inputs.nixos-raspberrypi.nixosModules.raspberry-pi-5.bluetooth
   ];

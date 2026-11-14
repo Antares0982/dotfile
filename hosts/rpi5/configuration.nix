@@ -76,5 +76,4 @@ in
     antares-rpc-client = inputs.antares-rpc-client.packages.${system}.default;
     napcat = inputs.napcat-nix.packages.${system}.default;
   };
-  services.vscode-server.enableFHS = true;
 }

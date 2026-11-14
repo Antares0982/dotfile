@@ -21,11 +21,6 @@
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    vscode-server = {
-      url = "github:nix-community/nixos-vscode-server";
-      # upstream only exposes a `flake-parts` input now
-      inputs.flake-parts.follows = "flake-parts";
-    };
     napcat-nix = {
       url = "github:Antares0982/napcat.nix/ddeb30e659ef9e45c702def65feb36c6bfa22f9c";
       inputs = {
