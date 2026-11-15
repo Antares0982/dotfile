@@ -10,7 +10,7 @@
     };
     blacklistedKernelModules = [ "nouveau" ];
     initrd.kernelModules = [ ];
-    kernelPackages = pkgs.linuxPackagesFor (pkgs.linux_zen);
+    kernelPackages = pkgs.linuxPackagesFor (pkgs.linux_latest);
     # kernelPackages = pkgs.linuxPackages_latest;
     kernelModules = [
       "kvm-intel"
