@@ -134,5 +134,4 @@ See [administrator setup](build.md#hk-forgejo) after the first deployment.
 
 RPi runners use the host flake's nixpkgs, independently of the Raspberry Pi
 system nixpkgs. Preserve existing unit names, users, homes, registration data,
-and package sources. Keep `indexed = true` for SSRJSON even when reducing its
-instance count to one.
+and package sources.

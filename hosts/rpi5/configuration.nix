@@ -27,28 +27,6 @@ in
       (import ../../common/users.nix { inherit (config.age) secrets; }).commonUserAuthorizedKey
     ];
   };
-  services.antares-runners.instances.ssrjson = {
-    enable = true;
-    user = "ssrjsonrunner";
-    serviceName = "ssrjson-runner";
-    count = 10;
-    indexed = true;
-    package = runnerPackage;
-    proxy = if config.antares.proxy.enable then config.antares.proxy.httpUrl else null;
-    authorizedKeys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDOMS7+EqU5j6TmQrQyg/9TG4oPfnR1J13B6jvmnqdI0 antares@alyr.dev"
-    ];
-  };
-  services.antares-runners.instances.nixdev = {
-    enable = true;
-    user = "ssrjsonnixdev";
-    serviceName = "ssrjson-nixdev-runner";
-    package = runnerPackage;
-    proxy = if config.antares.proxy.enable then config.antares.proxy.httpUrl else null;
-    authorizedKeys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDOMS7+EqU5j6TmQrQyg/9TG4oPfnR1J13B6jvmnqdI0 antares@alyr.dev"
-    ];
-  };
   services.telegram-output-monitor-bot.enable = true;
   antares.monitor.proxy = if config.antares.proxy.enable then config.antares.proxy.httpUrl else null;
   services.antares-rpc-client.enable = true;
