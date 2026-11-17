@@ -34,6 +34,8 @@ $line_break$character"""
 
 palette = 'host'
 
+scan_timeout = 300
+
 [palettes.host]
 color_os = '#00af00'
 color_fg0 = '#fbf1c7'
