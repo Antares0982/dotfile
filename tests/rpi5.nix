@@ -148,6 +148,8 @@
     check =
       c:
       c.services.qq-codex-agent.configFile == c.age.secrets.qqCodexAllowlist.path
+      && builtins.elem "sysinit-reactivation.target" c.systemd.services.qq-codex-agent.partOf
+      && builtins.elem "sysinit-reactivation.target" c.systemd.services.qq-codex-agent.after
       && c.services.qq-codex-agent.allowlistFile == null
       && c.age.secrets.qqCodexAllowlist.owner == "qq-codex-agent"
       && c.age.secrets.qqCodexAllowlist.mode == "0400"
@@ -184,7 +186,6 @@
       && !(c.age.secrets ? simpleModerationKey)
       && !(c.systemd.services ? qq-codex-auth)
       && !(c.systemd.services ? qq-codex-login)
-      && !(c.system.activationScripts ? qqCodexRestart)
       && !(c.age.secrets ? qqRelayEnv)
       && !(c.age.secrets ? qqCodexGhToken)
       && !(c.age.secrets ? l4d2-rcon)
