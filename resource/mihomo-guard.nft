@@ -1,0 +1,34 @@
+# Preserve active service identities on reload.
+add table inet mihomo_guard
+add set inet mihomo_guard core { typeof meta skuid; }
+add chain inet mihomo_guard egress { type filter hook postrouting priority filter; policy drop; }
+add chain inet mihomo_guard ingress { type filter hook input priority filter - 1; policy drop; }
+flush chain inet mihomo_guard egress
+flush chain inet mihomo_guard ingress
+table inet mihomo_guard {
+  chain egress {
+    oifname { "lo", "mihomo0" } accept
+    meta skuid @core accept
+    meta l4proto { tcp, udp } th dport 53 counter drop
+    ip daddr 192.168.0.0/24 accept
+    ip daddr 224.0.0.0/4 ip protocol igmp accept
+    ip daddr { 224.0.0.251, 239.255.255.250 } udp dport { 5353, 1900 } accept
+    ip6 daddr fe80::/10 accept
+    ip6 hoplimit 255 icmpv6 type { nd-neighbor-advert, nd-neighbor-solicit } accept
+    ip6 daddr ff02::/16 meta l4proto ipv6-icmp accept
+    ip6 daddr { ff02::fb, ff02::c } udp dport { 5353, 1900 } accept
+    udp sport 68 udp dport 67 accept
+    udp sport 546 udp dport 547 accept
+    counter drop
+  }
+  chain ingress {
+    iifname { "lo", "mihomo0" } accept
+    ct state { established, related } accept
+    ip saddr 192.168.0.0/24 accept
+    ip6 saddr fe80::/10 accept
+    ip6 hoplimit 255 icmpv6 type { nd-router-advert, nd-neighbor-advert, nd-neighbor-solicit } accept
+    udp sport 67 udp dport 68 accept
+    udp sport 547 udp dport 546 accept
+    counter drop
+  }
+}

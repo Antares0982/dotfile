@@ -24,7 +24,11 @@ def write_json(path, value):
 def prepare(template, subscription):
     os.umask(0o077)
     darwin = sys.platform == "darwin"
-    directory = Path.home() / "Library/Application Support/mihomo" if darwin else Path("/var/lib/mihomo-config")
+    directory = (
+        Path.home() / "Library/Application Support/mihomo"
+        if darwin
+        else Path("/var/lib/mihomo-config")
+    )
     directory.mkdir(mode=0o700, parents=True, exist_ok=True)
     url = Path(subscription).read_text().strip()
     parsed = urlsplit(url)
@@ -34,6 +38,9 @@ def prepare(template, subscription):
     if not secret_file.exists():
         secret_file.write_text(secrets.token_urlsafe(32))
     config = json.loads(Path(template).read_text())
+    if config.get("tun", {}).get("enable"):
+        dns = config["dns"]
+        dns["nameserver-policy"][parsed.hostname] = dns["proxy-server-nameserver"]
     config["secret"] = secret_file.read_text().strip()
     config["proxy-providers"]["subscription"]["url"] = url
     write_json(directory / "config.json", config)
@@ -43,10 +50,15 @@ def prepare(template, subscription):
     if os.geteuid() == 0:
         os.chown(client_dir, user.pw_uid, user.pw_gid)
     client_file = client_dir / "connection.json"
-    write_json(client_file, {
-        "api": "http://127.0.0.1:17900", "secret": config["secret"],
-        "port": config["mixed-port"], "test_port": 17901,
-    })
+    write_json(
+        client_file,
+        {
+            "api": "http://127.0.0.1:17900",
+            "secret": config["secret"],
+            "port": config["mixed-port"],
+            "test_port": 17901,
+        },
+    )
     if os.geteuid() == 0:
         os.chown(client_file, user.pw_uid, user.pw_gid)
     if darwin:

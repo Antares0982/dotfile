@@ -11,7 +11,15 @@ let
   tools = (import ../packages { pkgs = apps; }).mihomo-tools;
   queue = "/home/agent/agent_work/.agent/mihomo";
   agent = config.antares.agent.enable or false;
-  template = pkgs.writeText "mihomo-base.json" (builtins.toJSON cfg.settings);
+  settings = lib.recursiveUpdate cfg.settings (
+    lib.optionalAttrs cfg.tun.enable (
+      (builtins.fromJSON (builtins.readFile ../resource/mihomo-tun.json))
+      // {
+        rules = cfg.settings.rules ++ [ "MATCH,REJECT" ];
+      }
+    )
+  );
+  template = pkgs.writeText "mihomo-base.json" (builtins.toJSON settings);
   mobile = cfg.mobileRules;
   mobilePolicy = (pkgs.formats.yaml { }).generate "clashmi-pc-routing.yaml" (
     cfg.policy
@@ -28,7 +36,10 @@ let
   ];
 in
 {
-  imports = [ ./mihomo-common.nix ];
+  imports = [
+    ./mihomo-common.nix
+    ./mihomo-tun.nix
+  ];
   options.antares.mihomo.mobileRules = {
     enable = lib.mkEnableOption "serve public Clash Mi routing overrides on the home LAN";
     address = lib.mkOption {

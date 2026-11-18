@@ -11,28 +11,53 @@ import time
 import urllib.error
 import urllib.request
 
-spec = importlib.util.spec_from_file_location("mihomo", Path(__file__).resolve().parents[1] / "resource/mihomo-tools.py")
+spec = importlib.util.spec_from_file_location(
+    "mihomo", Path(__file__).resolve().parents[1] / "resource/mihomo-tools.py"
+)
 m = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(m)
 
 
-def trace(proxy=None):
-    command = ["curl", "-q", "-fsS", "--connect-timeout", "10", "--max-time", "30", "--noproxy", "" if proxy else "*"]
+def trace(proxy=None, family=None):
+    command = [
+        "curl",
+        "-q",
+        "-fsS",
+        "--connect-timeout",
+        "10",
+        "--max-time",
+        "30",
+        "--noproxy",
+        "" if proxy else "*",
+    ]
     if proxy:
         command += ["--proxy", proxy]
-    result = subprocess.run(command + ["https://www.cloudflare.com/cdn-cgi/trace"], capture_output=True, text=True)
+    if family:
+        command.append(f"-{family}")
+    result = subprocess.run(
+        command + ["https://www.cloudflare.com/cdn-cgi/trace"],
+        capture_output=True,
+        text=True,
+    )
     assert result.returncode == 0, f"curl failed: {proxy} ({result.returncode})"
-    return dict(line.split("=", 1) for line in result.stdout.splitlines() if "=" in line)
+    return dict(
+        line.split("=", 1) for line in result.stdout.splitlines() if "=" in line
+    )
 
 
 def route(port, host, outbound):
     with socket.create_connection(("127.0.0.1", port), timeout=15) as sock:
         source_port = sock.getsockname()[1]
-        sock.sendall(f"CONNECT {host}:443 HTTP/1.1\r\nHost: {host}:443\r\n\r\n".encode())
+        sock.sendall(
+            f"CONNECT {host}:443 HTTP/1.1\r\nHost: {host}:443\r\n\r\n".encode()
+        )
         assert b"200" in sock.recv(4096), f"CONNECT failed for {host}"
         for _ in range(150):
-            matches = [c for c in m.request("/connections")["connections"]
-                       if str(c["metadata"]["sourcePort"]) == str(source_port)]
+            matches = [
+                c
+                for c in m.request("/connections")["connections"]
+                if str(c["metadata"]["sourcePort"]) == str(source_port)
+            ]
             if matches:
                 assert outbound in matches[0]["chains"], (host, matches[0]["chains"])
                 print(f"{port} {host}: {matches[0]['rule']} -> {outbound}")
@@ -54,23 +79,38 @@ def check(webui=True):
         result = m.probe_node(proxies[name]["now"])
         assert result["loc"] == name, (name, result["loc"])
         print(f"{name} selected node: {result['loc']}")
+
     def outbound(name):
         seen = set()
-        while name not in (*regions, "DIRECT", "REJECT") and "now" in proxies.get(name, {}):
+        while name not in (*regions, "DIRECT", "REJECT") and "now" in proxies.get(
+            name, {}
+        ):
             assert name not in seen, "Cyclic policy group"
             seen.add(name)
             name = proxies[name]["now"]
         return name
+
     rules = m.request("/providers/rules")["providers"]
-    assert {"category-ai-!cn", "telegram", "telegram-ip", "netflix", "netflix-ip", "youtube", "cn", "cn-ip"} <= rules.keys()
+    assert {
+        "category-ai-!cn",
+        "telegram",
+        "telegram-ip",
+        "netflix",
+        "netflix-ip",
+        "youtube",
+        "cn",
+        "cn-ip",
+    } <= rules.keys()
     assert all(r["ruleCount"] > 0 for r in rules.values())
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
     if webui:
         with opener.open(client["api"] + "/ui/", timeout=10) as response:
             assert b"MetaCubeXD" in response.read()
     else:
-        request = urllib.request.Request(client["api"] + "/ui/",
-                                         headers={"Authorization": "Bearer " + client["secret"]})
+        request = urllib.request.Request(
+            client["api"] + "/ui/",
+            headers={"Authorization": "Bearer " + client["secret"]},
+        )
         try:
             opener.open(request, timeout=10)
         except urllib.error.HTTPError as error:
@@ -84,12 +124,21 @@ def check(webui=True):
     else:
         raise AssertionError("Missing API authentication")
     countries = {name: name for name in regions}
-    countries["DIRECT"] = trace()["loc"]
+    tun = config.get("tun", {}).get("enable", False)
+    direct = client["port"] + 2
+    if tun:
+        route(direct, "www.cloudflare.com", "DIRECT")
+    countries["DIRECT"] = trace(f"http://127.0.0.1:{direct}" if tun else None)["loc"]
     for offset, target in enumerate([outbound("其他"), outbound("GLOBAL"), "DIRECT"]):
         if target not in countries:
             countries[target] = m.probe_node(target)["loc"]
         country = countries[target]
         port = client["port"] + offset
+        if tun and offset == 0:
+            for family in (4, 6):
+                assert trace(family=family)["loc"] == country, (
+                    f"Unexpected IPv{family} TUN egress"
+                )
         for protocol in ("http", "socks5h"):
             result = trace(f"{protocol}://127.0.0.1:{port}")
             assert result["loc"] == country, (port, result["loc"], country)
@@ -102,14 +151,33 @@ def check(webui=True):
     route(client["port"], "149.154.167.51", outbound("Telegram"))
     route(client["port"] + 1, "www.baidu.com", outbound("GLOBAL"))
     with socket.socket() as sock:
-        assert sock.connect_ex(("127.0.0.1", client["port"] + 3)) != 0, "Retired port still listening"
-    rejected = subprocess.run(["curl", "-q", "-fsS", "--max-time", "10", "--noproxy", "",
-                               "--proxy", f"http://127.0.0.1:{client['port']}", "https://id6.me"], capture_output=True)
+        assert sock.connect_ex(("127.0.0.1", client["port"] + 3)) != 0, (
+            "Retired port still listening"
+        )
+    rejected = subprocess.run(
+        [
+            "curl",
+            "-q",
+            "-fsS",
+            "--max-time",
+            "10",
+            "--noproxy",
+            "",
+            "--proxy",
+            f"http://127.0.0.1:{client['port']}",
+            "https://id6.me",
+        ],
+        capture_output=True,
+    )
     assert rejected.returncode != 0, "Carrier authentication domain was not blocked"
-    print("PASS: protocols, regions, routing, rule providers, dashboard policy and API authentication")
+    print(
+        "PASS: protocols, regions, routing, rule providers, dashboard policy and API authentication"
+    )
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--no-webui", action="store_true", help="expect no WebUI (HK/SZ)")
+    parser.add_argument(
+        "--no-webui", action="store_true", help="expect no WebUI (HK/SZ)"
+    )
     check(webui=not parser.parse_args().no_webui)

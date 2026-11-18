@@ -17,6 +17,7 @@ in
   services.antares-rpc-client.enable = true;
   antares.mihomo = {
     enable = true;
+    tun.enable = true;
     port = 1081;
     singapore = true;
     mobileRules = {

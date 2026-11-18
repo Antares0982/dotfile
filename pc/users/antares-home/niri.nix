@@ -17,6 +17,9 @@ let
     qbittorrent = "${pkgs.qbittorrent}/bin/qbittorrent";
     gdbus = "${pkgs.glib}/bin/gdbus";
   };
+  tun = osConfig.antares.mihomo.enable && osConfig.antares.mihomo.tun.enable;
+  qbitCommand = "${pkgs.python3}/bin/python3 ${qbit}";
+  qbitEnvironment = "QBIT_DIRECT_PORT=${toString (osConfig.antares.mihomo.port + 2)}";
   session = {
     After = [ "graphical-session.target" ];
     PartOf = [ "graphical-session.target" ];
@@ -97,14 +100,29 @@ in
         };
         Install.WantedBy = [ "graphical-session.target" ];
       };
+      qbittorrent-proxy = lib.mkIf tun {
+        Unit = session // {
+          Description = "Configure the BitTorrent direct listener";
+          Before = [ "qbittorrent.service" ];
+        };
+        Service = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          Environment = qbitEnvironment;
+          ExecStart = "${qbitCommand} --set-proxy";
+          ExecStop = "${qbitCommand} --restore-proxy";
+        };
+        Install.WantedBy = [ "graphical-session.target" ];
+      };
       qbittorrent = {
         Unit = session // {
           Description = "qBittorrent tray";
-          Wants = [ "waybar.service" ];
+          Wants = [ "waybar.service" ] ++ lib.optional tun "qbittorrent-proxy.service";
           After = session.After ++ [ "waybar.service" ];
         };
         Service = {
-          ExecStart = "${pkgs.python3}/bin/python3 ${qbit}";
+          ExecStart = qbitCommand;
+          Environment = lib.mkIf tun qbitEnvironment;
           Restart = "on-failure";
           RestartSec = 5;
           TimeoutStopSec = 120;

@@ -206,6 +206,15 @@ def main():
             assert parsed["Preferences"]["General\\SystrayEnabled"] == "true"
             if "Other" in text:
                 assert "Other=unchanged" in updated
+        path.write_text(original + "\n[Network]\nProxy\\Type=HTTP\nKeep=true\n")
+        qbit.save_config(path, 1083)
+        qbit.save_config(path, 1083)
+        assert qbit.parse_config(path.read_text())["Network"][r"Proxy\Port"] == "1083"
+        path.write_text(path.read_text().replace("Keep=true", "Keep=changed"))
+        qbit.save_config(path, restore_only=True)
+        restored = qbit.parse_config(path.read_text())
+        assert dict(restored["Network"]) == {r"Proxy\Type": "HTTP", "Keep": "changed"}
+        assert r"Session\ProxyPeerConnections" not in restored["BitTorrent"]
         path.write_text("broken configuration")
         try:
             qbit.save_config(path)

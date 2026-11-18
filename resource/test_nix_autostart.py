@@ -23,7 +23,11 @@ def check():
         pull.write_text('#!/bin/sh\ntouch "$HOME/pulled"\n')
         pull.chmod(0o700)
         env = {**os.environ, "HOME": str(home), "PULL_ALL": str(pull)}
-        subprocess.run(["bash", str(Path(__file__).with_name("nix-autostart.sh"))], env=env, check=True)
+        subprocess.run(
+            ["bash", str(Path(__file__).with_name("nix-autostart.sh"))],
+            env=env,
+            check=True,
+        )
         assert (home / "pulled").exists()
         assert (copy / "Preferences").read_text() == "current"
         assert not (copy / "stale").exists()

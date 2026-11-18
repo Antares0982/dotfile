@@ -8,6 +8,10 @@
       && c.antares.mihomo.singapore
       && !c.antares.mihomo.lan
       && c.services.mihomo.enable
+      && c.services.mihomo.tunMode
+      && c.services.resolved.enable
+      && c.systemd.services ? mihomo-guard
+      && !c.antares.mihomo.settings.tun.enable
       && c.systemd.services.mihomo.serviceConfig.DynamicUser
       && c.age.secrets.mihomoSubscription.mode == "0400"
       && c.antares.mihomo.port == 1081
@@ -33,6 +37,17 @@
       && c.antares.proxy.socksUrl == "socks5h://127.0.0.1:1081"
       && !(c.systemd.services ? mihomo-worker)
       && !(c.systemd.paths ? mihomo-worker);
+  }
+  {
+    name = "mihomo-tun-off";
+    module = { lib, ... }: { antares.mihomo.tun.enable = lib.mkForce false; };
+    check =
+      c:
+      c.services.mihomo.enable
+      && !c.services.mihomo.tunMode
+      && !(c.systemd.services ? mihomo-guard)
+      && !(c.environment.etc ? "opt/chrome/policies/managed/mihomo.json")
+      && !c.services.resolved.enable;
   }
   {
     name = "mihomo-mobile-on";
@@ -128,6 +143,7 @@
     check =
       c:
       !(c.systemd.services ? mihomo)
+      && !(c.systemd.services ? mihomo-guard)
       && !(c.systemd.services ? mihomo-config)
       && !(c.age.secrets ? mihomoSubscription)
       && !(c.systemd.services ? mihomo-mobile-rules)

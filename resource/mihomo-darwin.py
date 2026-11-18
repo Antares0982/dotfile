@@ -61,19 +61,35 @@ def start(template, subscription, prepare, core, ctl, rules):
     os.umask(0o077)
     user = pwd.getpwnam("antares")
     state = Path(user.pw_dir) / "Library/Application Support/mihomo"
-    child_args = {"user": user.pw_uid, "group": user.pw_gid, "extra_groups": [],
-                  "env": os.environ | {"HOME": user.pw_dir, "USER": user.pw_name, "LOGNAME": user.pw_name}}
+    child_args = {
+        "user": user.pw_uid,
+        "group": user.pw_gid,
+        "extra_groups": [],
+        "env": os.environ
+        | {"HOME": user.pw_dir, "USER": user.pw_name, "LOGNAME": user.pw_name},
+    }
     deadline = time.monotonic() + 120
-    while not Path(subscription).is_file() or Path(subscription).stat().st_uid != user.pw_uid:
+    while (
+        not Path(subscription).is_file()
+        or Path(subscription).stat().st_uid != user.pw_uid
+    ):
         if time.monotonic() >= deadline:
             raise ValueError("Subscription decryption timed out")
         time.sleep(1)
     # Keep subscription errors private.
     run(sys.executable, prepare, template, subscription, **child_args)
     settings = json.loads(Path(template).read_text())
-    listeners = [{"listen": "127.0.0.1", "port": settings["mixed-port"], "udp": True}] + settings["listeners"]
-    ports = [(entry["listen"], entry["port"], socket.SOCK_STREAM) for entry in listeners]
-    ports += [(entry["listen"], entry["port"], socket.SOCK_DGRAM) for entry in listeners if entry.get("udp")]
+    listeners = [
+        {"listen": "127.0.0.1", "port": settings["mixed-port"], "udp": True}
+    ] + settings["listeners"]
+    ports = [
+        (entry["listen"], entry["port"], socket.SOCK_STREAM) for entry in listeners
+    ]
+    ports += [
+        (entry["listen"], entry["port"], socket.SOCK_DGRAM)
+        for entry in listeners
+        if entry.get("udp")
+    ]
     ports.append(("0.0.0.0" if rules else "127.0.0.1", 17900, socket.SOCK_STREAM))
     # Darwin loads replacements before unloading removed jobs.
     wait_ports(ports)
@@ -85,7 +101,10 @@ def start(template, subscription, prepare, core, ctl, rules):
             run(FIREWALL, "--add", core)
             firewall_added = True
             run(FIREWALL, "--unblockapp", core)
-        child = subprocess.Popen([core, "-d", str(state / "data"), "-f", str(state / "config.json")], **child_args)
+        child = subprocess.Popen(
+            [core, "-d", str(state / "data"), "-f", str(state / "config.json")],
+            **child_args,
+        )
         run(ctl, "ready", timeout=180, **child_args)
         if child.wait() != 0:
             raise ValueError("Mihomo exited unexpectedly")
@@ -111,6 +130,9 @@ if __name__ == "__main__":
         start(*sys.argv[1:])
     except (OSError, ValueError, subprocess.SubprocessError) as error:
         print(f"Mihomo launch failed: {error}", file=sys.stderr)
-        if isinstance(error, subprocess.CalledProcessError) and error.cmd[0] in (PF, FIREWALL):
+        if isinstance(error, subprocess.CalledProcessError) and error.cmd[0] in (
+            PF,
+            FIREWALL,
+        ):
             print(error.stderr, file=sys.stderr)
         sys.exit(1)

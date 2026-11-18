@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Usage: test_mihomo_mobile.py GENERATED_YAML PUBLIC_JSON (requires PyYAML)"""
+
 from functools import partial
 from http.server import ThreadingHTTPServer
 from pathlib import Path
@@ -17,8 +18,18 @@ def check_override(script, public):
 
     policy = yaml.safe_load(script.read_text())
     pc = json.loads(public.read_text())
-    assert set(policy) == {"proxy-groups", "rule-providers", "rules", "dns", "mode", "profile", "tun"}
-    assert policy["proxy-groups"] == [g for g in pc["proxy-groups"] if g["name"] != "BENCH"]
+    assert set(policy) == {
+        "proxy-groups",
+        "rule-providers",
+        "rules",
+        "dns",
+        "mode",
+        "profile",
+        "tun",
+    }
+    assert policy["proxy-groups"] == [
+        g for g in pc["proxy-groups"] if g["name"] != "BENCH"
+    ]
     assert policy["rules"] == pc["rules"]
     assert policy["rule-providers"] == pc["rule-providers"]
     assert policy["dns"] == pc["dns"]
@@ -45,36 +56,55 @@ def check_override(script, public):
         assert target in groups.keys() | {"DIRECT", "REJECT"}
         if fields[0] == "RULE-SET":
             assert fields[1] in policy["rule-providers"]
-    assert policy["rules"].index("RULE-SET,telegram-ip,Telegram,no-resolve") < policy["rules"].index("RULE-SET,cn-ip,国内")
+    assert policy["rules"].index("RULE-SET,telegram-ip,Telegram,no-resolve") < policy[
+        "rules"
+    ].index("RULE-SET,cn-ip,国内")
     assert policy["rules"][-1] == "MATCH,其他"
-    assert len({p["path"] for p in policy["rule-providers"].values()}) == len(policy["rule-providers"])
+    assert len({p["path"] for p in policy["rule-providers"].values()}) == len(
+        policy["rule-providers"]
+    )
     assert "sub-rules" not in pc
-    assert [entry["port"] for entry in pc["listeners"]] == [pc["mixed-port"] + 1, pc["mixed-port"] + 2, 17901]
+    assert [entry["port"] for entry in pc["listeners"]] == [
+        pc["mixed-port"] + 1,
+        pc["mixed-port"] + 2,
+        17901,
+    ]
     assert pc["listeners"][0]["proxy"] == "GLOBAL"
 
 
 def check_http(script):
-    handler = runpy.run_path(str(Path(__file__).with_name("mihomo-mobile.py")))["Handler"]
+    handler = runpy.run_path(str(Path(__file__).with_name("mihomo-mobile.py")))[
+        "Handler"
+    ]
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
         served = root / "clashmi-pc-routing.yaml"
         served.symlink_to(script.resolve())
-        with ThreadingHTTPServer(("127.0.0.1", 0), partial(handler, directory=tmp)) as server:
+        with ThreadingHTTPServer(
+            ("127.0.0.1", 0), partial(handler, directory=tmp)
+        ) as server:
             thread = Thread(target=server.serve_forever, daemon=True)
             thread.start()
             try:
                 url = f"http://127.0.0.1:{server.server_port}"
                 client = build_opener(ProxyHandler({}))
-                request = Request(url + "/clashmi-pc-routing.yaml", headers={
-                    "If-Modified-Since": "Thu, 01 Jan 2099 00:00:00 GMT",
-                })
+                request = Request(
+                    url + "/clashmi-pc-routing.yaml",
+                    headers={
+                        "If-Modified-Since": "Thu, 01 Jan 2099 00:00:00 GMT",
+                    },
+                )
                 with client.open(request, timeout=5) as response:
                     assert response.status == 200
                     assert response.headers["Cache-Control"] == "no-store"
                     assert response.headers["Content-Type"] == "application/yaml"
                     assert response.read() == script.read_bytes()
-                with client.open(Request(request.full_url, method="HEAD"), timeout=5) as response:
-                    assert int(response.headers["Content-Length"]) == script.stat().st_size
+                with client.open(
+                    Request(request.full_url, method="HEAD"), timeout=5
+                ) as response:
+                    assert (
+                        int(response.headers["Content-Length"]) == script.stat().st_size
+                    )
                     assert response.read() == b""
                 for path in ["/config.json", "/../etc/passwd", "/%2e%2e/etc/passwd"]:
                     try:
@@ -92,4 +122,6 @@ if __name__ == "__main__":
     script, public = map(Path, sys.argv[1:3])
     check_override(script, public)
     check_http(script)
-    print("PASS: shared YAML policy, node-source independence, HTTP freshness and file isolation")
+    print(
+        "PASS: shared YAML policy, node-source independence, HTTP freshness and file isolation"
+    )

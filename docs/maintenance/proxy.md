@@ -123,6 +123,30 @@ checks execute as a systemd dynamic user without a home directory; resolve
 macOS home paths only on Darwin. Configuration evaluation alone does not test
 this service environment.
 
+## Desktop TUN
+
+The PC selects `antares.mihomo.tun.enable`. NetworkManager and systemd-resolved
+send desktop DNS to Mihomo. Both IP families use fake IPs. Default lookups use
+Cloudflare DoH through `其他`. Node names and the exact subscription host
+use a separate bootstrap resolver. Home `.lan` and `.home.arpa` names use
+the LAN router. Chrome uses system DNS and disables unproxied WebRTC UDP.
+
+The `mihomo-guard` service loads its own nftables table before NetworkManager.
+While Mihomo is stopped, public traffic fails closed. The home subnet
+`192.168.0.0/24` retains SSH, Samba and discovery. Direct queries to router
+DNS from applications are blocked on the physical interface. qBittorrent
+uses the SOCKS5 direct listener for trackers and peers. Its desktop unit
+backs up only the managed proxy keys and restores them when disabled.
+
+Run `bash scripts/check-mihomo-guard.sh` with network namespace privileges
+and nftables on PATH to exercise the guard in isolation.
+Test a new configuration locally with a timed rollback to the previous system
+closure. Run `python3 scripts/check-mihomo.py`, then repeat the browser DNS
+and WebRTC tests. During a supervised service stop, check literal public IPv4
+and IPv6, UDP, raw router DNS, and LAN access from another device. Test a fresh
+provider cache in a separate private runtime directory. Preserve production
+state. The mobile override uses the shared base DNS and routing settings.
+
 ## Clash Mi on Android
 
 PC enables `antares.mihomo.mobileRules` and serves
