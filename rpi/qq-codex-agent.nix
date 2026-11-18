@@ -88,7 +88,7 @@ let
   ];
 in
 {
-  imports = [ (inputs.qq-codex-agent + "/nix/module.nix") ];
+  imports = [ inputs.qq-codex-agent.nixosModules.default ];
   config = lib.mkIf config.services.qq-codex-agent.enable {
     assertions = [
       {
@@ -97,10 +97,6 @@ in
       }
     ];
     services.qq-codex-agent = {
-      package = import (inputs.qq-codex-agent + "/nix/package.nix") {
-        inherit inputs;
-        system = pkgs.stdenv.hostPlatform.system;
-      };
       configFile = config.age.secrets.qqCodexAllowlist.path;
       tokenFile = "/run/qq-codex-auth/token";
       extraPackages = [

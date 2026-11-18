@@ -34,7 +34,7 @@
     };
     qq-codex-agent = {
       url = "github:Antares0982/qq-codex-agent";
-      flake = false;
+      inputs.nixpkgs.follows = "nixpkgs";
     };
     antares-monitor = {
       url = "github:antares0982/telegram-output-monitor-bot";

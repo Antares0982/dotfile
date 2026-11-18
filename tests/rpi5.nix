@@ -196,6 +196,8 @@
     check =
       c:
       !(c.systemd.services ? qq-codex-agent)
+      && c.systemd.services ? codex-auth
+      && c.systemd.services ? codex-login
       && !(c.systemd.services ? simple-moderation)
       && !(c.age.secrets ? simpleModerationKey)
       && !(c.systemd.services ? qq-codex-auth)

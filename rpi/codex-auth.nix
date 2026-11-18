@@ -7,10 +7,7 @@
 }:
 let
   enabled = config.antares.agent.enable || config.services.qq-codex-agent.enable;
-  app = import (inputs.qq-codex-agent + "/nix/package.nix") {
-    inherit inputs;
-    system = pkgs.stdenv.hostPlatform.system;
-  };
+  app = inputs.qq-codex-agent.packages.${pkgs.stdenv.hostPlatform.system}.default;
   environment = {
     http_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
     https_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
