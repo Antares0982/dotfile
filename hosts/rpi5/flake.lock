@@ -350,11 +350,11 @@
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1795007187,
-        "narHash": "sha256-ng1dk0emsERgK8dwixmbP5WcibWVWGGB1wsUe+7O05c=",
+        "lastModified": 1795099255,
+        "narHash": "sha256-/XJhPP2/1gjG+LirDLG0wdo+YaX7vgeZVH+bpMQtmaU=",
         "owner": "Antares0982",
         "repo": "qq-codex-agent",
-        "rev": "91721235c9ae103f14b1c9c75e94890c10961eb6",
+        "rev": "106d70045295fd50c721fb8677a4774a1e0774df",
         "type": "github"
       },
       "original": {
