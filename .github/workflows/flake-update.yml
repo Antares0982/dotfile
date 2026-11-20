@@ -19,9 +19,6 @@ jobs:
         - host: hk
           runner: '["ubuntu-latest"]'
           self_hosted: false
-        - host: gz
-          runner: '["ubuntu-latest"]'
-          self_hosted: false
         - host: sz
           runner: '["ubuntu-latest"]'
           self_hosted: false
