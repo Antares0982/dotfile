@@ -126,8 +126,9 @@ this service environment.
 ## Desktop TUN
 
 The PC selects `antares.mihomo.tun.enable`. NetworkManager and systemd-resolved
-send desktop DNS to Mihomo. Both IP families use fake IPs. Default lookups use
-Cloudflare DoH through `其他`. Node names and the exact subscription host
+send desktop DNS to Mihomo. Both IP families use fake IPs. Domains in the
+`cn` rule set use AliDNS over direct DoH for domestic CDN selection. Default
+lookups use Cloudflare DoH through `其他`. Node names and the exact subscription host
 use a separate bootstrap resolver. Home `.lan` and `.home.arpa` names use
 the LAN router. Chrome uses system DNS and disables unproxied WebRTC UDP.
 
@@ -145,7 +146,7 @@ closure. Run `python3 scripts/check-mihomo.py`, then repeat the browser DNS
 and WebRTC tests. During a supervised service stop, check literal public IPv4
 and IPv6, UDP, raw router DNS, and LAN access from another device. Test a fresh
 provider cache in a separate private runtime directory. Preserve production
-state. The mobile override uses the shared base DNS and routing settings.
+state.
 
 ## Clash Mi on Android
 
@@ -163,18 +164,33 @@ override after binding the YAML version; the old `.js` URL is no longer served.
 This URL belongs in the remote override field, not an individual rule provider.
 
 The phone keeps its own nodes, subscription updates, ports and control API.
-The published `proxy-groups`, `rules` and `rule-providers` come directly from
-`antares.mihomo.policy`, also used by PC. Regional groups use native `include-all`
+The override uses the PC's effective DNS, IPv6 and routing rules, including
+the `cn` resolver policy and final `MATCH,REJECT` when desktop TUN is enabled.
+It also enables TUN on Android.
+Proxy groups and rule providers come from `antares.mihomo.policy`.
+Regional groups use native `include-all`
 and filters to discover the phone's nodes, so no subscription-name adaptation
-or JavaScript is required. DNS is shared and the mobile override enables TUN.
+or JavaScript is required.
 Old subscription policy groups and rules are replaced rather than retained.
 Select `Telegram → SG`, `其他 → JP`, and `国内 → DIRECT` in the phone dashboard.
 Each device stores its own selections; PC Web UI changes do not synchronize.
 
-After editing the Nix routing settings, rebuild and switch PC to publish the
-new override automatically. Merely editing the repository does not publish.
-Rule-provider datasets still refresh independently each day. The service avoids
-HTTP timestamp caching because Nix store files share normalized timestamps.
+### Keeping PC and mobile in sync
+
+When changing PC Mihomo behavior, share every feature that Clash Mi can use.
+Define public routing rules, groups and providers once in `modules/mihomo-common.nix`.
+For portable core settings such as DNS, export the effective PC value from
+`settings` in `modules/mihomo.nix` after the TUN overlay has been applied.
+When introducing a new portable field, include it in the mobile export and
+compare it with the PC template in `resource/test_mihomo_mobile.py` in the same change.
+Keep Linux interface settings, nftables and Chrome policies on the PC.
+Clash Mi manages Android VPN routing and app selection. Keep credentials,
+node subscriptions and control listeners private to each device.
+
+Switching the PC publishes the generated YAML at the existing LAN URL.
+On the phone, update the bound remote override and reconnect to apply it.
+Rule-provider datasets refresh independently each day. The service sends
+fresh content even when a client caches the normalized Nix store timestamp.
 
 Clash Mi checks overdue remote overrides on startup, returning to the foreground
 and VPN connection. Its Android implementation does not run the desktop's
@@ -183,7 +199,8 @@ the app at home to trigger an overdue update; reconnect to apply it. Off-LAN
 or while PC is asleep, failed downloads preserve the last downloaded file.
 See the [upstream implementation](https://github.com/KaringX/clashmi/blob/main/lib/app/modules/profile_patch_manager.dart).
 
-Validate a generated override against public settings with
-`python3 resource/test_mihomo_mobile.py GENERATED_YAML PUBLIC_JSON` (with PyYAML), and run
+Validate a generated override against the public `mihomo-base.json` template
+passed to `mihomo-config.service` with
+`python3 resource/test_mihomo_mobile.py GENERATED_YAML PC_TEMPLATE_JSON` (with PyYAML), and run
 `bash scripts/check-configs.sh nixos rpi5`. After switching, fetch the URL from
 another LAN device and run the normal live proxy check.

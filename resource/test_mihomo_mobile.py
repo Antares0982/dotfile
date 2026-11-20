@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Usage: test_mihomo_mobile.py GENERATED_YAML PUBLIC_JSON (requires PyYAML)"""
+"""Usage: test_mihomo_mobile.py GENERATED_YAML PC_TEMPLATE_JSON (requires PyYAML)"""
 
 from functools import partial
 from http.server import ThreadingHTTPServer
@@ -18,7 +18,7 @@ def check_override(script, public):
 
     policy = yaml.safe_load(script.read_text())
     pc = json.loads(public.read_text())
-    assert set(policy) == {
+    expected_keys = {
         "proxy-groups",
         "rule-providers",
         "rules",
@@ -27,6 +27,10 @@ def check_override(script, public):
         "profile",
         "tun",
     }
+    if "ipv6" in pc:
+        expected_keys.add("ipv6")
+        assert policy.get("ipv6") == pc["ipv6"]
+    assert set(policy) == expected_keys
     assert policy["proxy-groups"] == [
         g for g in pc["proxy-groups"] if g["name"] != "BENCH"
     ]
@@ -34,7 +38,7 @@ def check_override(script, public):
     assert policy["rule-providers"] == pc["rule-providers"]
     assert policy["dns"] == pc["dns"]
     assert policy["mode"] == "rule" and policy["profile"]["store-selected"]
-    assert policy["tun"]["enable"]
+    assert policy["tun"] == {"enable": True}
     groups = {g["name"]: g for g in policy["proxy-groups"]}
     assert len(groups) == len(policy["proxy-groups"])
     assert groups["其他"]["proxies"][0] == "JP"
@@ -59,7 +63,10 @@ def check_override(script, public):
     assert policy["rules"].index("RULE-SET,telegram-ip,Telegram,no-resolve") < policy[
         "rules"
     ].index("RULE-SET,cn-ip,国内")
-    assert policy["rules"][-1] == "MATCH,其他"
+    if pc["tun"]["enable"]:
+        assert policy["rules"][-2:] == ["MATCH,其他", "MATCH,REJECT"]
+    else:
+        assert policy["rules"][-1] == "MATCH,其他"
     assert len({p["path"] for p in policy["rule-providers"].values()}) == len(
         policy["rule-providers"]
     )

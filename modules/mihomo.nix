@@ -23,8 +23,14 @@ let
   mobile = cfg.mobileRules;
   mobilePolicy = (pkgs.formats.yaml { }).generate "clashmi-pc-routing.yaml" (
     cfg.policy
+    // lib.optionalAttrs (settings ? ipv6) { inherit (settings) ipv6; }
     // {
-      inherit (cfg.settings) dns mode profile;
+      inherit (settings)
+        dns
+        mode
+        profile
+        rules
+        ;
       tun.enable = true;
     }
   );
