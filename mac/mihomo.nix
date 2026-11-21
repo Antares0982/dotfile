@@ -45,10 +45,7 @@ in
         home = "/var/empty";
         shell = "/usr/bin/false";
       };
-      environment.systemPackages = [
-        tools
-        tools.clashtui
-      ];
+      environment.systemPackages = [ tools ];
       age.identityPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
       age.secrets.mihomoSubscription = {
         file = ../secrets/xraysub.age;

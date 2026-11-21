@@ -25,7 +25,7 @@ pkgs.runCommand "mihomo-tools"
     cp ${../resource/test_mihomo_tools.py} test_mihomo_tools.py
     ln -s $out/lib/mihomo-tools.py mihomo-tools.py
     ${pkgs.python3}/bin/python3 test_mihomo_tools.py
-    for name in mihomoctl mihomo-speed-test; do
+    for name in mihomoctl mihomo-speed-test ${pkgs.lib.optionalString pkgs.stdenv.hostPlatform.isDarwin "clashtui"}; do
       makeWrapper ${pkgs.python3}/bin/python3 $out/bin/$name \
         --add-flags "$out/lib/mihomo-tools.py" \
         --set MIHOMO_COMMAND "$name" \

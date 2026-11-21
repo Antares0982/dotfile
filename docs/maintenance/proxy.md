@@ -83,7 +83,13 @@ On MacBook the launchd supervisor owns the utun descriptor, routes, system
 DNS and PF anchor. The core runs as the dedicated `_mihomo` account, using
 private state under `/var/db/antares-mihomo`. On first activation it imports the
 previous selection cache. The CLI credential and speed-test lock remain in
-the user's private state. Startup failures keep the PF guard installed.
+the user's private state. On Mac, `clashtui` and `mihomoctl tui` both use
+the authenticated local API on 17900. An explicit `clashtui --config-dir`
+selects a separate client configuration. The utun routes leave the zero-address
+lookup available for sockets bound to the physical interface. Compare
+`route -n get 223.5.5.5` (utun) with `route -n get -ifscope en0 223.5.5.5`
+(physical gateway, substitute the active interface). Startup failures keep
+the PF guard installed.
 Use a local console for the first switch. Check the WebRTC and DoH entries
 in `chrome://policy`. Test sleep, wake and moving to
 another network, including one with the same IPv4 subnet.

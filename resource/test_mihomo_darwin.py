@@ -1,6 +1,7 @@
 """Check private state, firewall and privileges."""
 
 import importlib.util
+import ipaddress
 import json
 import os
 import socket
@@ -101,6 +102,27 @@ def check():
                 else:
                     raise AssertionError("Occupied port accepted")
         daemon.wait_ports(ports)
+        sock = Mock()
+        sock.getsockopt.return_value = b"utun4\0"
+        with (
+            patch.object(socket, "AF_SYSTEM", 32, create=True),
+            patch.object(socket, "SYSPROTO_CONTROL", 2, create=True),
+            patch.object(socket, "socket", return_value=sock),
+            patch.object(daemon, "run") as route,
+        ):
+            daemon.open_tunnel()
+        prefixes = [
+            ipaddress.ip_network(call.args[5])
+            for call in route.call_args_list
+            if call.args[0] == daemon.ROUTE
+        ]
+        for default, reserved in (("0.0.0.0/0", "0.0.0.0/8"), ("::/0", "::/16")):
+            excluded = ipaddress.ip_network(reserved)
+            family = [net for net in prefixes if net.version == excluded.version]
+            assert all(not net.overlaps(excluded) for net in family)
+            assert list(ipaddress.collapse_addresses([*family, excluded])) == [
+                ipaddress.ip_network(default)
+            ]
         settings = {
             "mixed-port": 1081,
             "allow-lan": True,

@@ -1,6 +1,7 @@
 """Supervise unprivileged Mihomo behind PF."""
 
 import fcntl
+import ipaddress
 import json
 import os
 import plistlib
@@ -180,12 +181,15 @@ def open_tunnel():
         "126",
         "alias",
     )
-    for family, prefixes in (
-        ("-inet", ("0.0.0.0/1", "128.0.0.0/1")),
-        ("-inet6", ("::/1", "8000::/1")),
+    # Preserve Darwin's zero-address default-route lookup.
+    for family, default, reserved in (
+        ("-inet", "0.0.0.0/0", "0.0.0.0/8"),
+        ("-inet6", "::/0", "::/16"),
     ):
-        for prefix in prefixes:
-            run(ROUTE, "-n", "add", family, "-net", prefix, "-interface", name)
+        for prefix in ipaddress.ip_network(default).address_exclude(
+            ipaddress.ip_network(reserved)
+        ):
+            run(ROUTE, "-n", "add", family, "-net", str(prefix), "-interface", name)
     return sock, name
 
 

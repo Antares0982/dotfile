@@ -411,7 +411,21 @@ def via_worker(value):
     raise ValueError("Worker timed out; do not reuse earlier results")
 
 
-def tui():
+def tui(args=()):
+    binary = os.environ["CLASHTUI_BIN"]
+    if any(
+        arg.partition("=")[0]
+        in (
+            "--config-dir",
+            "--help",
+            "-h",
+            "--version",
+            "-V",
+            "--generate-shell-completion",
+        )
+        for arg in args
+    ) or args[:1] == ["help"]:
+        os.execv(binary, ["clashtui", *args])
     client = connection()
     directory = (
         Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local/state")
@@ -451,11 +465,13 @@ def tui():
         os.environ[key] = ",".join(
             filter(None, (os.environ.get(key), "127.0.0.1", "localhost"))
         )
-    os.execv(os.environ["CLASHTUI_BIN"], ["clashtui", f"--config-dir={directory}"])
+    os.execv(binary, ["clashtui", f"--config-dir={directory}", *args])
 
 
 def main():
     os.umask(0o077)
+    if os.environ.get("MIHOMO_COMMAND") == "clashtui":
+        return tui(sys.argv[1:])
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--via-worker", action="store_true")
     if os.environ.get("MIHOMO_COMMAND") == "mihomo-speed-test":

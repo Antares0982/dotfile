@@ -2,6 +2,7 @@
 
 import importlib.util
 import io
+import json
 import os
 from pathlib import Path
 import tempfile
@@ -50,6 +51,34 @@ def check_service_home():
 
 def check():
     check_service_home()
+    with (
+        tempfile.TemporaryDirectory() as state,
+        patch.dict(
+            os.environ,
+            {"XDG_STATE_HOME": state, "CLASHTUI_BIN": "tui", "MIHOMO_BIN": "core"},
+        ),
+        patch.object(m.os, "execv", side_effect=SystemExit) as spawn,
+        patch.object(
+            m, "connection", return_value={"secret": "test", "port": 1081}
+        ) as connection,
+    ):
+        for args in (["--config-dir=/custom"], ["--help"], ["mode"]):
+            try:
+                m.tui(args)
+            except SystemExit:
+                pass
+            expected = (
+                ["--config-dir=" + state + "/mihomo-tui"] if args == ["mode"] else []
+            )
+            assert spawn.call_args.args == ("tui", ["clashtui", *expected, *args])
+        connection.assert_called_once()
+        config = json.loads(
+            (Path(state) / "mihomo-tui/mihomo/core_override_config.yaml").read_text()
+        )
+        assert (
+            config["external-controller"] == "127.0.0.1:17900"
+            and config["secret"] == "test"
+        )
     token = "a" * 32
     for action in ("status", "update", "restart"):
         assert m.valid_request({"id": token, "action": action}, token)
