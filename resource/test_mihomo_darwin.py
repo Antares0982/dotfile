@@ -122,7 +122,7 @@ def check():
         for listener in settings["listeners"]:
             listener.update(listen="127.0.0.1", udp=False)
         template.write_text(json.dumps(settings))
-        worker = SimpleNamespace(pw_uid=397, pw_gid=397)
+        worker = SimpleNamespace(pw_uid=397, pw_gid=493)
         protected = root / "protected"
         protected.mkdir()
         (protected / "data").mkdir()
@@ -158,6 +158,7 @@ def check():
                 raise AssertionError("Core failure ignored")
             args = spawn.call_args_list[0].kwargs
             assert args["user"] == worker.pw_uid and args["pass_fds"] == (19,)
+            assert args["group"] == worker.pw_gid
             assert guard.call_args_list[-1].args == (settings, worker.pw_uid)
             disable.assert_not_called()
             tunnel.close.assert_called_once()

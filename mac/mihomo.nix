@@ -37,11 +37,11 @@ in
     }
     (lib.mkIf proxy.enable {
       users.knownGroups = [ "_mihomo" ];
-      users.groups._mihomo.gid = 397;
+      users.groups._mihomo.gid = 493;
       users.knownUsers = [ "_mihomo" ];
       users.users._mihomo = {
         uid = 397;
-        gid = 397;
+        gid = config.users.groups._mihomo.gid;
         home = "/var/empty";
         shell = "/usr/bin/false";
       };
