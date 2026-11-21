@@ -13,13 +13,13 @@ HK, GZ, and SZ import `server` for fail2ban, sysstat, and firewall activation.
 HK-specific hardware, accounts, packages, and service integrations live in
 `server/hk`; host-specific configuration lives in `server/gz` and `server/sz`.
 Both VPS hosts import `server/vps.nix`, which imports the shared Mihomo and proxy
-modules. The retained GZ declaration follows SZ but must not be deployed; its
+modules. The retained GZ declaration uses local proxy ports without TUN and must not be deployed; its
 `/etc/ssh/agenix` identity has no current secret access. The local SSH
 alias `gz` uses `antares` and `~/.ssh/gz`; root SSH is disabled. Its disko layout
 targets `/dev/vda` with BIOS GRUB and ext4. Installation erases that disk;
 ordinary rebuilds do not repartition it.
 
-SZ uses `antares.mihomo.enable` and `antares.proxy.enable`. Mihomo supplies
+SZ enables `antares.proxy.enable` and `antares.proxy.insideGFW`. Its TUN guard preserves public service replies. Mihomo supplies
 HTTP/SOCKS5 on 1081, GLOBAL on 1082, and DIRECT on 1083. All listeners and the
 authenticated control API are loopback-only, with no WebUI. Use `mihomoctl tui`
 for policy and node selection, `mihomoctl update` for subscription refresh, and

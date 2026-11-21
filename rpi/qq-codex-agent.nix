@@ -73,8 +73,8 @@ let
     asyncio.run(main())
   '';
   environment = {
-    http_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
-    https_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
+    http_proxy = lib.mkIf config.antares.proxy.exportEnvironment config.antares.proxy.httpUrl;
+    https_proxy = lib.mkIf config.antares.proxy.exportEnvironment config.antares.proxy.httpUrl;
     no_proxy = "127.0.0.1,localhost,::1";
     NIX_REMOTE = "daemon";
     NIX_CONFIG = "experimental-features = nix-command flakes";
@@ -162,7 +162,7 @@ in
         "napcat.service"
         "qq-codex-auth.service"
       ]
-      ++ lib.optional config.antares.mihomo.enable "mihomo.service"
+      ++ lib.optional config.antares.proxy.enable "mihomo.service"
       ++ lib.optional config.services.simple-moderation.enable "simple-moderation.service";
       wants = lib.optional config.services.simple-moderation.enable "simple-moderation.service";
       requires = [ "qq-codex-auth.service" ];

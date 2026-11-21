@@ -63,10 +63,7 @@ def check_override(script, public):
     assert policy["rules"].index("RULE-SET,telegram-ip,Telegram,no-resolve") < policy[
         "rules"
     ].index("RULE-SET,cn-ip,国内")
-    if pc["tun"]["enable"]:
-        assert policy["rules"][-2:] == ["MATCH,其他", "MATCH,REJECT"]
-    else:
-        assert policy["rules"][-1] == "MATCH,其他"
+    assert policy["rules"][-2:] == ["MATCH,其他", "MATCH,REJECT"]
     assert len({p["path"] for p in policy["rule-providers"].values()}) == len(
         policy["rule-providers"]
     )

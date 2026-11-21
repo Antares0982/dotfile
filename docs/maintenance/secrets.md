@@ -19,7 +19,7 @@ identity between hosts. Reauthorize the subscription before replacing the Mac
 SSH host key.
 
 `xraysub.age` keeps its historical filename and supplies Mihomo on PC, RPi,
-MacBook, HK and SZ. HK's recipient must be added before deploying Mihomo.
+MacBook, WSL, HK and SZ. WSL uses the same authorized identity as its signing passphrase.
 `xray-template-json.age` and `xray-template-gz.age` are encrypted recovery
 archives with PC-only access; no host configuration consumes them. Disabling
 or retiring a proxy does not delete encrypted sources or persistent data.
@@ -56,8 +56,8 @@ with current encrypted secrets before rollback.
 secrets. QQ relay and QQ Codex share the deployment in `rpi/qq-credentials.nix`;
 it remains while either consumer is enabled.
 
-WSL sets its identity path independently and only deploys
-`github-sign-passphrase.age`. Its `antares.gitSignUnlock.enable` feature loads
+WSL sets its identity path independently and deploys `xraysub.age` with the proxy and
+`github-sign-passphrase.age` with signing. Its `antares.gitSignUnlock.enable` feature loads
 `~antares/.ssh/github_sign` and `~antares/.ssh/github_push` into the user's
 OpenSSH agent at login and when that agent restarts. The password is root-only;
 the user service asks the root oneshot service to load both keys. Provision the

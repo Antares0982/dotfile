@@ -4,8 +4,8 @@ import importlib.util
 import json
 import os
 import socket
-from pathlib import Path
 import tempfile
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
@@ -89,7 +89,6 @@ def check():
                 (daemon.PF, "-a", daemon.ANCHOR, "-F", "rules")
             ]
 
-        events = []
         with socket.socket() as occupied:
             occupied.bind(("127.0.0.1", 0))
             occupied.listen()
@@ -102,58 +101,72 @@ def check():
                 else:
                     raise AssertionError("Occupied port accepted")
         daemon.wait_ports(ports)
+        settings = {
+            "mixed-port": 1081,
+            "allow-lan": True,
+            "tun": {"enable": True},
+            "listeners": [
+                {"name": "global", "port": 1082},
+                {"name": "direct", "port": 1083},
+                {"name": "bandwidth-test", "port": 17901},
+            ],
+        }
+        away = daemon.pf_rules(settings, 397)
+        home = daemon.pf_rules(settings, 397, "en0", True, "utun4")
+        assert "block drop out quick all" in away and "pass in quick on en0" not in away
+        assert "user 397" in home and "on utun4" in home and "port 17901" not in home
+        assert "from 192.168.0.0/24" in home and "1083, 17900" in home
+        assert home.index("port 53 user 397") < home.index("block drop out quick")
+        settings["bind-address"] = "0.0.0.0"
+        settings["external-controller"] = "0.0.0.0:17900"
+        for listener in settings["listeners"]:
+            listener.update(listen="127.0.0.1", udp=False)
+        template.write_text(json.dumps(settings))
+        worker = SimpleNamespace(pw_uid=397, pw_gid=397)
+        protected = root / "protected"
+        protected.mkdir()
+        (protected / "data").mkdir()
+        tunnel = Mock()
+        tunnel.fileno.return_value = 19
         child = Mock()
-        child.poll.return_value = None
-        child.wait.return_value = 0
-
-        def run(*args, **kwargs):
-            events.append(args)
-            if args[0] == "ctl":
-                assert kwargs["user"] == user.pw_uid and kwargs["extra_groups"] == []
-                raise ValueError("Bootstrap failure")
-
-        def spawn(*args, **kwargs):
-            assert events[-1] == (daemon.FIREWALL, "--unblockapp", "core")
-            assert kwargs["user"] == user.pw_uid and kwargs["group"] == user.pw_gid
-            return child
-
+        child.poll.return_value = 1
         with (
-            patch.object(daemon.pwd, "getpwnam", return_value=user),
-            patch.object(daemon, "run", run),
-            patch.object(daemon, "wait_ports") as wait_ports,
-            patch.object(daemon, "enable_pf") as enable,
+            patch.object(daemon, "STATE", protected),
+            patch.object(daemon.pwd, "getpwnam", side_effect=[user, worker]),
+            patch.object(
+                daemon, "physical_uplink", return_value=("en0", "192.168.0.1")
+            ),
+            patch.object(daemon, "is_home", return_value=False),
+            patch.object(daemon, "protect") as guard,
             patch.object(daemon, "disable_pf") as disable,
-            patch.object(daemon.subprocess, "Popen", spawn),
-        ):
-            try:
-                daemon.start(
-                    str(template), str(subscription), "prepare", "core", "ctl", "rules"
-                )
-            except ValueError:
-                pass
-            else:
-                raise AssertionError("Bootstrap failure ignored")
-            enable.assert_called_once_with("rules")
-            wait_ports.assert_called_once()
-            disable.assert_called_once_with()
-            child.terminate.assert_called_once_with()
-            assert events[-1] == (daemon.FIREWALL, "--remove", "core")
-
-        with (
-            patch.object(daemon.pwd, "getpwnam", return_value=user),
-            patch.object(daemon, "run", run),
             patch.object(daemon, "wait_ports"),
-            patch.object(daemon, "enable_pf", side_effect=ValueError("PF unavailable")),
-            patch.object(daemon, "disable_pf"),
-            patch.object(daemon.subprocess, "Popen") as spawn,
+            patch.object(daemon, "set_dns"),
+            patch.object(daemon, "open_tunnel", return_value=(tunnel, "utun4")),
+            patch.object(daemon.os, "chown"),
+            patch.object(
+                daemon, "run", return_value=SimpleNamespace(stdout=json.dumps(settings))
+            ),
+            patch.object(
+                daemon.subprocess, "Popen", side_effect=[child, Mock()]
+            ) as spawn,
         ):
             try:
-                daemon.start(
-                    str(template), str(subscription), "prepare", "core", "ctl", "rules"
-                )
-            except ValueError:
-                pass
-            spawn.assert_not_called()
+                daemon.start(template, subscription, "prepare", "core", "ctl")
+            except ValueError as error:
+                assert "Mihomo exited" in str(error)
+            else:
+                raise AssertionError("Core failure ignored")
+            args = spawn.call_args_list[0].kwargs
+            assert args["user"] == worker.pw_uid and args["pass_fds"] == (19,)
+            assert guard.call_args_list[-1].args == (settings, worker.pw_uid)
+            disable.assert_not_called()
+            tunnel.close.assert_called_once()
+        assert (
+            json.loads((protected / "config.json").read_text())["tun"][
+                "file-descriptor"
+            ]
+            == 19
+        )
     print("PASS: private preparation, PF gating, unprivileged core and failure cleanup")
 
 

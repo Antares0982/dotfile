@@ -213,9 +213,8 @@
     module = { };
     check =
       c:
-      c.antares.mihomo.enable
-      && c.antares.mihomo.lan
-      && !c.antares.mihomo.singapore
+      c.antares.proxy.enable
+      && c.antares.proxy.lan
       && c.antares.mihomo.port == 1081
       &&
         map (entry: entry.port) c.antares.mihomo.settings.listeners == [
@@ -227,9 +226,10 @@
       && (builtins.head c.antares.mihomo.settings.listeners).proxy == "GLOBAL"
       &&
         (lib.findFirst (g: g.name == "GLOBAL") { } c.antares.mihomo.policy.proxy-groups).default-selected
-        == "JP"
+        == "SG"
       &&
         (lib.findFirst (g: g.name == "Telegram") { } c.antares.mihomo.policy.proxy-groups).proxies == [
+          "SG"
           "JP"
           "其他"
           "全部节点"
@@ -251,7 +251,6 @@
   {
     name = "mihomo-off";
     module = { lib, ... }: {
-      antares.mihomo.enable = lib.mkForce false;
       antares.proxy.enable = lib.mkForce false;
     };
     check =
@@ -265,14 +264,6 @@
       && !(c.systemd.paths ? mihomo-worker)
       && !(c.systemd.services ? mihomo-agent-guide)
       && !(c.age.secrets ? mihomoSubscription);
-  }
-  {
-    name = "mihomo-dependency";
-    module = { lib, ... }: {
-      antares.mihomo.enable = lib.mkForce false;
-    };
-    check = c: true;
-    valid = false;
   }
   {
     name = "rabbitmq-off";
@@ -308,7 +299,6 @@
       antares = {
         agent.enable = lib.mkForce false;
         qq.enable = lib.mkForce false;
-        mihomo.enable = lib.mkForce false;
         proxy.enable = lib.mkForce false;
         gitServer.enable = lib.mkForce false;
       };

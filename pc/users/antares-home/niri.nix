@@ -17,7 +17,7 @@ let
     qbittorrent = "${pkgs.qbittorrent}/bin/qbittorrent";
     gdbus = "${pkgs.glib}/bin/gdbus";
   };
-  tun = osConfig.antares.mihomo.enable && osConfig.antares.mihomo.tun.enable;
+  tun = osConfig.antares.proxy.enable && osConfig.antares.proxy.insideGFW;
   qbitCommand = "${pkgs.python3}/bin/python3 ${qbit}";
   qbitEnvironment = "QBIT_DIRECT_PORT=${toString (osConfig.antares.mihomo.port + 2)}";
   session = {

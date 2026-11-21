@@ -10,19 +10,28 @@
   },
   "dns": {
     "enable": true,
-    "ipv6": false,
-    "enhanced-mode": "redir-host",
+    "ipv6": true,
+    "enhanced-mode": "fake-ip",
     "default-nameserver": [
-      "223.5.5.5",
-      "119.29.29.29"
+      "https://223.5.5.5/dns-query"
     ],
     "nameserver": [
-      "https://dns.alidns.com/dns-query",
-      "https://doh.pub/dns-query"
+      "https://1.1.1.1/dns-query#其他"
     ],
     "proxy-server-nameserver": [
-      "https://dns.alidns.com/dns-query"
-    ]
+      "https://223.5.5.5/dns-query"
+    ],
+    "fake-ip-range": "198.18.0.1/16",
+    "fake-ip-range6": "fdfe:dcba:9876::1/64",
+    "fake-ip-filter": [
+      "localhost",
+      "+.lan",
+      "+.local",
+      "+.home.arpa"
+    ],
+    "nameserver-policy": {
+      "rule-set:cn": "https://223.5.5.5/dns-query#DIRECT"
+    }
   },
   "proxy-providers": {
     "subscription": {
@@ -50,5 +59,6 @@
     "IP-CIDR6,::1/128,DIRECT,no-resolve",
     "IP-CIDR6,fc00::/7,DIRECT,no-resolve",
     "IP-CIDR6,fe80::/10,DIRECT,no-resolve"
-  ]
+  ],
+  "ipv6": true
 }

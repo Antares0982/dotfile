@@ -26,8 +26,7 @@ package dependencies, never for choosing imports. Imports stay static;
 
 `_make-device.nix` and the root device descriptors retain platform metadata and
 legacy compatibility. New business features use module options, not device
-flags. Proxy consumers in migrated hosts read `antares.proxy`; shared modules
-retain the descriptor fallback for the excluded WSL configuration.
+flags. All six active hosts use the shared `antares.proxy` options, including WSL through its existing entry point.
 
 `common/localFileDef.nix` derives user directory conventions. Human and shared
 accounts remain in user modules. Dedicated service accounts belong to their
@@ -73,7 +72,7 @@ integration as well as the upstream service.
 |---|---|
 | all seven hosts | `antares.starship.enable` ([settings](zsh.md#starship)) |
 | nixos, hk, rpi5 | `services.telegram-output-monitor-bot.enable`, `services.antares-rpc-client.enable`, `services.rabbitmq.enable` |
-| nixos, hk, sz, gz, rpi5, macbook | `antares.mihomo.enable`, `antares.proxy.enable` |
+| all active hosts | `antares.proxy.{enable,insideGFW,lan}` |
 | rpi5 | `services.antares-runners.instances.<name>.enable`, `antares.agent.enable`, `antares.qq.enable`, `antares.gitServer.enable`, `services.ssh-probe.enable` |
 | hk | `antares.blog.enable`, `antares.blog.metrics.enable`, `antares.messaging.enable`, `mailserver.enable`, `services.mysql.enable`, `services.nginx.enable`, `services.forgejo.enable`, `antares.acme.enable` |
 | nixos | `antares.desktop.enable`, `antares.wallpaper.enable`, `antares.rust.enable`, `antares.autostart.enable`, `antares.waitOnline.enable`, `services.mcp-nixos.enable` |
@@ -104,8 +103,7 @@ resume. Kernel/driver updates also require a new hardware check.
 - The local proxy environment requires Mihomo. Its provider updates subscriptions.
   Desktop autostart owns only repository updates and existing desktop housekeeping.
 - Mihomo shares routing configuration across NixOS and Darwin. Darwin owns
-  its launchd supervisor and PF anchor; only its dashboard is reachable on LAN.
-  HK/SZ disable the WebUI with `antares.mihomo.dashboard = false` and keep all
+  its launchd supervisor and PF anchor. HK/SZ use `antares.proxy.lan = false` and keep all
   proxy and API listeners on loopback.
 - Agent proxy actions require both agent and the corresponding proxy feature.
 - Remote broker endpoints and external application scripts remain external

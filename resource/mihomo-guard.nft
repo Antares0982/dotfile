@@ -1,12 +1,27 @@
 # Preserve active service identities on reload.
 add table inet mihomo_guard
 add set inet mihomo_guard core { typeof meta skuid; }
+add set inet mihomo_guard public_if { type ifname; }
+add set inet mihomo_guard public_tcp { type inet_service; }
+add set inet mihomo_guard public_udp { type inet_service; }
+add chain inet mihomo_guard incoming { type filter hook prerouting priority mangle - 1; policy accept; }
+add chain inet mihomo_guard replies { type route hook output priority mangle - 1; policy accept; }
+flush chain inet mihomo_guard incoming
+flush chain inet mihomo_guard replies
 add chain inet mihomo_guard egress { type filter hook postrouting priority filter; policy drop; }
 add chain inet mihomo_guard ingress { type filter hook input priority filter - 1; policy drop; }
 flush chain inet mihomo_guard egress
 flush chain inet mihomo_guard ingress
 table inet mihomo_guard {
+  chain incoming {
+    iifname @public_if fib daddr type local tcp dport @public_tcp ct direction original ct mark set 0x4d48
+    iifname @public_if fib daddr type local udp dport @public_udp ct direction original ct mark set 0x4d48
+  }
+  chain replies {
+    ct direction reply ct mark 0x4d48 meta mark set 0x4d48
+  }
   chain egress {
+    oifname @public_if ct direction reply ct mark 0x4d48 accept
     oifname { "lo", "mihomo0" } accept
     meta skuid @core accept
     meta l4proto { tcp, udp } th dport 53 counter drop
@@ -23,6 +38,7 @@ table inet mihomo_guard {
   }
   chain ingress {
     iifname { "lo", "mihomo0" } accept
+    iifname @public_if ct mark 0x4d48 accept
     ct state { established, related } accept
     ip saddr 192.168.0.0/24 accept
     ip6 saddr fe80::/10 accept

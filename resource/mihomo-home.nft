@@ -1,0 +1,21 @@
+add table inet mihomo_home
+add set inet mihomo_home home { type ifname; flags timeout; }
+add set inet mihomo_home tcp_ports { type inet_service; }
+add set inet mihomo_home udp_ports { type inet_service; }
+add chain inet mihomo_home ingress { type filter hook prerouting priority raw - 1; policy accept; }
+add chain inet mihomo_home egress { type filter hook postrouting priority filter - 1; policy accept; }
+flush chain inet mihomo_home ingress
+flush chain inet mihomo_home egress
+table inet mihomo_home {
+  chain ingress {
+    iifname "lo" accept
+    iifname @home ip saddr 192.168.0.0/24 accept
+    fib daddr type local tcp dport @tcp_ports drop
+    fib daddr type local udp dport @udp_ports drop
+  }
+  chain egress {
+    oifname { "lo", "mihomo0" } accept
+    oifname @home accept
+    ip daddr 192.168.0.1 meta l4proto { tcp, udp } th dport 53 drop
+  }
+}

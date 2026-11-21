@@ -30,7 +30,7 @@ in
           "GITHUB_DIR=${envs.envs.GITHUB_DIR}"
           "GIT_DIRS=${envs.envs.GITHUB_DIR}"
         ]
-        ++ lib.optionals osConfig.antares.proxy.enable [
+        ++ lib.optionals osConfig.antares.proxy.exportEnvironment [
           "http_proxy=${osConfig.antares.proxy.httpUrl}"
           "https_proxy=${osConfig.antares.proxy.httpUrl}"
         ];

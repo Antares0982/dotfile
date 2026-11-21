@@ -16,7 +16,7 @@ in
       "HTTP_PROXY"
       "HTTPS_PROXY"
     ]
-    // lib.optionalAttrs osConfig.antares.proxy.enable {
+    // lib.optionalAttrs osConfig.antares.proxy.exportEnvironment {
       http_proxy = osConfig.antares.proxy.httpUrl;
       https_proxy = osConfig.antares.proxy.httpUrl;
       HTTP_PROXY = osConfig.antares.proxy.httpUrl;

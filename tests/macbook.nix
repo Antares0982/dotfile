@@ -4,9 +4,8 @@
     module = { };
     check =
       c:
-      c.antares.mihomo.enable
-      && c.antares.mihomo.singapore
-      && !c.antares.mihomo.lan
+      c.antares.proxy.enable
+      && c.antares.proxy.lan
       && c.antares.mihomo.settings.mixed-port == 1081
       &&
         map (entry: entry.port) c.antares.mihomo.settings.listeners == [
@@ -26,9 +25,11 @@
           "其他"
           "全部节点"
         ]
-      && c.antares.mihomo.settings.bind-address == "127.0.0.1"
+      && c.antares.mihomo.settings.bind-address == "0.0.0.0"
       && c.antares.mihomo.settings.external-controller == "0.0.0.0:17900"
-      && lib.all (listener: listener.listen == "127.0.0.1") c.antares.mihomo.settings.listeners
+      && lib.all (
+        listener: listener.listen == (if listener.port == 17901 then "127.0.0.1" else "0.0.0.0")
+      ) c.antares.mihomo.settings.listeners
       && c.launchd.daemons.mihomo.serviceConfig.RunAtLoad
       && c.launchd.daemons.mihomo.serviceConfig.KeepAlive
       && lib.any (lib.hasSuffix "-mihomo-darwin.py") (
@@ -41,12 +42,12 @@
       && c.age.secrets.mihomoSubscription.group == "staff"
       && c.age.secrets.mihomoSubscription.mode == "0400"
       && c.age.identityPaths == [ "/etc/ssh/ssh_host_ed25519_key" ]
+      && c.environment.variables.http_proxy == c.launchd.daemons.nix-daemon.environment.http_proxy
       && c.antares.proxy.socksUrl == "socks5h://127.0.0.1:1081";
   }
   {
     name = "mihomo-off";
     module = { lib, ... }: {
-      antares.mihomo.enable = lib.mkForce false;
       antares.proxy.enable = lib.mkForce false;
     };
     check =
@@ -57,14 +58,8 @@
       && !(c.launchd.daemons.nix-daemon.environment ? all_proxy);
   }
   {
-    name = "mihomo-dependency";
-    module = { lib, ... }: { antares.mihomo.enable = lib.mkForce false; };
-    check = c: true;
-    valid = false;
-  }
-  {
     name = "mihomo-local-dashboard";
-    module = { lib, ... }: { antares.mihomo.dashboardLan = lib.mkForce false; };
+    module = { lib, ... }: { antares.proxy.lan = lib.mkForce false; };
     check = c: c.antares.mihomo.settings.external-controller == "127.0.0.1:17900";
   }
   {
@@ -86,7 +81,6 @@
   {
     name = "all-features-off";
     module = { lib, ... }: {
-      antares.mihomo.enable = lib.mkForce false;
       antares.proxy.enable = lib.mkForce false;
       antares.nixShell.enable = lib.mkForce false;
       antares.systemCompiler.enable = lib.mkForce false;

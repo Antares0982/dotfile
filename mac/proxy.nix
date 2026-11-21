@@ -1,13 +1,15 @@
+{ config, lib, ... }:
+let
+  proxy = config.antares.proxy;
+  environment = {
+    http_proxy = proxy.httpUrl;
+    https_proxy = proxy.httpUrl;
+    all_proxy = proxy.socksUrl;
+  };
+in
 {
-  config,
-  lib,
-  currentDevice,
-  ...
-}:
-{
-  launchd.daemons.nix-daemon.environment = lib.mkIf config.antares.proxy.enable {
-    http_proxy = config.antares.proxy.httpUrl;
-    https_proxy = config.antares.proxy.httpUrl;
-    all_proxy = config.antares.proxy.socksUrl;
+  config = lib.mkIf proxy.exportEnvironment {
+    environment.variables = environment;
+    launchd.daemons.nix-daemon.environment = environment;
   };
 }

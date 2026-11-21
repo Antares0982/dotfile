@@ -31,7 +31,7 @@ in
         WorkingDirectory = "${envs.envs.GITHUB_DIR}/wait-online";
         Environment = [
         ]
-        ++ lib.optionals osConfig.antares.proxy.enable [
+        ++ lib.optionals osConfig.antares.proxy.exportEnvironment [
           "http_proxy=${osConfig.antares.proxy.httpUrl}"
           "https_proxy=${osConfig.antares.proxy.httpUrl}"
         ];

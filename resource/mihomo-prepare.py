@@ -38,7 +38,7 @@ def prepare(template, subscription):
     if not secret_file.exists():
         secret_file.write_text(secrets.token_urlsafe(32))
     config = json.loads(Path(template).read_text())
-    if config.get("tun", {}).get("enable"):
+    if "nameserver-policy" in config.get("dns", {}):
         dns = config["dns"]
         dns["nameserver-policy"][parsed.hostname] = dns["proxy-server-nameserver"]
     config["secret"] = secret_file.read_text().strip()

@@ -6,7 +6,7 @@
   ...
 }:
 let
-  proxyEnv = lib.optionalAttrs config.antares.proxy.enable {
+  proxyEnv = lib.optionalAttrs config.antares.proxy.exportEnvironment {
     http_proxy = config.antares.proxy.httpUrl;
     https_proxy = config.antares.proxy.httpUrl;
     HTTP_PROXY = config.antares.proxy.httpUrl;

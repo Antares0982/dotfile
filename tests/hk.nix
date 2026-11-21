@@ -7,7 +7,6 @@
       c.services.mihomo.enable
       && c.services.mihomo.webui == null
       && !(c.systemd.services.mihomo.environment ? SAFE_PATHS)
-      && c.antares.mihomo.singapore
       && c.antares.mihomo.settings.mixed-port == 1081
       && !c.antares.mihomo.settings.allow-lan
       && c.antares.mihomo.settings.bind-address == "127.0.0.1"
@@ -111,7 +110,7 @@
   }
   {
     name = "mihomo-off";
-    module = { lib, ... }: { antares.mihomo.enable = lib.mkForce false; };
+    module = { lib, ... }: { antares.proxy.enable = lib.mkForce false; };
     check =
       c:
       !(c.systemd.services ? mihomo)
@@ -302,7 +301,7 @@
       mailserver.enable = lib.mkForce false;
       services.mysql.enable = lib.mkForce false;
       services.nginx.enable = lib.mkForce false;
-      antares.mihomo.enable = lib.mkForce false;
+      antares.proxy.enable = lib.mkForce false;
       services.rabbitmq.enable = lib.mkForce false;
       services.telegram-output-monitor-bot.enable = lib.mkForce false;
       services.antares-rpc-client.enable = lib.mkForce false;

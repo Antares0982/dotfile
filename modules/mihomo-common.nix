@@ -1,8 +1,14 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.antares.mihomo;
   base = builtins.fromJSON (builtins.readFile ../resource/mihomo-base.json);
-  address = if cfg.lan then "0.0.0.0" else "127.0.0.1";
+  proxy = config.antares.proxy;
+  address = if proxy.lan then "0.0.0.0" else "127.0.0.1";
   domains = [
     "cn"
     "private"
@@ -99,6 +105,7 @@ let
     ++ [
       "RULE-SET,cn-ip,国内"
       "MATCH,其他"
+      "MATCH,REJECT"
     ];
   regionGroup = name: filter: {
     inherit name filter;
@@ -106,7 +113,10 @@ let
     include-all = true;
     empty-fallback = "REJECT";
   };
-  regions = [ "JP" ] ++ lib.optional cfg.singapore "SG";
+  regions = [
+    "JP"
+    "SG"
+  ];
   choices = regions ++ [ "全部节点" ];
   selectGroup = name: proxies: {
     inherit name proxies;
@@ -126,15 +136,15 @@ let
     (selectGroup "YouTube" ([ "其他" ] ++ choices))
     (selectGroup "国内" ([ "DIRECT" ] ++ choices))
     (regionGroup "JP" "(?i)Japan|日本|🇯🇵|\\bJP\\b")
-  ]
-  ++ lib.optional cfg.singapore (regionGroup "SG" "(?i)Singapore|新加坡|狮城|🇸🇬|\\bSG\\b")
-  ++ [ (regionGroup "全部节点" ".*") ];
+    (regionGroup "SG" "(?i)Singapore|新加坡|狮城|🇸🇬|\\bSG\\b")
+    (regionGroup "全部节点" ".*")
+  ];
   policy = {
     proxy-groups = groups ++ [
       (
         (selectGroup "GLOBAL" ((map (group: group.name) groups) ++ [ "DIRECT" ]))
         // {
-          default-selected = if cfg.singapore then "SG" else "JP";
+          default-selected = "SG";
         }
       )
     ];
@@ -158,14 +168,44 @@ let
     ]
     // policy
     // {
-      allow-lan = cfg.lan;
+      allow-lan = proxy.lan;
       bind-address = address;
       lan-allowed-ips = [
         "127.0.0.0/8"
         "192.168.0.0/24"
       ];
+      dns = base.dns // {
+        nameserver-policy =
+          base.dns.nameserver-policy
+          // lib.optionalAttrs proxy.lan {
+            "+.lan" = "udp://192.168.0.1:53#DIRECT";
+            "+.home.arpa" = "udp://192.168.0.1:53#DIRECT";
+          };
+      };
+      tun =
+        if proxy.insideGFW then
+          (builtins.fromJSON (builtins.readFile ../resource/mihomo-tun.json)).tun
+          // lib.optionalAttrs (!proxy.lan) {
+            route-exclude-address = [
+              "169.254.0.0/16"
+              "224.0.0.0/4"
+              "255.255.255.255/32"
+              "fe80::/10"
+              "ff00::/8"
+            ];
+          }
+          // lib.optionalAttrs (cfg.publicInterface != null) { auto-redirect = false; }
+          // lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
+            device = "utun";
+            auto-detect-interface = false;
+            auto-route = false;
+            auto-redirect = false;
+            dns-mode = "disabled";
+          }
+        else
+          base.tun;
       mixed-port = cfg.port;
-      external-controller = "${if cfg.dashboardLan then "0.0.0.0" else "127.0.0.1"}:17900";
+      external-controller = "${if proxy.lan then "0.0.0.0" else "127.0.0.1"}:17900";
       external-controller-cors = {
         allow-origins = [
           "http://127.0.0.1:17900"
@@ -190,22 +230,14 @@ let
 in
 {
   options.antares.mihomo = {
-    enable = lib.mkEnableOption "Mihomo proxy with terminal and web management";
     port = lib.mkOption {
       type = lib.types.port;
       default = 1081;
     };
-    singapore = lib.mkEnableOption "Singapore nodes for service policy groups";
-    lan = lib.mkEnableOption "proxy access from the home LAN";
-    dashboard = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Install the WebUI; the authenticated control API remains available.";
-    };
-    dashboardLan = lib.mkOption {
-      type = lib.types.bool;
-      default = cfg.dashboard && cfg.lan;
-      description = "Listen for dashboard connections on IPv4 interfaces.";
+    publicInterface = lib.mkOption {
+      type = lib.types.nullOr (lib.types.strMatching "[a-zA-Z0-9_.-]+");
+      default = null;
+      description = "Physical interface serving public connections during TUN operation.";
     };
     dashboardOrigins = lib.mkOption {
       type = lib.types.listOf lib.types.str;
@@ -226,7 +258,7 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable {
+  config = lib.mkIf proxy.enable {
     assertions = [
       {
         assertion =

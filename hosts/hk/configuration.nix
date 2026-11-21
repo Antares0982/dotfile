@@ -8,19 +8,15 @@ let
   system = pkgs.stdenv.hostPlatform.system;
 in
 {
+  antares.proxy = {
+    enable = true;
+  };
   antares.starship = {
     enable = true;
     settings.palettes.host.color_os = "#ff8700";
   };
   services.telegram-output-monitor-bot.enable = true;
   services.antares-rpc-client.enable = true;
-  antares.mihomo = {
-    enable = true;
-    singapore = true;
-    lan = false;
-    dashboard = false;
-    dashboardLan = false;
-  };
   services.nginx.enable = true;
   services.forgejo.enable = true;
   antares.acme.enable = true;

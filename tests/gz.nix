@@ -11,7 +11,6 @@
       c.services.mihomo.enable
       && c.services.mihomo.webui == null
       && !(c.systemd.services.mihomo.environment ? SAFE_PATHS)
-      && c.antares.mihomo.singapore
       && c.antares.mihomo.settings.mixed-port == 1081
       && !c.antares.mihomo.settings.allow-lan
       && c.antares.mihomo.settings.bind-address == "127.0.0.1"
@@ -103,19 +102,24 @@
       && c.age.secrets.mihomoSubscription.owner == "root"
       && c.age.secrets.mihomoSubscription.mode == "0400"
       && lib.any (p: lib.getName p == "mihomo-tools") c.environment.systemPackages
-      && c.environment.variables.http_proxy == "http://127.0.0.1:1081"
-      && c.environment.variables.HTTPS_PROXY == c.environment.variables.http_proxy
-      && c.environment.variables.ALL_PROXY == "socks5h://127.0.0.1:1081"
-      && c.environment.variables.NO_PROXY == "localhost,127.0.0.1,::1"
-      && c.systemd.services.nix-daemon.environment.http_proxy == c.environment.variables.http_proxy
-      && c.systemd.services.nix-daemon.environment.ALL_PROXY == c.environment.variables.ALL_PROXY;
+      && (
+        if host == "gz" then
+          !(c.environment.variables ? http_proxy)
+        else
+          c.environment.variables.http_proxy == "http://127.0.0.1:1081"
+          && c.environment.variables.HTTPS_PROXY == c.environment.variables.http_proxy
+          && c.environment.variables.ALL_PROXY == "socks5h://127.0.0.1:1081"
+          && c.environment.variables.NO_PROXY == "localhost,127.0.0.1,::1"
+          && c.systemd.services.nix-daemon.environment.http_proxy == c.environment.variables.http_proxy
+          && c.systemd.services.nix-daemon.environment.ALL_PROXY == c.environment.variables.ALL_PROXY
+      );
   }
   {
     name = "proxy-off";
     module = { lib, ... }: { antares.proxy.enable = lib.mkForce false; };
     check =
       c:
-      c.services.mihomo.enable
+      !c.services.mihomo.enable
       && !(c.environment.variables ? http_proxy)
       && !(c.environment.variables ? ALL_PROXY)
       && !(c.systemd.services.nix-daemon.environment ? http_proxy)
@@ -124,7 +128,6 @@
   {
     name = "mihomo-off";
     module = { lib, ... }: {
-      antares.mihomo.enable = lib.mkForce false;
       antares.proxy.enable = lib.mkForce false;
     };
     check =
@@ -254,11 +257,5 @@
     module = { lib, ... }: { services.nginx.enable = lib.mkForce false; };
     valid = false;
     check = c: c.antares.l4d2.fileServer.enable && !c.services.nginx.enable;
-  }
-  {
-    name = "mihomo-dependency";
-    module = { lib, ... }: { antares.mihomo.enable = lib.mkForce false; };
-    valid = false;
-    check = c: !(c.systemd.services ? mihomo) && c.antares.proxy.enable;
   }
 ]

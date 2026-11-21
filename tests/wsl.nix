@@ -55,7 +55,10 @@
         service = c.systemd.services.git-sign-unlock;
         trigger = c.systemd.user.services.git-sign-unlock;
       in
-      builtins.attrNames c.age.secrets == [ "gitSignPassphrase" ]
+      builtins.attrNames c.age.secrets == [
+        "gitSignPassphrase"
+        "mihomoSubscription"
+      ]
       && secret.owner == "root"
       && secret.group == "root"
       && secret.mode == "0400"
@@ -81,7 +84,7 @@
       c:
       !(c.systemd.services ? git-sign-unlock)
       && !(c.systemd.user.services ? git-sign-unlock)
-      && c.age.secrets == { }
+      && builtins.attrNames c.age.secrets == [ "mihomoSubscription" ]
       && c.programs.ssh.startAgent
       && c.users.users ? antares;
   }

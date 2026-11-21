@@ -11,13 +11,16 @@ let
   tools = (import ../packages { pkgs = apps; }).mihomo-tools;
   queue = "/home/agent/agent_work/.agent/mihomo";
   agent = config.antares.agent.enable or false;
-  settings = lib.recursiveUpdate cfg.settings (
-    lib.optionalAttrs cfg.tun.enable (
-      (builtins.fromJSON (builtins.readFile ../resource/mihomo-tun.json))
-      // {
-        rules = cfg.settings.rules ++ [ "MATCH,REJECT" ];
-      }
-    )
+  proxy = config.antares.proxy;
+  settings = cfg.settings;
+  homeRules = pkgs.writeText "mihomo-home.nft" (
+    builtins.readFile ../resource/mihomo-home.nft
+    + ''
+      flush set inet mihomo_home tcp_ports
+      flush set inet mihomo_home udp_ports
+      add element inet mihomo_home tcp_ports { ${toString cfg.port}, ${toString (cfg.port + 1)}, ${toString (cfg.port + 2)}, 17900${lib.optionalString mobile.enable ", ${toString mobile.port}"} }
+      add element inet mihomo_home udp_ports { ${toString cfg.port}, ${toString (cfg.port + 1)}, ${toString (cfg.port + 2)} }
+    ''
   );
   template = pkgs.writeText "mihomo-base.json" (builtins.toJSON settings);
   mobile = cfg.mobileRules;
@@ -58,8 +61,8 @@ in
       default = 18080;
     };
   };
-  config = lib.mkIf cfg.enable {
-    system.build.mihomo-mobile-rules = lib.mkIf mobile.enable mobileRoot;
+  config = lib.mkIf proxy.enable {
+    system.build.mihomo-mobile-rules = lib.mkIf (proxy.lan && mobile.enable) mobileRoot;
     assertions = lib.optional mobile.enable {
       assertion =
         !(builtins.elem mobile.port (
@@ -84,8 +87,39 @@ in
     services.mihomo = {
       enable = true;
       package = apps.mihomo;
-      webui = if cfg.dashboard then apps.metacubexd else null;
+      webui = if proxy.lan then apps.metacubexd else null;
       configFile = "/var/lib/mihomo-config/config.json";
+    };
+    systemd.services.mihomo-home = lib.mkIf proxy.lan {
+      wantedBy = [ "sysinit.target" ];
+      before = [
+        "network-pre.target"
+        "mihomo.service"
+        "mihomo-mobile-rules.service"
+      ];
+      after = [ "systemd-modules-load.service" ];
+      unitConfig.DefaultDependencies = false;
+      reloadIfChanged = true;
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        ExecStart = "${pkgs.nftables}/bin/nft -f ${homeRules}";
+        ExecReload = "${pkgs.nftables}/bin/nft -f ${homeRules}";
+        ExecStop = "${pkgs.nftables}/bin/nft destroy table inet mihomo_home";
+      };
+    };
+    systemd.services.mihomo-home-watch = lib.mkIf proxy.lan {
+      wantedBy = [ "multi-user.target" ];
+      after = [ "mihomo-home.service" ];
+      requires = [ "mihomo-home.service" ];
+      path = [
+        pkgs.iproute2
+        pkgs.nftables
+      ];
+      serviceConfig = {
+        ExecStart = "${pkgs.python3}/bin/python3 ${../resource/mihomo-home.py}";
+        Restart = "always";
+      };
     };
     systemd.services.mihomo-config = {
       description = "Prepare private Mihomo configuration";
@@ -104,12 +138,12 @@ in
     };
     systemd.services.mihomo = {
       after = [ "mihomo-config.service" ];
-      requires = [ "mihomo-config.service" ];
+      requires = [ "mihomo-config.service" ] ++ lib.optional proxy.lan "mihomo-home.service";
       restartTriggers = [
         template
         config.age.secrets.mihomoSubscription.file
       ];
-      environment = lib.optionalAttrs cfg.dashboard { SAFE_PATHS = "${apps.metacubexd}"; };
+      environment = lib.optionalAttrs proxy.lan { SAFE_PATHS = "${apps.metacubexd}"; };
       serviceConfig = {
         Restart = "on-failure";
         RestartSec = "3s";
@@ -128,9 +162,10 @@ in
         "/results"
       ]
     );
-    systemd.services.mihomo-mobile-rules = lib.mkIf mobile.enable {
+    systemd.services.mihomo-mobile-rules = lib.mkIf (proxy.lan && mobile.enable) {
       description = "Public Clash Mi routing override";
       wantedBy = [ "multi-user.target" ];
+      requires = [ "mihomo-home.service" ];
       wants = [ "network-online.target" ];
       after = [ "network-online.target" ];
       serviceConfig = {
@@ -151,11 +186,11 @@ in
       };
     };
     networking.firewall.extraCommands = lib.mkMerge [
-      (lib.mkIf cfg.lan ''
-        iptables -A nixos-fw -i end0 -s 192.168.0.0/24 -p tcp -m multiport --dports ${toString cfg.port},${toString (cfg.port + 1)},${toString (cfg.port + 2)},17900 -j nixos-fw-accept
-        iptables -A nixos-fw -i end0 -s 192.168.0.0/24 -p udp -m multiport --dports ${toString cfg.port},${toString (cfg.port + 1)},${toString (cfg.port + 2)} -j nixos-fw-accept
+      (lib.mkIf proxy.lan ''
+        iptables -A nixos-fw -s 192.168.0.0/24 -p tcp -m multiport --dports ${toString cfg.port},${toString (cfg.port + 1)},${toString (cfg.port + 2)},17900 -j nixos-fw-accept
+        iptables -A nixos-fw -s 192.168.0.0/24 -p udp -m multiport --dports ${toString cfg.port},${toString (cfg.port + 1)},${toString (cfg.port + 2)} -j nixos-fw-accept
       '')
-      (lib.mkIf mobile.enable ''
+      (lib.mkIf (proxy.lan && mobile.enable) ''
         iptables -A nixos-fw -s 192.168.0.0/24 -p tcp --dport ${toString mobile.port} -j nixos-fw-accept
       '')
     ];

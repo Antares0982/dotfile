@@ -167,13 +167,13 @@ in
       description = "antares-agent: pull and sync the app before starting";
       before = [ "antares-agent.service" ];
       wantedBy = [ "antares-agent.service" ];
-      after = [ "network-online.target" ] ++ lib.optional config.antares.mihomo.enable "mihomo.service";
+      after = [ "network-online.target" ] ++ lib.optional config.antares.proxy.enable "mihomo.service";
       wants = [ "network-online.target" ];
 
       environment = {
         HOME = home;
-        http_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
-        https_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
+        http_proxy = lib.mkIf config.antares.proxy.exportEnvironment config.antares.proxy.httpUrl;
+        https_proxy = lib.mkIf config.antares.proxy.exportEnvironment config.antares.proxy.httpUrl;
       };
 
       serviceConfig = {
@@ -191,7 +191,7 @@ in
         "network-online.target"
         "codex-auth.service"
       ]
-      ++ lib.optional config.antares.mihomo.enable "mihomo.service";
+      ++ lib.optional config.antares.proxy.enable "mihomo.service";
       wants = [ "network-online.target" ];
       requires = [ "codex-auth.service" ];
       partOf = [ "codex-auth.service" ];
@@ -209,8 +209,8 @@ in
         ANTARES_AUTH_SOCKET = "/run/codex-auth/auth.sock";
         ANTARES_PROFILES_DIR = "${stateDir}/codex-v1/profiles";
 
-        http_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
-        https_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
+        http_proxy = lib.mkIf config.antares.proxy.exportEnvironment config.antares.proxy.httpUrl;
+        https_proxy = lib.mkIf config.antares.proxy.exportEnvironment config.antares.proxy.httpUrl;
       };
 
       serviceConfig = {

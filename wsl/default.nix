@@ -5,6 +5,11 @@
   ...
 }:
 {
+  antares.proxy = {
+    enable = true;
+    insideGFW = true;
+    lan = true;
+  };
   antares.windowsShell.enable = true;
   antares.starship = {
     enable = true;
@@ -21,6 +26,8 @@
   programs.direnv.enable = false;
   nixpkgs.config.allowUnfree = true;
   imports = [
+    ../modules/proxy.nix
+    ../modules/mihomo.nix
     ../modules/windows-shell.nix
     ./git-sign-unlock.nix
     ./network.nix

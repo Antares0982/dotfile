@@ -2,10 +2,19 @@
 
 ## Shared Mihomo configuration
 
-PC, RPi, MacBook, HK and SZ use `antares.mihomo.enable`. The shared module owns the native
-Mihomo service, subscription secret, Web UI, management commands and optional
-RPi agent worker. Disable `antares.proxy.enable` when disabling the last proxy.
-The retained GZ configuration uses the same modules, without deployment or secret access.
+Set the three host options under `antares.proxy`. All default to false.
+
+| Host | enable | insideGFW | lan |
+|---|---|---|---|
+| PC, RPi, MacBook, WSL | yes | yes | yes |
+| SZ | yes | yes | no |
+| HK | yes | no | no |
+
+`enable` owns the service, subscription, clients and listeners. `insideGFW`
+enables dual-stack TUN, system DNS and fail-closed egress. These hosts also
+export the local proxy environment. HK applications opt in explicitly.
+`lan` enables the authenticated WebUI and shares proxy listeners with the
+home IPv4 network. Preserve GZ for historical evaluation only.
 
 | Port | Purpose |
 |---|---|
@@ -15,25 +24,14 @@ The retained GZ configuration uses the same modules, without deployment or secre
 | 17900 | MetaCubeXD `/ui/` and authenticated control API |
 | 17901 | Private loopback bandwidth probes |
 
-Ports 1080 and 1084 are retired. PC listeners are loopback-only. RPi permits proxy and
-dashboard access from `192.168.0.0/24` on `end0`; firewall rules deny public IPv6 access.
-Dashboard URLs: `http://127.0.0.1:17900/ui/` locally and
-`http://192.168.0.3:17900/ui/` for RPi. Run `mihomoctl secret` on the target host
-to obtain its API password. Never put the password in Git or Nix expressions.
-
-MacBook uses `http://192.168.0.5:17900/ui/` on the home LAN. Its proxy ports
-remain loopback-only; the control API listens on IPv4, with a dedicated PF
-anchor permitting only loopback and `192.168.0.0/24`. `dashboardLan` controls
-dashboard exposure independently of `lan`, which controls proxy listeners.
-`dashboardOrigins` declares additional Web UI origins. In the dashboard setup,
-use the API address without `/ui/` and the target host's `mihomoctl secret`.
-
-HK and SZ set `dashboard = false`, `dashboardLan = false`, and `lan = false`.
-They install no WebUI and bind every proxy listener and the authenticated API
-to `127.0.0.1`; no proxy ports are opened in their firewalls. CLI and TUI use
-that API locally as `antares`. HK retains its direct system environment; SZ
-exports proxy variables to shells and the Nix daemon, using 1081 for HTTP/SOCKS5.
-Use `python3 scripts/check-mihomo.py --no-webui` after eventual deployment.
+Home access requires the physical uplink, router 192.168.0.1, its configured
+link-layer address, and client source 192.168.0.0/24. When replacing the
+router, update the router identity for both platforms. Unknown networks retain
+loopback access. The dashboard is on port 17900 at the host address (PC .2,
+RPi .3, Mac .5). Obtain its local credential with `mihomoctl secret`.
+HK and SZ expose 1081–1083 and the authenticated API exclusively on loopback.
+Both omit the WebUI. Port 17901 always stays on loopback; only PC serves the
+public Clash Mi override on port 18080.
 
 ```sh
 mihomoctl tui
@@ -52,9 +50,8 @@ Nix owns ports and routing: edit `modules/mihomo-common.nix` and rebuild. Do not
 clashtui File profiles to replace the managed daemon configuration.
 
 Service groups are `Telegram`, `AI`, `Netflix`, `YouTube`, `国内` and `其他`.
-On PC/Mac/HK/SZ/mobile, Telegram defaults to SG; AI, Netflix and YouTube follow `其他`,
-which defaults to JP. `国内` defaults to DIRECT. RPi retains JP as its only
-dedicated region group. `singapore` enables the SG group, without adding a listener.
+On all hosts and mobile, Telegram defaults to SG. AI, Netflix and YouTube
+follow `其他` (JP). `国内` defaults to DIRECT.
 Private networks always go DIRECT; advertisements and carrier authentication
 remain blocked. Service rules use upstream MRS domain/IP datasets instead of
 separate JP/SG rule lists. Keep the core in Rule mode; 1082/1083 bypass those
@@ -63,7 +60,7 @@ rules through native listener targets.
 1082 follows the GLOBAL selector even in Rule mode. Select SG, JP or DIRECT in
 GLOBAL using the Web UI or TUI; 1081 keeps its service rules in Rule mode.
 Global mode also sends 1081 through GLOBAL. The shared config defaults GLOBAL
-to SG on PC/Mac/HK/SZ/mobile and JP on RPi. Mihomo otherwise auto-generates GLOBAL
+to SG everywhere. Mihomo otherwise auto-generates GLOBAL
 with DIRECT first. Saved selections override the configured default; existing
 devices that saved DIRECT must select the desired region once. Restarts and
 subscription updates retain that choice.
@@ -82,16 +79,29 @@ The API credential persists under `/var/lib/mihomo-config`; node/provider
 caches and selections use the native service's private state directory.
 Disabling the feature preserves persistent files, including retired proxy data.
 
-On MacBook, `org.nixos.mihomo` supervises the core under launchd. The supervisor
-sets up PF and the application firewall before starting Mihomo as `antares`;
-the core never runs as root. Exit cleanup removes only this service's firewall
-entries and PF enable reference. State, credentials and the bandwidth lock live
-under `~/Library/Application Support/mihomo`, with private directory/file modes.
-The supervisor waits for agenix on boot and retries failed startups through
-launchd. Logs are in `/var/log/mihomo.log` (root-only). Mac configuration updates
-require `sudo darwin-rebuild switch --flake ./hosts/macbook#macbook`; preserve the
-previous system closure for rollback. `opencode` is temporarily omitted on Mac
-until its Darwin build is fixed.
+On MacBook the launchd supervisor owns the utun descriptor, routes, system
+DNS and PF anchor. The core runs as the dedicated `_mihomo` account, using
+private state under `/var/db/antares-mihomo`. On first activation it imports the
+previous selection cache. The CLI credential and speed-test lock remain in
+the user's private state. Startup failures keep the PF guard installed.
+Use a local console for the first switch. Check the WebRTC and DoH entries
+in `chrome://policy`. Test sleep, wake and moving to
+another network, including one with the same IPv4 subnet.
+
+WSL uses the distro's systemd, TUN device and resolver. In the Windows user's
+`.wslconfig`, set `networkingMode=mirrored` under `[wsl2]`. Apply host changes
+at a convenient `wsl --shutdown`. Check for existing Windows listeners on
+1081–1083 and 17900. In elevated PowerShell, configure narrow Hyper-V rules:
+
+```powershell
+$id = '{40E0AC32-46A5-438A-A0B2-2B479E8F2E90}'
+New-NetFirewallHyperVRule -Name MihomoHomeTCP -DisplayName 'Mihomo home TCP' -Direction Inbound -VMCreatorId $id -Protocol TCP -LocalPorts 1081,1082,1083,17900 -RemoteAddresses 192.168.0.0/24
+New-NetFirewallHyperVRule -Name MihomoHomeUDP -DisplayName 'Mihomo home UDP' -Direction Inbound -VMCreatorId $id -Protocol UDP -LocalPorts 1081,1082,1083 -RemoteAddresses 192.168.0.0/24
+```
+
+Verify `/dev/net/tun`, nftables, the mirrored default gateway identity, communication
+from a second LAN device and isolation on another network. WSL's TUN covers
+Linux processes. Windows clients can opt into port 1081.
 
 Keep launchd script paths in the system closure using Nix path interpolation.
 `toString` on a source path loses its dependency context; garbage collection can
@@ -123,18 +133,21 @@ checks execute as a systemd dynamic user without a home directory; resolve
 macOS home paths only on Darwin. Configuration evaluation alone does not test
 this service environment.
 
-## Desktop TUN
+## TUN and DNS
 
-The PC selects `antares.mihomo.tun.enable`. NetworkManager and systemd-resolved
-send desktop DNS to Mihomo. Both IP families use fake IPs. Domains in the
+Every core uses the same DNS upstream policy, including headless HK. On Linux
+TUN hosts systemd-resolved sends system queries to Mihomo. Both IP families use fake IPs. Domains in the
 `cn` rule set use AliDNS over direct DoH for domestic CDN selection. Default
 lookups use Cloudflare DoH through `其他`. Node names and the exact subscription host
-use a separate bootstrap resolver. Home `.lan` and `.home.arpa` names use
-the LAN router. Chrome uses system DNS and disables unproxied WebRTC UDP.
+use a separate bootstrap resolver. Home-enabled hosts resolve `.lan` and `.home.arpa` through the verified home router. Chrome uses system DNS and disables unproxied WebRTC UDP.
 
 The `mihomo-guard` service loads its own nftables table before NetworkManager.
-While Mihomo is stopped, public traffic fails closed. The home subnet
-`192.168.0.0/24` retains SSH, Samba and discovery. Direct queries to router
+While Mihomo is stopped, public traffic fails closed. The PC home subnet retains SSH, Samba and discovery. On SZ conntrack marks
+public service connections on eth0 and routes their replies through the main
+table. Verify new SSH sessions, Source queries on UDP 27015 and HTTPS on
+8443 from outside while the core is stopped (`python3 scripts/check-sz-ingress.py`).
+A UDP reply first selects the physical source address using its source port;
+only replies to tracked incoming public connections pass the egress firewall. Set a timed rollback before switching. Direct queries to router
 DNS from applications are blocked on the physical interface. qBittorrent
 uses the SOCKS5 direct listener for trackers and peers. Its desktop unit
 backs up only the managed proxy keys and restores them when disabled.
@@ -165,7 +178,7 @@ This URL belongs in the remote override field, not an individual rule provider.
 
 The phone keeps its own nodes, subscription updates, ports and control API.
 The override uses the PC's effective DNS, IPv6 and routing rules, including
-the `cn` resolver policy and final `MATCH,REJECT` when desktop TUN is enabled.
+the `cn` resolver policy and final `MATCH,REJECT`.
 It also enables TUN on Android.
 Proxy groups and rule providers come from `antares.mihomo.policy`.
 Regional groups use native `include-all`

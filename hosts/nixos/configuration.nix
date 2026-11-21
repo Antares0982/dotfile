@@ -8,25 +8,24 @@ let
   system = pkgs.stdenv.hostPlatform.system;
 in
 {
+  antares.proxy = {
+    enable = true;
+    insideGFW = true;
+    lan = true;
+  };
   antares.starship = {
     enable = true;
     settings.palettes.host.color_os = "#00af00";
   };
   services.telegram-output-monitor-bot.enable = true;
-  antares.monitor.proxy = if config.antares.proxy.enable then config.antares.proxy.httpUrl else null;
+  antares.monitor.proxy =
+    if config.antares.proxy.exportEnvironment then config.antares.proxy.httpUrl else null;
   services.antares-rpc-client.enable = true;
-  antares.mihomo = {
+  antares.mihomo.mobileRules = {
     enable = true;
-    tun.enable = true;
-    port = 1081;
-    singapore = true;
-    mobileRules = {
-      enable = true;
-      address = "192.168.0.2";
-    };
+    address = "192.168.0.2";
   };
-  antares.proxy.enable = true;
-  antares.proxy.socksUrl = "socks5h://127.0.0.1:1081";
+  antares.mihomo.dashboardOrigins = [ "http://192.168.0.2:17900" ];
   antares.autostart.enable = true;
   services.rabbitmq.enable = true;
   antares.desktop.enable = true;

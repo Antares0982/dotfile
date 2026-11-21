@@ -11,6 +11,39 @@ let
   cfg = system.config;
   casesFile = ./. + "/${host}.nix";
   allCases = [
+    {
+      name = "proxy-host";
+      module = { };
+      check =
+        c:
+        let
+          proxy = c.antares.proxy;
+          settings = c.antares.mihomo.settings;
+          inside =
+            !(lib.elem host [
+              "hk"
+              "gz"
+            ]);
+          lan = lib.elem host [
+            "nixos"
+            "rpi5"
+            "macbook"
+            "wsl"
+          ];
+        in
+        proxy.enable
+        && proxy.insideGFW == inside
+        && proxy.lan == lan
+        && settings.tun.enable == inside
+        && settings.allow-lan == lan
+        && settings.ipv6
+        && settings.dns.ipv6
+        && settings.dns.nameserver == [ "https://1.1.1.1/dns-query#其他" ]
+        && settings.dns.nameserver-policy."rule-set:cn" == "https://223.5.5.5/dns-query#DIRECT"
+        && settings.mixed-port == 1081
+        && settings.rules == c.antares.mihomo.policy.rules
+        && c.age.secrets ? mihomoSubscription;
+    }
     (import ./zsh.nix { inherit lib host; })
   ]
   ++ (import ./starship.nix { inherit lib host; })

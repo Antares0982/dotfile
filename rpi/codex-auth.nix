@@ -9,8 +9,8 @@ let
   enabled = config.antares.agent.enable || config.services.qq-codex-agent.enable;
   app = inputs.qq-codex-agent.packages.${pkgs.stdenv.hostPlatform.system}.default;
   environment = {
-    http_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
-    https_proxy = lib.mkIf config.antares.proxy.enable config.antares.proxy.httpUrl;
+    http_proxy = lib.mkIf config.antares.proxy.exportEnvironment config.antares.proxy.httpUrl;
+    https_proxy = lib.mkIf config.antares.proxy.exportEnvironment config.antares.proxy.httpUrl;
     no_proxy = "127.0.0.1,localhost,::1";
   };
   importer = pkgs.writeShellApplication {
@@ -73,7 +73,7 @@ in
       after = [
         "network-online.target"
       ]
-      ++ lib.optional config.antares.mihomo.enable "mihomo.service";
+      ++ lib.optional config.antares.proxy.enable "mihomo.service";
       wants = [ "network-online.target" ];
       inherit environment;
       serviceConfig = service // {

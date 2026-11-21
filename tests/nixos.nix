@@ -4,14 +4,13 @@
     module = { };
     check =
       c:
-      c.antares.mihomo.enable
-      && c.antares.mihomo.singapore
-      && !c.antares.mihomo.lan
+      c.antares.proxy.enable
+      && c.antares.proxy.lan
       && c.services.mihomo.enable
       && c.services.mihomo.tunMode
       && c.services.resolved.enable
       && c.systemd.services ? mihomo-guard
-      && !c.antares.mihomo.settings.tun.enable
+      && c.antares.mihomo.settings.tun.enable
       && c.systemd.services.mihomo.serviceConfig.DynamicUser
       && c.age.secrets.mihomoSubscription.mode == "0400"
       && c.antares.mihomo.port == 1081
@@ -40,7 +39,7 @@
   }
   {
     name = "mihomo-tun-off";
-    module = { lib, ... }: { antares.mihomo.tun.enable = lib.mkForce false; };
+    module = { lib, ... }: { antares.proxy.insideGFW = lib.mkForce false; };
     check =
       c:
       c.services.mihomo.enable
@@ -136,7 +135,6 @@
   {
     name = "mihomo-off";
     module = { lib, ... }: {
-      antares.mihomo.enable = lib.mkForce false;
       antares.proxy.enable = lib.mkForce false;
       antares.autostart.enable = lib.mkForce false;
     };
@@ -152,14 +150,6 @@
       && !(c.home-manager.users.antares.home.sessionVariables ? http_proxy)
       && !(c.systemd.services.nix-daemon.environment ? http_proxy)
       && !(lib.any (p: p.from == 1080) c.networking.firewall.allowedTCPPortRanges);
-  }
-  {
-    name = "mihomo-dependency";
-    module = { lib, ... }: {
-      antares.mihomo.enable = lib.mkForce false;
-    };
-    check = c: true;
-    valid = false;
   }
   {
     name = "rabbitmq-off";
@@ -475,7 +465,6 @@
     module = { lib, ... }: {
       antares = {
         desktop.enable = lib.mkForce false;
-        mihomo.enable = lib.mkForce false;
         proxy.enable = lib.mkForce false;
         autostart.enable = lib.mkForce false;
         waitOnline.enable = lib.mkForce false;
