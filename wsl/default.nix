@@ -27,6 +27,18 @@
   environment.variables.NIX_DOT_FILES = "${config.users.users.antares.home}/Nix";
   age.identityPaths = [ "/etc/ssh/agenix" ];
   wsl.enable = true;
+  # Keep a Windows-side WSL client attached after the last terminal closes.
+  systemd.services.wsl-keepalive = {
+    description = "Keep the NixOS WSL distribution running";
+    wantedBy = [ "multi-user.target" ];
+    unitConfig.RequiresMountsFor = "/mnt/c";
+    serviceConfig = {
+      User = config.wsl.defaultUser;
+      ExecStart = "/mnt/c/Windows/System32/wsl.exe --distribution NixOS --user ${config.wsl.defaultUser} --exec ${pkgs.coreutils}/bin/sleep infinity";
+      Restart = "always";
+      RestartSec = "5s";
+    };
+  };
   programs.direnv.enable = false;
   nixpkgs.config.allowUnfree = true;
   imports = [
