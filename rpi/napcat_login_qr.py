@@ -84,6 +84,8 @@ if __name__ == "__main__":
     forward(
         sys.stdin,
         Path(os.environ["RUNTIME_DIRECTORY"]) / "last-sent",
-        "https://api.telegram.org/bot" + os.environ["ANTARES_MONITOR_TOKEN"] + "/sendPhoto",
+        "https://api.telegram.org/bot"
+        + os.environ["ANTARES_MONITOR_TOKEN"]
+        + "/sendPhoto",
         int(os.environ["ANTARES_MONITOR_MYID"]),
     )

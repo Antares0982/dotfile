@@ -51,6 +51,38 @@ def check_service_home():
 
 def check():
     check_service_home()
+    # ExecStartPost receives the core config credential, not connection.json.
+    with tempfile.TemporaryDirectory() as credentials:
+        Path(credentials, "config.yaml").write_text(
+            json.dumps({"secret": "test", "mixed-port": 1081})
+        )
+        for address in ("127.0.0.1", "127.0.0.2"):
+            with patch.dict(
+                os.environ,
+                {
+                    "CREDENTIALS_DIRECTORY": credentials,
+                    "MIHOMO_CLIENT_ADDRESS": address,
+                },
+            ):
+                assert m.connection()["api"] == f"http://{address}:17900"
+                assert m.test_proxy() == f"http://{address}:17901"
+                with (
+                    patch.object(m, "select"),
+                    patch.object(
+                        m.subprocess,
+                        "run",
+                        return_value=SimpleNamespace(
+                            returncode=0, stdout="200 1000 3000 3 0.1"
+                        ),
+                    ) as run,
+                ):
+                    assert m.sample("Japan 1", 3)["valid"]
+                    assert f"http://{address}:17901" in run.call_args.args[0]
+                Path(credentials, "connection.json").write_text(
+                    json.dumps({"api": f"http://{address}:17900", "test_port": 17901})
+                )
+                assert m.client_address() == address
+                Path(credentials, "connection.json").unlink()
     with (
         tempfile.TemporaryDirectory() as state,
         patch.dict(
@@ -59,7 +91,13 @@ def check():
         ),
         patch.object(m.os, "execv", side_effect=SystemExit) as spawn,
         patch.object(
-            m, "connection", return_value={"secret": "test", "port": 1081}
+            m,
+            "connection",
+            return_value={
+                "api": "http://127.0.0.2:17900",
+                "secret": "test",
+                "port": 1081,
+            },
         ) as connection,
     ):
         for args in (["--config-dir=/custom"], ["--help"], ["mode"]):
@@ -76,7 +114,7 @@ def check():
             (Path(state) / "mihomo-tui/mihomo/core_override_config.yaml").read_text()
         )
         assert (
-            config["external-controller"] == "127.0.0.1:17900"
+            config["external-controller"] == "127.0.0.2:17900"
             and config["secret"] == "test"
         )
     token = "a" * 32
@@ -157,7 +195,11 @@ def check():
 
             with (
                 patch.object(m, "select", choose),
-                patch.object(m, "connection", return_value={"test_port": 17901}),
+                patch.object(
+                    m,
+                    "connection",
+                    return_value={"api": "http://127.0.0.2:17900", "test_port": 17901},
+                ),
                 patch.object(
                     m.subprocess,
                     "run",
@@ -174,7 +216,7 @@ def check():
                     raise AssertionError("Wrong egress accepted")
                 assert state["JP"] == "Japan 1"
                 assert state["BENCH"] == "Japan 2"
-                assert "http://127.0.0.1:17901" in run.call_args.args[0]
+                assert "http://127.0.0.2:17901" in run.call_args.args[0]
                 run.return_value = SimpleNamespace(
                     returncode=0, stdout="ip=1.2.3.4\nloc=JP\n"
                 )

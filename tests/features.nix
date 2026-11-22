@@ -35,6 +35,7 @@ let
         && proxy.insideGFW == inside
         && proxy.lan == lan
         && settings.tun.enable == inside
+        && (settings.tun.auto-redirect or false) == (inside && host != "wsl" && host != "sz" && !darwin)
         && settings.allow-lan == lan
         && settings.ipv6
         && settings.dns.ipv6

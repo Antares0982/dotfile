@@ -52,7 +52,9 @@ infrastructure and shared accounts remain independent.
 The refactoring covers `nixos`, `hk`, `rpi5`, and `macbook`. WSL is excluded;
 keep its existing entry points and shared-module interfaces compatible.
 
-Run `bash scripts/check-configs.sh` for all configured checks, or pass host names.
+Run `bash scripts/check-configs.sh <host> ...` using the validation scope in
+[AGENTS.md](../../AGENTS.md): PC also checks affected other hosts; other machines
+check only themselves unless the user explicitly requests broader validation.
 The check evaluates locked configurations and feature scenarios without switching.
 Stage new Nix files before evaluating Git-backed flakes.
 

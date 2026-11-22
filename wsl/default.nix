@@ -9,7 +9,11 @@
     enable = true;
     insideGFW = true;
     lan = true;
+    # Mirrored networking redirects 127.0.0.1 through Windows' loopback0.
+    clientAddress = "127.0.0.2";
   };
+  # WSL's existing redirect rules conflict with Mihomo's auto-redirect setup.
+  antares.mihomo.autoRedirect = false;
   antares.windowsShell.enable = true;
   antares.starship = {
     enable = true;

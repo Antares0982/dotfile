@@ -1,6 +1,50 @@
 { lib }:
 [
   {
+    name = "mihomo-wsl-loopback";
+    module = { };
+    check =
+      c:
+      let
+        settings = c.antares.mihomo.settings;
+        bench = lib.findFirst (entry: entry.name == "bandwidth-test") { } settings.listeners;
+      in
+      c.antares.proxy.httpUrl == "http://127.0.0.2:1081"
+      && c.antares.proxy.socksUrl == "socks5h://127.0.0.2:1081"
+      && c.systemd.services.nix-daemon.environment.https_proxy == c.antares.proxy.httpUrl
+      && c.systemd.services.mihomo.environment.MIHOMO_CLIENT_ADDRESS == "127.0.0.2"
+      && c.systemd.services.mihomo-config.environment.MIHOMO_CLIENT_ADDRESS == "127.0.0.2"
+      && c.systemd.services.mihomo-loopback.requiredBy == [ "mihomo.service" ]
+      && c.systemd.services.mihomo-loopback.before == [ "mihomo.service" ]
+      && c.systemd.services.mihomo-loopback.serviceConfig.RemainAfterExit
+      && settings.tun.auto-route
+      && !settings.tun.auto-redirect
+      && settings.bind-address == "0.0.0.0"
+      && settings.external-controller == "0.0.0.0:17900"
+      && bench.listen == "127.0.0.2"
+      && !bench.udp;
+  }
+  {
+    name = "mihomo-wsl-off";
+    module.antares.proxy.enable = lib.mkForce false;
+    check =
+      c:
+      !(c.systemd.services ? mihomo)
+      && !(c.systemd.services ? mihomo-loopback)
+      && !(c.systemd.services ? mihomo-config)
+      && !(c.systemd.services.nix-daemon.environment ? http_proxy)
+      && !(c.age.secrets ? mihomoSubscription);
+  }
+  {
+    name = "mihomo-wsl-without-lan";
+    module.antares.proxy.lan = lib.mkForce false;
+    check =
+      c:
+      c.antares.mihomo.settings.bind-address == "127.0.0.2"
+      && c.antares.mihomo.settings.external-controller == "127.0.0.2:17900"
+      && lib.all (entry: entry.listen == "127.0.0.2") c.antares.mihomo.settings.listeners;
+  }
+  {
     name = "windows-shell-on";
     module = { };
     check =

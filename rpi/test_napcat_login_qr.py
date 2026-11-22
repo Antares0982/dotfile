@@ -43,7 +43,9 @@ def test_forward():
             assert call.args == (endpoint,) and call.kwargs["data"]["chat_id"] == 123
             name, image, mime = call.kwargs["files"]["photo"]
             assert name.endswith(".png") and mime == "image/png"
-            decoded = subprocess.check_output(["zbarimg", "-q", "--raw", "-"], input=image)
+            decoded = subprocess.check_output(
+                ["zbarimg", "-q", "--raw", "-"], input=image
+            )
             assert decoded.rstrip(b"\n") == url.encode()
 
 

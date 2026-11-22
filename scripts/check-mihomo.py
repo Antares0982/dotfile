@@ -46,7 +46,7 @@ def trace(proxy=None, family=None):
 
 
 def route(port, host, outbound):
-    with socket.create_connection(("127.0.0.1", port), timeout=15) as sock:
+    with socket.create_connection((m.client_address(), port), timeout=15) as sock:
         source_port = sock.getsockname()[1]
         sock.sendall(
             f"CONNECT {host}:443 HTTP/1.1\r\nHost: {host}:443\r\n\r\n".encode()
@@ -128,7 +128,9 @@ def check(webui=True):
     direct = client["port"] + 2
     if tun:
         route(direct, "www.cloudflare.com", "DIRECT")
-    countries["DIRECT"] = trace(f"http://127.0.0.1:{direct}" if tun else None)["loc"]
+    countries["DIRECT"] = trace(
+        f"http://{m.client_address()}:{direct}" if tun else None
+    )["loc"]
     for offset, target in enumerate([outbound("其他"), outbound("GLOBAL"), "DIRECT"]):
         if target not in countries:
             countries[target] = m.probe_node(target)["loc"]
@@ -140,7 +142,7 @@ def check(webui=True):
                     f"Unexpected IPv{family} TUN egress"
                 )
         for protocol in ("http", "socks5h"):
-            result = trace(f"{protocol}://127.0.0.1:{port}")
+            result = trace(f"{protocol}://{m.client_address()}:{port}")
             assert result["loc"] == country, (port, result["loc"], country)
             print(f"{port} {protocol}: {result['loc']} {result['ip']}")
     route(client["port"], "www.baidu.com", outbound("国内"))
@@ -151,7 +153,7 @@ def check(webui=True):
     route(client["port"], "149.154.167.51", outbound("Telegram"))
     route(client["port"] + 1, "www.baidu.com", outbound("GLOBAL"))
     with socket.socket() as sock:
-        assert sock.connect_ex(("127.0.0.1", client["port"] + 3)) != 0, (
+        assert sock.connect_ex((m.client_address(), client["port"] + 3)) != 0, (
             "Retired port still listening"
         )
     rejected = subprocess.run(
@@ -164,7 +166,7 @@ def check(webui=True):
             "--noproxy",
             "",
             "--proxy",
-            f"http://127.0.0.1:{client['port']}",
+            f"http://{m.client_address()}:{client['port']}",
             "https://id6.me",
         ],
         capture_output=True,

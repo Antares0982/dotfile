@@ -53,7 +53,7 @@ def prepare(template, subscription):
     write_json(
         client_file,
         {
-            "api": "http://127.0.0.1:17900",
+            "api": f"http://{os.environ.get('MIHOMO_CLIENT_ADDRESS', '127.0.0.1')}:17900",
             "secret": config["secret"],
             "port": config["mixed-port"],
             "test_port": 17901,

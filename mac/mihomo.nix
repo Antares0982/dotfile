@@ -64,6 +64,7 @@ in
           "${tools}/bin/mihomoctl"
         ];
         environment = {
+          MIHOMO_CLIENT_ADDRESS = proxy.clientAddress;
           SKIP_SYSTEM_IPV6_CHECK = "1";
           # Restart when encrypted subscription changes.
           MIHOMO_SUBSCRIPTION_SOURCE = toString config.age.secrets.mihomoSubscription.file;

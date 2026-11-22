@@ -8,7 +8,7 @@ let
   cfg = config.antares.mihomo;
   base = builtins.fromJSON (builtins.readFile ../resource/mihomo-base.json);
   proxy = config.antares.proxy;
-  address = if proxy.lan then "0.0.0.0" else "127.0.0.1";
+  address = if proxy.lan then "0.0.0.0" else proxy.clientAddress;
   domains = [
     "cn"
     "private"
@@ -194,7 +194,9 @@ let
               "ff00::/8"
             ];
           }
-          // lib.optionalAttrs (cfg.publicInterface != null) { auto-redirect = false; }
+          // {
+            auto-redirect = cfg.autoRedirect;
+          }
           // lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
             device = "utun";
             auto-detect-interface = false;
@@ -205,10 +207,10 @@ let
         else
           base.tun;
       mixed-port = cfg.port;
-      external-controller = "${if proxy.lan then "0.0.0.0" else "127.0.0.1"}:17900";
+      external-controller = "${address}:17900";
       external-controller-cors = {
         allow-origins = [
-          "http://127.0.0.1:17900"
+          "http://${proxy.clientAddress}:17900"
           "http://localhost:17900"
         ]
         ++ cfg.dashboardOrigins;
@@ -221,7 +223,7 @@ let
         (
           (listener "bandwidth-test" 17901 "BENCH")
           // {
-            listen = "127.0.0.1";
+            listen = proxy.clientAddress;
             udp = false;
           }
         )
@@ -230,6 +232,11 @@ let
 in
 {
   options.antares.mihomo = {
+    autoRedirect = lib.mkOption {
+      type = lib.types.bool;
+      default = cfg.publicInterface == null;
+      description = "Enable Linux TUN auto-redirect; disable on WSL mirrored networking.";
+    };
     port = lib.mkOption {
       type = lib.types.port;
       default = 1081;

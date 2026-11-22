@@ -63,6 +63,12 @@ def check():
             ):
                 assert path.stat().st_mode & 0o777 == 0o600
             assert state.stat().st_mode & 0o777 == 0o700
+            for address in ("127.0.0.1", "127.0.0.2"):
+                with patch.dict(os.environ, {"MIHOMO_CLIENT_ADDRESS": address}):
+                    prepare.prepare(template, subscription)
+                client = json.loads((state / "client/connection.json").read_text())
+                assert client["api"] == f"http://{address}:17900"
+                assert client["secret"] == first
             before = (state / "config.json").read_bytes()
             subscription.write_text("http://example.invalid/not-https")
             try:

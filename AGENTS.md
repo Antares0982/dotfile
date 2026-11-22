@@ -76,7 +76,16 @@ cost without meaningful coverage. Test stable module interfaces, feature
 enable/disable behavior, and resource ownership instead.
 
 For Nix configuration changes, run `bash scripts/check-configs.sh <host> ...`;
-omit hosts for the six active hosts; pass `gz` explicitly for historical checks.
+choose validation scope by the machine where the work is performed:
+
+- On PC (`nixos`), also evaluate affected other hosts; omit hosts to check all
+  six active hosts when shared changes affect them all.
+- On any other machine, validate only that machine, even for shared-module
+  changes (for example, `bash scripts/check-configs.sh wsl` on WSL), unless the
+  user explicitly requests broader validation. Do not fetch other hosts' inputs
+  or evaluate their configurations just for validation there.
+
+Pass `gz` explicitly when historical checks are requested.
 These checks evaluate locked configurations without switching.
 Stage new Nix files before evaluating Git-backed flakes.
 Use the relevant guide for feature-specific checks. For documentation-only

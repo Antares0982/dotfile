@@ -109,6 +109,39 @@ Verify `/dev/net/tun`, nftables, the mirrored default gateway identity, communic
 from a second LAN device and isolation on another network. WSL's TUN covers
 Linux processes. Windows clients can opt into port 1081.
 
+WSL sets `antares.proxy.clientAddress = "127.0.0.2"`. Mirrored networking can
+route `127.0.0.1` TCP/UDP through Windows' `loopback0` before Linux's local table.
+The client address drives shell/Nix daemon URLs, API clients (including systemd
+readiness), clashtui and the private bandwidth listener. `mihomo-loopback`
+assigns this alternate address as a `/32` on `lo` before Mihomo starts, so the
+kernel also chooses `.2` as the connection source. Without that address, replies
+to the default `.1` source can still stall larger API/proxy responses.
+Other hosts default to
+`127.0.0.1`; LAN listener scope is independent. WSL also disables
+`antares.mihomo.autoRedirect` to avoid the observed netlink `file exists` startup
+error, retaining TUN `auto-route`. No priority-zero loopback rules are needed.
+After changing these settings, test a fresh login shell, `mihomoctl status`,
+ordinary curl and `curl --noproxy '*'`, then restart Mihomo and repeat without
+temporary port 1081/17900 routing rules before switching permanently.
+
+This keeps WSL's mirrored networking enabled. Linux clients use `.2`; Windows
+clients should test `127.0.0.1:1081` independently before enabling a system proxy.
+The Linux `.2` address is not a Windows endpoint guarantee. A working Linux
+proxy does not validate Windows localhost forwarding or the Windows/Hyper-V
+and Linux ingress firewalls. On the 2026-11-23 repair, Linux acceptance passed
+but a Windows-native curl to `127.0.0.1:1081` timed out at connection setup;
+Windows ingress needs separate diagnosis before using it as a system proxy.
+
+When WSL provides the Windows proxy, prefer `[wsl2] autoProxy=false` in the
+Windows user's `.wslconfig`: Nix already configures Linux's proxy, and importing
+Windows' `.1` proxy back into WSL can give applications the wrong endpoint.
+Keep `networkingMode=mirrored`. These Windows settings require a later WSL
+restart to apply; do not interrupt a live repair with `wsl --shutdown`.
+Windows applications using the proxy depend on WSL/Mihomo staying available;
+the WSL TUN does not automatically proxy all Windows traffic.
+See Microsoft's [networking documentation](https://learn.microsoft.com/en-us/windows/wsl/networking)
+and [WSL settings](https://learn.microsoft.com/en-us/windows/wsl/wsl-config).
+
 Keep launchd script paths in the system closure using Nix path interpolation.
 `toString` on a source path loses its dependency context; garbage collection can
 then remove the scripts while launchd still references them. Mac checks verify

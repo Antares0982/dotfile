@@ -90,6 +90,19 @@ in
       webui = if proxy.lan then apps.metacubexd else null;
       configFile = "/var/lib/mihomo-config/config.json";
     };
+    # A /32 gives local connections the same source address as their target.
+    # Otherwise Linux selects 127.0.0.1, whose replies WSL may route to Windows.
+    systemd.services.mihomo-loopback = lib.mkIf (proxy.clientAddress != "127.0.0.1") {
+      description = "Local Mihomo client address";
+      before = [ "mihomo.service" ];
+      requiredBy = [ "mihomo.service" ];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        ExecStart = "${pkgs.iproute2}/bin/ip address replace ${proxy.clientAddress}/32 dev lo";
+        ExecStop = "${pkgs.iproute2}/bin/ip address del ${proxy.clientAddress}/32 dev lo";
+      };
+    };
     systemd.services.mihomo-home = lib.mkIf proxy.lan {
       wantedBy = [ "sysinit.target" ];
       before = [
@@ -123,6 +136,7 @@ in
     };
     systemd.services.mihomo-config = {
       description = "Prepare private Mihomo configuration";
+      environment.MIHOMO_CLIENT_ADDRESS = proxy.clientAddress;
       before = [ "mihomo.service" ];
       requiredBy = [ "mihomo.service" ];
       restartTriggers = [
@@ -143,7 +157,10 @@ in
         template
         config.age.secrets.mihomoSubscription.file
       ];
-      environment = lib.optionalAttrs proxy.lan { SAFE_PATHS = "${apps.metacubexd}"; };
+      environment = {
+        MIHOMO_CLIENT_ADDRESS = proxy.clientAddress;
+      }
+      // lib.optionalAttrs proxy.lan { SAFE_PATHS = "${apps.metacubexd}"; };
       serviceConfig = {
         Restart = "on-failure";
         RestartSec = "3s";

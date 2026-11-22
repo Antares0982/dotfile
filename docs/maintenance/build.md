@@ -53,7 +53,12 @@ nix flake update nixpkgs --flake ./hosts/nixos         # update a specific input
 
 ## Configuration checks
 
-`bash scripts/check-configs.sh` evaluates the six active hosts, including WSL.
+Choose hosts by the machine where the work is performed. On PC (`nixos`),
+validate the local configuration and affected other hosts;
+`bash scripts/check-configs.sh` evaluates all six active hosts for shared changes.
+On any other machine, validate only that machine, including when editing shared
+modules: for example, `bash scripts/check-configs.sh wsl` on WSL. Do not download
+other hosts' inputs or evaluate them there unless the user explicitly asks.
 Use `bash scripts/check-configs.sh gz` explicitly to check the historical GZ configuration.
 To check one feature while editing, use e.g.
 `CHECK_CASE='blog-off|metrics-off' bash scripts/check-configs.sh hk`.

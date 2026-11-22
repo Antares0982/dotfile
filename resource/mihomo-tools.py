@@ -56,12 +56,20 @@ def connection():
     if credentials and not path.exists():
         config = json.loads((Path(credentials) / "config.yaml").read_text())
         return {
-            "api": "http://127.0.0.1:17900",
+            "api": f"http://{os.environ.get('MIHOMO_CLIENT_ADDRESS', '127.0.0.1')}:17900",
             "secret": config["secret"],
             "port": config["mixed-port"],
             "test_port": 17901,
         }
     return json.loads(path.read_text())
+
+
+def client_address():
+    return urllib.parse.urlsplit(connection()["api"]).hostname
+
+
+def test_proxy():
+    return f"http://{client_address()}:{connection()['test_port']}"
 
 
 def request(path, method="GET", data=None):
@@ -111,7 +119,7 @@ def sample(node, seconds):
                 "--noproxy",
                 "",
                 "--proxy",
-                f"http://127.0.0.1:{connection()['test_port']}",
+                test_proxy(),
                 "--connect-timeout",
                 str(PARAMS["connect_seconds"]),
                 "--max-time",
@@ -241,7 +249,7 @@ def probe_node(node):
                     "--max-time",
                     "30",
                     "--proxy",
-                    f"http://127.0.0.1:{connection()['test_port']}",
+                    test_proxy(),
                     "https://www.cloudflare.com/cdn-cgi/trace",
                 ],
                 capture_output=True,
@@ -456,14 +464,21 @@ def tui(args=()):
     publish(
         directory / "mihomo/core_override_config.yaml",
         {
-            "external-controller": "127.0.0.1:17900",
+            "external-controller": urllib.parse.urlsplit(client["api"]).netloc,
             "secret": client["secret"],
             "mixed-port": client["port"],
         },
     )
     for key in ("no_proxy", "NO_PROXY"):
         os.environ[key] = ",".join(
-            filter(None, (os.environ.get(key), "127.0.0.1", "localhost"))
+            filter(
+                None,
+                (
+                    os.environ.get(key),
+                    urllib.parse.urlsplit(client["api"]).hostname,
+                    "localhost",
+                ),
+            )
         )
     os.execv(binary, ["clashtui", f"--config-dir={directory}", *args])
 
