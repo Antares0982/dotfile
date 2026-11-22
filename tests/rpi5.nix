@@ -87,7 +87,10 @@
     name = "monitor-off";
     module = { lib, ... }: { services.telegram-output-monitor-bot.enable = lib.mkForce false; };
     check =
-      c: !(c.systemd.services ? telegram-output-monitor-bot) && !(c.age.secrets ? monitorCfgAntaresRpi);
+      c:
+      !(c.systemd.services ? telegram-output-monitor-bot)
+      && !(c.systemd.services ? napcat-login-qr)
+      && !(c.age.secrets ? monitorCfgAntaresRpi);
   }
   {
     name = "rpc-off";
@@ -118,6 +121,19 @@
       && c.systemd.services ? mihomo;
   }
   {
+    name = "napcat-login-qr";
+    module = { };
+    check =
+      c:
+      let
+        unit = c.systemd.services.napcat-login-qr;
+      in
+      unit.serviceConfig.DynamicUser
+      && builtins.elem "systemd-journal" unit.serviceConfig.SupplementaryGroups
+      && unit.serviceConfig.EnvironmentFile == c.age.secrets.monitorCfgAntaresRpi.path
+      && unit.environment.https_proxy == c.antares.monitor.proxy;
+  }
+  {
     name = "napcat-dependency";
     module = { lib, ... }: { services.napcat.enable = lib.mkForce false; };
     check =
@@ -125,6 +141,7 @@
       !(c.users.users ? napcat)
       && !(c.systemd.services ? napcat)
       && !(c.systemd.services ? napcat-watchdog)
+      && !(c.systemd.services ? napcat-login-qr)
       && !(c.systemd.timers ? napcat-restart)
       && !(c.age.secrets ? napcatEnv);
     valid = false;
@@ -180,6 +197,7 @@
       c:
       !(c.users.users ? napcat)
       && !(c.systemd.services ? napcat)
+      && !(c.systemd.services ? napcat-login-qr)
       && !(c.systemd.services ? qq-napcat-relay)
       && !(c.systemd.services ? qq-codex-agent)
       && !(c.systemd.services ? simple-moderation)

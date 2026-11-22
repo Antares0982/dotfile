@@ -14,6 +14,11 @@ let
     '';
   };
   pyenv = pkgs.python3.withPackages (ps: with ps; [ websockets ]);
+  qrPython = pkgs.python3.withPackages (ps: [
+    ps.qrcode
+    ps.pypng
+    ps.requests
+  ]);
   napcatWatchdog = pkgs.writeShellApplication {
     name = "napcat-watchdog";
     runtimeInputs = [
@@ -46,6 +51,32 @@ in
         Restart = "on-failure";
         RestartSec = "10s";
         EnvironmentFile = config.age.secrets.napcatEnv.path;
+      };
+    };
+
+    systemd.services.napcat-login-qr = lib.mkIf config.services.telegram-output-monitor-bot.enable {
+      description = "Send NapCat login QR codes to Telegram";
+      wantedBy = [ "multi-user.target" ];
+      environment = lib.optionalAttrs (config.antares.monitor.proxy != null) {
+        https_proxy = config.antares.monitor.proxy;
+      };
+      restartTriggers = [ config.age.secrets.monitorCfgAntaresRpi.file ];
+      script = ''
+        set -o pipefail
+        ${pkgs.systemd}/bin/journalctl --boot --follow --no-tail --since='2 minutes ago' \
+          _SYSTEMD_UNIT=napcat.service --grep='^二维码解码URL: ' --output=json --output-fields=MESSAGE \
+          | ${qrPython}/bin/python3 ${./napcat_login_qr.py}
+      '';
+      serviceConfig = {
+        DynamicUser = true;
+        SupplementaryGroups = [ "systemd-journal" ];
+        ProtectHome = true;
+        EnvironmentFile = config.services.telegram-output-monitor-bot.environmentFile;
+        RuntimeDirectory = "napcat-login-qr";
+        RuntimeDirectoryMode = "0700";
+        RuntimeDirectoryPreserve = "restart";
+        Restart = "always";
+        RestartSec = "3s";
       };
     };
 
