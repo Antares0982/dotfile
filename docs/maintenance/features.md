@@ -132,7 +132,7 @@ package and virtual host declarations, preserving all persistent data.
 The old `/home/git` repository is not migrated or automatically deleted.
 See [administrator setup](build.md#hk-forgejo) after the first deployment.
 
-HK services can call OpenAI at `http://127.0.0.1:60082/v1`. Any local process
+HK services can call OpenAI at `http://127.0.0.1:61082/v1`. Any local process
 can use the personal key's quota. Leave the Authorization header unset or use
 a placeholder for SDKs that require a key. The gateway replaces that header
 and uses Mihomo on port 1081 through the unit's `HTTPS_PROXY`.

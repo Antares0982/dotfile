@@ -125,7 +125,7 @@
       && lib.elem "openai-api-key:${secret.path}" unit.serviceConfig.LoadCredential
       && secret.owner == "root"
       && secret.mode == "0400"
-      && !(lib.elem 60082 c.networking.firewall.allowedTCPPorts);
+      && !(lib.elem 61082 c.networking.firewall.allowedTCPPorts);
   }
   {
     name = "openai-gateway-off";
