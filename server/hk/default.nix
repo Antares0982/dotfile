@@ -21,6 +21,7 @@
     ./rabbitmq.nix
     ./web.nix
     ./forgejo.nix
+    ./openai-gateway.nix
     ../../modules/acme.nix
     ./blog.nix
     ./site-metrics.nix

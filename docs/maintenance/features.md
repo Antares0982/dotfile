@@ -76,7 +76,7 @@ integration as well as the upstream service.
 | nixos, hk, rpi5 | `services.telegram-output-monitor-bot.enable`, `services.antares-rpc-client.enable`, `services.rabbitmq.enable` |
 | all active hosts | `antares.proxy.{enable,insideGFW,lan}` |
 | rpi5 | `services.antares-runners.instances.<name>.enable`, `antares.agent.enable`, `antares.qq.enable`, `antares.gitServer.enable`, `services.ssh-probe.enable` |
-| hk | `antares.blog.enable`, `antares.blog.metrics.enable`, `antares.messaging.enable`, `mailserver.enable`, `services.mysql.enable`, `services.nginx.enable`, `services.forgejo.enable`, `antares.acme.enable` |
+| hk | `antares.blog.enable`, `antares.blog.metrics.enable`, `antares.messaging.enable`, `mailserver.enable`, `services.mysql.enable`, `services.nginx.enable`, `services.forgejo.enable`, `services.openai-gateway.enable`, `antares.acme.enable` |
 | nixos | `antares.desktop.enable`, `antares.wallpaper.enable`, `antares.rust.enable`, `antares.autostart.enable`, `antares.waitOnline.enable`, `services.mcp-nixos.enable` |
 | nixos | `services.pipewire.enable`, `hardware.bluetooth.enable`, `i18n.inputMethod.enable`, `services.samba.enable`, `programs.steam.enable`, `programs.ydotool.enable` |
 | nixos | `antares.gpuUnlock.enable` (RTX 3090 at `0000:01:00.0`, enabled by the host) |
@@ -131,6 +131,15 @@ Disabling `services.forgejo.enable` removes its account, group, services,
 package and virtual host declarations, preserving all persistent data.
 The old `/home/git` repository is not migrated or automatically deleted.
 See [administrator setup](build.md#hk-forgejo) after the first deployment.
+
+HK services can call OpenAI at `http://127.0.0.1:60082/v1`. Any local process
+can use the personal key's quota. Leave the Authorization header unset or use
+a placeholder for SDKs that require a key. The gateway replaces that header
+and uses Mihomo on port 1081 through the unit's `HTTPS_PROXY`.
+Rotate `openai-personal-api-key.age` as a single raw key, authorized for PC
+management and HK. Switching to the updated ciphertext restarts the gateway.
+To test locally with Caddy and OpenSSL on PATH, run
+`unshare -Urn sh -ec 'ip link set lo up; exec python3 scripts/test-openai-gateway.py'`.
 
 RPi runners use the host flake's nixpkgs, independently of the Raspberry Pi
 system nixpkgs. Preserve existing unit names, users, homes, registration data,

@@ -109,8 +109,47 @@
       && c.users.users ? alice;
   }
   {
-    name = "mihomo-off";
+    name = "openai-gateway";
+    module = { };
+    check =
+      c:
+      let
+        unit = c.systemd.services.openai-gateway;
+        secret = c.age.secrets.openaiPersonalApiKey;
+      in
+      c.users.users.openai-gateway.isSystemUser
+      && c.users.users.openai-gateway.group == "openai-gateway"
+      && unit.serviceConfig.User == "openai-gateway"
+      && unit.serviceConfig.Group == "openai-gateway"
+      && unit.environment.HTTPS_PROXY == "http://127.0.0.1:1081"
+      && lib.elem "openai-api-key:${secret.path}" unit.serviceConfig.LoadCredential
+      && secret.owner == "root"
+      && secret.mode == "0400"
+      && !(lib.elem 60082 c.networking.firewall.allowedTCPPorts);
+  }
+  {
+    name = "openai-gateway-off";
+    module = { lib, ... }: { services.openai-gateway.enable = lib.mkForce false; };
+    check =
+      c:
+      !(c.systemd.services ? openai-gateway)
+      && !(c.users.users ? openai-gateway)
+      && !(c.users.groups ? openai-gateway)
+      && !(c.age.secrets ? openaiPersonalApiKey)
+      && c.services.mihomo.enable;
+  }
+  {
+    name = "openai-gateway-proxy-dependency";
     module = { lib, ... }: { antares.proxy.enable = lib.mkForce false; };
+    check = c: true;
+    valid = false;
+  }
+  {
+    name = "mihomo-off";
+    module = { lib, ... }: {
+      antares.proxy.enable = lib.mkForce false;
+      services.openai-gateway.enable = lib.mkForce false;
+    };
     check =
       c:
       !(c.systemd.services ? mihomo)
@@ -293,6 +332,7 @@
   {
     name = "all-features-off";
     module = { lib, ... }: {
+      services.openai-gateway.enable = lib.mkForce false;
       antares.blog.enable = lib.mkForce false;
       antares.messaging.enable = lib.mkForce false;
       services.forgejo.enable = lib.mkForce false;

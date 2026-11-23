@@ -1,0 +1,14 @@
+{
+	admin off
+	persist_config off
+}
+
+http://127.0.0.1:60082 {
+	bind 127.0.0.1
+	handle /v1/* {
+		reverse_proxy https://api.openai.com {
+			header_up Authorization "Bearer {file.{$CREDENTIALS_DIRECTORY}/openai-api-key}"
+		}
+	}
+	respond 404
+}

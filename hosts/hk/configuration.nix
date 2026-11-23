@@ -19,6 +19,7 @@ in
   services.antares-rpc-client.enable = true;
   services.nginx.enable = true;
   services.forgejo.enable = true;
+  services.openai-gateway.enable = true;
   antares.acme.enable = true;
   networking.firewall.allowedUDPPorts = [
     53
