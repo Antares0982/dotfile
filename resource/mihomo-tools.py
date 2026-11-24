@@ -90,7 +90,7 @@ def request(path, method="GET", data=None):
 
 
 def group(name):
-    if name not in ("JP", "SG", "BENCH"):
+    if name not in ("JP", "HK", "US", "SG", "BENCH"):
         raise ValueError("Unknown proxy group")
     return request("/proxies/" + name)
 

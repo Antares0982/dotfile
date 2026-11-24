@@ -21,6 +21,7 @@ let
     "telegram"
     "netflix"
     "youtube"
+    "dlsite"
   ];
   provider = kind: name: {
     type = "http";
@@ -84,6 +85,7 @@ let
       "RULE-SET,netflix,Netflix"
       "RULE-SET,netflix-ip,Netflix,no-resolve"
       "RULE-SET,youtube,YouTube"
+      "RULE-SET,dlsite,DLsite"
       "RULE-SET,private,DIRECT"
     ]
     ++ map (name: "RULE-SET,${name},国内") [
@@ -115,6 +117,8 @@ let
   };
   regions = [
     "JP"
+    "HK"
+    "US"
     "SG"
   ];
   choices = regions ++ [ "全部节点" ];
@@ -135,8 +139,11 @@ let
     (selectGroup "AI" ([ "其他" ] ++ choices))
     (selectGroup "Netflix" ([ "其他" ] ++ choices))
     (selectGroup "YouTube" ([ "其他" ] ++ choices))
+    (selectGroup "DLsite" ([ "其他" ] ++ choices))
     (selectGroup "国内" ([ "DIRECT" ] ++ choices))
     (regionGroup "JP" "(?i)Japan|日本|🇯🇵|\\bJP\\b")
+    (regionGroup "HK" "(?i)HongKong|香港|🇭🇰|\\bHK\\b")
+    (regionGroup "US" "(?i)America|美国|🇺🇸|\\bUS\\b")
     (regionGroup "SG" "(?i)Singapore|新加坡|狮城|🇸🇬|\\bSG\\b")
     (regionGroup "全部节点" ".*")
   ];
