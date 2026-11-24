@@ -19,9 +19,6 @@
         17900
         17901
       ]
-      &&
-        (lib.findFirst (g: g.name == "GLOBAL") { } c.antares.mihomo.policy.proxy-groups).default-selected
-        == "SG"
       && c.age.secrets.mihomoSubscription.owner == "root"
       && c.age.secrets.mihomoSubscription.mode == "0400"
       && lib.any (p: lib.getName p == "mihomo-tools") c.environment.systemPackages

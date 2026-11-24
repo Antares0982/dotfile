@@ -125,7 +125,8 @@ let
   groups = [
     (selectGroup "其他" choices)
     (selectGroup "Telegram" (
-      (lib.reverseList regions)
+      [ "SG" ]
+      ++ lib.remove "SG" regions
       ++ [
         "其他"
         "全部节点"

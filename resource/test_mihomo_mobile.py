@@ -41,29 +41,24 @@ def check_override(script, public):
     assert policy["tun"] == {"enable": True}
     groups = {g["name"]: g for g in policy["proxy-groups"]}
     assert len(groups) == len(policy["proxy-groups"])
-    assert groups["其他"]["proxies"][0] == "JP"
-    assert groups["国内"]["proxies"][0] == "DIRECT"
-    assert groups["Telegram"]["proxies"][0] == ("SG" if "SG" in groups else "JP")
-    assert groups["GLOBAL"]["default-selected"] == ("SG" if "SG" in groups else "JP")
-    assert set(groups["GLOBAL"]["proxies"]) == (groups.keys() - {"GLOBAL"}) | {"DIRECT"}
-    assert groups["全部节点"]["filter"] == ".*"
-    for name, group in groups.items():
-        if name in ("JP", "SG", "全部节点"):
-            assert group["include-all"] and group["empty-fallback"] == "REJECT"
+    targets = groups.keys() | {"DIRECT", "REJECT", "REJECT-DROP", "PASS", "COMPATIBLE"}
+    for group in groups.values():
+        choices = group.get("proxies", [])
+        assert set(choices) <= targets
+        if group.get("include-all"):
+            assert group["empty-fallback"] == "REJECT"
             assert "use" not in group
         else:
-            assert set(group["proxies"]) <= groups.keys() | {"DIRECT"}
-            assert "全部节点" in group["proxies"]
+            assert choices
+            if "default-selected" in group:
+                assert group["default-selected"] in choices
     for rule in policy["rules"]:
         fields = rule.split(",")
         target = fields[-2] if fields[-1] == "no-resolve" else fields[-1]
-        assert target in groups.keys() | {"DIRECT", "REJECT"}
+        assert target in targets
         if fields[0] == "RULE-SET":
             assert fields[1] in policy["rule-providers"]
-    assert policy["rules"].index("RULE-SET,telegram-ip,Telegram,no-resolve") < policy[
-        "rules"
-    ].index("RULE-SET,cn-ip,国内")
-    assert policy["rules"][-2:] == ["MATCH,其他", "MATCH,REJECT"]
+    assert policy["rules"][-1].startswith("MATCH,")
     assert len({p["path"] for p in policy["rule-providers"].values()}) == len(
         policy["rule-providers"]
     )

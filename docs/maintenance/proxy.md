@@ -166,7 +166,7 @@ Validation: `python3 resource/test_mihomo_tools.py`,
 `python3 resource/test_mihomo_darwin.py`,
 `python3 scripts/check-mihomo.py` on each deployed host, and
 `bash scripts/check-configs.sh`. The live check verifies both protocols, egress
-regions, direct routing, forced routing, domain blocking and API authentication.
+regions, rule matching, direct routing, forced routing and API authentication.
 The tools package also runs its regression checks during builds. Linux startup
 checks execute as a systemd dynamic user without a home directory; resolve
 macOS home paths only on Darwin. Configuration evaluation alone does not test

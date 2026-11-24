@@ -75,6 +75,11 @@ These details change with user needs; pinning them in tests adds maintenance
 cost without meaningful coverage. Test stable module interfaces, feature
 enable/disable behavior, and resource ownership instead.
 
+Keep user-maintained Mihomo routing policy out of test expectations. This
+includes individual domains, rule sets, service and region names, node filters,
+group membership, defaults, and rule order. Test that references resolve, PC
+and mobile export the same policy, and listeners honor their configured mode.
+
 For Nix configuration changes, run `bash scripts/check-configs.sh <host> ...`;
 choose validation scope by the machine where the work is performed:
 

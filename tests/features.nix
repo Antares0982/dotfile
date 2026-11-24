@@ -19,6 +19,7 @@ let
         let
           proxy = c.antares.proxy;
           settings = c.antares.mihomo.settings;
+          baseDns = (builtins.fromJSON (builtins.readFile ../resource/mihomo-base.json)).dns;
           inside =
             !(lib.elem host [
               "hk"
@@ -39,10 +40,15 @@ let
         && settings.allow-lan == lan
         && settings.ipv6
         && settings.dns.ipv6
-        && settings.dns.nameserver == [ "https://1.1.1.1/dns-query#其他" ]
-        && settings.dns.nameserver-policy."rule-set:cn" == "https://223.5.5.5/dns-query#DIRECT"
+        && settings.dns.nameserver == baseDns.nameserver
+        &&
+          lib.intersectAttrs baseDns.nameserver-policy settings.dns.nameserver-policy
+          == baseDns.nameserver-policy
         && settings.mixed-port == 1081
         && settings.rules == c.antares.mihomo.policy.rules
+        && lib.all (
+          listener: listener.proxy == "DIRECT" || lib.any (g: g.name == listener.proxy) settings.proxy-groups
+        ) settings.listeners
         && c.age.secrets ? mihomoSubscription;
     }
     (import ./zsh.nix { inherit lib host; })

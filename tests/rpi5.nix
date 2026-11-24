@@ -242,16 +242,6 @@
         ]
       && !(c.antares.mihomo.settings ? sub-rules)
       && (builtins.head c.antares.mihomo.settings.listeners).proxy == "GLOBAL"
-      &&
-        (lib.findFirst (g: g.name == "GLOBAL") { } c.antares.mihomo.policy.proxy-groups).default-selected
-        == "SG"
-      &&
-        (lib.findFirst (g: g.name == "Telegram") { } c.antares.mihomo.policy.proxy-groups).proxies == [
-          "SG"
-          "JP"
-          "其他"
-          "全部节点"
-        ]
       && c.antares.proxy.socksUrl == "socks5h://127.0.0.1:1081"
       && c.services.mihomo.enable
       && c.systemd.services.mihomo-worker.serviceConfig.DynamicUser

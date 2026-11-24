@@ -15,16 +15,6 @@
         ]
       && !(c.antares.mihomo.settings ? sub-rules)
       && (builtins.head c.antares.mihomo.settings.listeners).proxy == "GLOBAL"
-      &&
-        (lib.findFirst (g: g.name == "GLOBAL") { } c.antares.mihomo.policy.proxy-groups).default-selected
-        == "SG"
-      &&
-        (lib.findFirst (g: g.name == "Telegram") { } c.antares.mihomo.policy.proxy-groups).proxies == [
-          "SG"
-          "JP"
-          "其他"
-          "全部节点"
-        ]
       && c.antares.mihomo.settings.bind-address == "0.0.0.0"
       && c.antares.mihomo.settings.external-controller == "0.0.0.0:17900"
       && lib.all (
