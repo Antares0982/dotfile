@@ -32,6 +32,7 @@ in
   antares.blog.enable = true;
   antares.blog.metrics.enable = true;
   mailserver.enable = true;
+  services.unbound.enable = true;
   antares.alice.enable = true;
   antares.trilug.enable = true;
   services.telegram-bot-api.enable = true;
