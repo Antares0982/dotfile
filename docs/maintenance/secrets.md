@@ -104,6 +104,15 @@ preserves these directory permissions on the installed system.
 Run `bash scripts/check-install-files.sh EXTRA_FILES_ROOT` before installation.
 The copied tree root must also be 0755; keep its parent private (0700).
 
+## QQ image generation
+
+For QQ image generation, `openai-personal-api-key.age` is shared by HK and RPi,
+in addition to the management identity. Keep both hosts in the local recipient
+rules. The Pi QQ service alone mounts the read-only key under its sandbox-denied
+private directory; it uses the service proxy to contact OpenAI directly. After
+publishing the agent with `imageApiKeyFile`, update only the RPi
+`qq-codex-agent` input before building and switching on Pi.
+
 ## QQ image moderation
 
 RPi's `simple-moderation-key.age` contains only the DeepSeek API key and authorizes

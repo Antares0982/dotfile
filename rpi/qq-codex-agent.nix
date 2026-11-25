@@ -3,6 +3,7 @@
   lib,
   pkgs,
   inputs,
+  options,
   ...
 }:
 let
@@ -114,6 +115,15 @@ in
           supports_websockets = false;
         };
       };
+    }
+    // lib.optionalAttrs (options.services.qq-codex-agent ? imageApiKeyFile) {
+      imageApiKeyFile = config.age.secrets.openaiPersonalApiKey.path;
+    };
+    age.secrets.openaiPersonalApiKey = {
+      file = ../secrets/openai-personal-api-key.age;
+      owner = user;
+      group = user;
+      mode = "0400";
     };
     age.secrets.qqCodexAllowlist = {
       file = ../secrets/qq-codex-allowlist.age;
@@ -170,6 +180,7 @@ in
         config.age.secrets.qqRelayEnv.file
         config.age.secrets.qqCodexAllowlist.file
         config.age.secrets.qqCodexGhToken.file
+        config.age.secrets.openaiPersonalApiKey.file
         config.age.secrets.l4d2-rcon.file
       ];
       inherit environment;

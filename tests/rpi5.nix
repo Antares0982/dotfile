@@ -191,11 +191,29 @@
       && builtins.elem c.age.secrets.l4d2-rcon.file c.systemd.services.qq-codex-agent.restartTriggers;
   }
   {
+    name = "qq-codex-image-api";
+    module = { };
+    check =
+      c:
+      let
+        secret = c.age.secrets.openaiPersonalApiKey;
+        service = c.systemd.services.qq-codex-agent;
+      in
+      secret.owner == "qq-codex-agent"
+      && secret.mode == "0400"
+      && builtins.elem secret.file service.restartTriggers
+      && (
+        !(c.services.qq-codex-agent ? imageApiKeyFile)
+        || builtins.elem "${secret.path}:/etc/qq-codex-private/image-api-key" service.serviceConfig.BindReadOnlyPaths
+      );
+  }
+  {
     name = "qq-off";
     module = { lib, ... }: { antares.qq.enable = lib.mkForce false; };
     check =
       c:
       !(c.users.users ? napcat)
+      && !(c.age.secrets ? openaiPersonalApiKey)
       && !(c.systemd.services ? napcat)
       && !(c.systemd.services ? napcat-login-qr)
       && !(c.systemd.services ? qq-napcat-relay)
@@ -215,6 +233,7 @@
     check =
       c:
       !(c.systemd.services ? qq-codex-agent)
+      && !(c.age.secrets ? openaiPersonalApiKey)
       && c.systemd.services ? codex-auth
       && c.systemd.services ? codex-login
       && !(c.systemd.services ? simple-moderation)
