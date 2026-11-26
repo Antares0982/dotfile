@@ -12,8 +12,11 @@
     security.acme.certs."chr.fan" = { };
 
     mailserver = {
-      enablePop3 = true;
-      enableSubmission = true;
+      listeners = {
+        pop3.enable = true;
+        submission.enable = true;
+      };
+
       fqdn = "mail.alyr.dev";
       domains = [ "alyr.dev" ];
 
