@@ -1,10 +1,11 @@
-{ config, pkgs, ... }:
+{ config, lib, ... }:
 {
   imports = [
     ./hardware
     ./mysql.nix
     ./packages.nix
     ./user.nix
+    ../../modules/openai.nix
     ../../modules/proxy.nix
     ../../modules/mihomo.nix
     ../../common/env.nix
@@ -32,5 +33,11 @@
     ./telegram-bot-api.nix
     ./agent-files.nix
   ];
-  system.stateVersion = "23.11";
+  config = lib.mkMerge [
+    { system.stateVersion = "23.11"; }
+    (lib.mkIf (!config.antares.openai.enable) {
+      services.openai-gateway.enable = lib.mkForce false;
+      antares.agentFiles.enable = lib.mkForce false;
+    })
+  ];
 }

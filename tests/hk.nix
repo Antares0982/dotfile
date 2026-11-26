@@ -242,10 +242,7 @@
   }
   {
     name = "agent-files-off";
-    module = { lib, ... }: {
-      antares.agentFiles.enable = lib.mkForce false;
-      antares.alice.enable = lib.mkForce false;
-    };
+    module = { lib, ... }: { antares.agentFiles.enable = lib.mkForce false; };
     check =
       c:
       !(c.users.groups ? agent-files)
@@ -256,13 +253,26 @@
       && !(lib.elem "agent-files" (
         c.systemd.services.telegram-bot-api.serviceConfig.SupplementaryGroups or [ ]
       ))
-      && c.services.nginx.enable;
+      && c.services.nginx.enable
+      && c.home-manager.users.alice.systemd.user.services ? alice;
   }
   {
-    name = "agent-files-dependency";
-    module = { lib, ... }: { antares.agentFiles.enable = lib.mkForce false; };
-    check = c: true;
-    valid = false;
+    name = "openai-off";
+    module.antares.openai.enable = false;
+    check =
+      c:
+      !(c.systemd.services ? openai-gateway)
+      && !(c.age.secrets ? openaiPersonalApiKey)
+      && !(c.users.users ? openai-gateway)
+      && !(c.users.groups ? openai-gateway)
+      && !(c.services.nginx.virtualHosts ? "tg.alyr.dev")
+      && !(c.security.acme.certs ? "tg.alyr.dev")
+      && !(c.users.groups ? agent-files)
+      && !(c.age.secrets ? agentFilesHtpasswd)
+      && c.age.secrets ? aliceTelegramWebhookSecret
+      && c.systemd.services ? telegram-bot-api
+      && c.home-manager.users.alice.systemd.user.services ? trilug
+      && !(lib.any (lib.hasPrefix "ANTARES_FILE_ROOT=") c.home-manager.users.alice.systemd.user.services.alice.Service.Environment);
   }
   {
     name = "messaging-off";

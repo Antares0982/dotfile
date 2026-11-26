@@ -7,6 +7,7 @@
 {
   nixpkgs.config.allowUnfree = true;
   imports = [
+    ../modules/openai.nix
     ../modules/proxy.nix
     ../modules/mihomo.nix
     ./autostart.nix

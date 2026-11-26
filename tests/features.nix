@@ -12,6 +12,11 @@ let
   casesFile = ./. + "/${host}.nix";
   allCases = [
     {
+      name = "openai-on";
+      module = { };
+      check = c: c.antares.openai.enable;
+    }
+    {
       name = "proxy-host";
       module = { };
       check =
@@ -53,6 +58,11 @@ let
     }
     (import ./zsh.nix { inherit lib host; })
   ]
+  ++ lib.optional (host != "hk" && host != "rpi5") {
+    name = "openai-off";
+    module.antares.openai.enable = false;
+    check = c: c.system.build.toplevel.drvPath == drv system;
+  }
   ++ (import ./starship.nix { inherit lib host; })
   ++ (import ./direnv.nix { inherit lib host; })
   ++ (if builtins.pathExists casesFile then import casesFile { inherit lib; } else [ ]);

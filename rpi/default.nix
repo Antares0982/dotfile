@@ -1,11 +1,9 @@
 {
   config,
-  pkgs,
   lib,
   ...
 }:
 {
-  nixpkgs.config.allowUnfree = true;
   imports = [
     ./antares-agent.nix
     ./configuration.nix
@@ -17,6 +15,7 @@
     ./ssh-probe.nix
     ./git-server.nix
     ./user.nix
+    ../modules/openai.nix
     ../modules/proxy.nix
     ../modules/mihomo.nix
     ./napcat.nix
@@ -36,5 +35,12 @@
     ../common/time.nix
     ../common/zsh.nix
     ../common/nix-zshell.nix
+  ];
+  config = lib.mkMerge [
+    { nixpkgs.config.allowUnfree = true; }
+    (lib.mkIf (!config.antares.openai.enable) {
+      antares.agent.enable = lib.mkForce false;
+      services.qq-codex-agent.enable = lib.mkForce false;
+    })
   ];
 }

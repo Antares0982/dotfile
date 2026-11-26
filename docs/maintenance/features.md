@@ -73,6 +73,7 @@ integration as well as the upstream service.
 | Host | Controls |
 |---|---|
 | all seven hosts | `antares.starship.enable` ([settings](zsh.md#starship)) |
+| all seven hosts | `antares.openai.enable` (defaults to `true`) |
 | nixos, hk, rpi5 | `services.telegram-output-monitor-bot.enable`, `services.antares-rpc-client.enable`, `services.rabbitmq.enable` |
 | all active hosts | `antares.proxy.{enable,insideGFW,lan}` |
 | rpi5 | `services.antares-runners.instances.<name>.enable`, `antares.agent.enable`, `antares.qq.enable`, `antares.gitServer.enable`, `services.ssh-probe.enable` |
@@ -97,9 +98,21 @@ Disabling removes its boot parameter, module, firmware and initrd service.
 Suspend/resume persistence has not been validated; check the unlock again after
 resume. Kernel/driver updates also require a new hardware check.
 
+### OpenAI services
+
+Set `antares.openai.enable = false;` in a host configuration to disable its
+OpenAI services. With the shared default of `true`, individual feature switches
+select the services deployed on each host.
+
+| Host | Effect when disabled |
+|---|---|
+| HK | Stops `openai-gateway` and withdraws the agent file exchange at `tg.alyr.dev`, including its certificate declaration and credentials. Alice runs without `ANTARES_FILE_ROOT`. Alice plugins, Tri-LUG and the local Telegram Bot API remain independently managed. |
+| RPi | Stops `antares-agent`, its updater and relay, QQ Codex (including its NapCat auth and login units), shared Codex auth and login, and the agent's Mihomo worker, path and guide. DeepSeek image moderation keeps its service and API credential. NapCat, the QQ RabbitMQ relay, its shared credentials and the main proxy stay active. |
+| PC, WSL, MacBook, SZ, historical GZ | The switch has no deployment effect. The PC MCP service keeps its own switch, and interactive Codex CLI packages stay installed wherever selected. |
+
 ### Dependencies and State
 
-- QQ relay and QQ Codex require NapCat. Alice requires agent file exchange.
+- QQ relay and QQ Codex require NapCat. Alice can use the agent file exchange when enabled.
 - Web features require nginx; configured certificates require ACME.
 - Blog metrics require MySQL. The host ties MySQL backup activation to MySQL.
 - The local proxy environment requires Mihomo. Its provider updates subscriptions.

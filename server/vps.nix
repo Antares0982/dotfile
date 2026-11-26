@@ -20,6 +20,7 @@ in
 {
   imports = [
     (modulesPath + "/profiles/qemu-guest.nix")
+    ../modules/openai.nix
     ../modules/proxy.nix
     ../modules/mihomo.nix
     ../common/nix.nix

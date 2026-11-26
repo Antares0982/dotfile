@@ -26,8 +26,8 @@ in
         '';
         Environment = [
           "PATH=${userenvs.sysBin}"
-          "ANTARES_FILE_ROOT=/var/lib/agent-files"
-        ];
+        ]
+        ++ lib.optional osConfig.antares.agentFiles.enable "ANTARES_FILE_ROOT=/var/lib/agent-files";
         Restart = "on-failure";
         RestartSec = 5;
         StartLimitBurst = 3;

@@ -1,6 +1,7 @@
 { config, lib, ... }:
 let
   cfg = config.antares.qq;
+  codexSelected = cfg.enable && cfg.codex.enable;
 in
 {
   options.antares.qq = {
@@ -12,6 +13,7 @@ in
   config = {
     services.napcat.enable = cfg.enable && cfg.napcat.enable;
     services.qq-napcat-relay.enable = cfg.enable && cfg.relay.enable;
-    services.qq-codex-agent.enable = cfg.enable && cfg.codex.enable;
+    services.qq-codex-agent.enable = codexSelected;
+    services.simple-moderation.enable = lib.mkDefault codexSelected;
   };
 }

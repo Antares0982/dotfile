@@ -2,12 +2,6 @@
 {
   options.antares.alice.enable = lib.mkEnableOption "Alice bot";
   config = lib.mkIf (config.antares.messaging.enable && config.antares.alice.enable) {
-    assertions = [
-      {
-        assertion = config.antares.agentFiles.enable;
-        message = "Alice file exchange requires antares.agentFiles.enable.";
-      }
-    ];
     age.secrets.aliceTelegramWebhookSecret = {
       file = ../../secrets/alice-telegram-webhook-secret.age;
       owner = "alice";

@@ -124,6 +124,8 @@ plaintext, and validate decryption by exit status only.
 The existing encrypted QQ TOML sets the top-level `moderation_url` to
 `http://127.0.0.1:18765/moderate`. Keep all other parsed configuration unchanged.
 Publish both application repositories before updating their RPi flake inputs and
-switching on Pi. The moderation service follows QQ Codex enablement, binds only
-loopback, and opens no firewall port. After activation, check both services and
+switching on Pi. Moderation defaults on when the host selects the QQ stack and
+its Codex component. It keeps its DeepSeek credential when `antares.openai.enable`
+is false. Use `services.simple-moderation.enable` to override that default.
+It binds only loopback and opens no firewall port. After activation, check both services and
 submit a harmless image to the local endpoint without displaying credentials.

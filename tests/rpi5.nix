@@ -1,5 +1,49 @@
 { lib }: [
   {
+    name = "openai-off";
+    module.antares.openai.enable = false;
+    check =
+      c:
+      lib.all (name: !(builtins.hasAttr name c.systemd.services)) [
+        "antares-agent"
+        "antares-agent-update"
+        "antares-agent-relay"
+        "codex-auth"
+        "codex-login"
+        "qq-codex-agent"
+        "qq-codex-auth"
+        "qq-codex-login"
+        "mihomo-worker"
+        "mihomo-agent-guide"
+      ]
+      && !(c.systemd.paths ? mihomo-worker)
+      && !(c.systemd.generators ? antares-agent-mounts)
+      && lib.all (name: !(builtins.hasAttr name c.users.users)) [
+        "agent"
+        "agent-relay"
+        "codex-auth"
+        "qq-codex-agent"
+      ]
+      && !(c.users.groups ? codex-auth-clients)
+      && lib.all (name: !(builtins.hasAttr name c.age.secrets)) [
+        "agentFilesRelayEnv"
+        "agentRelayEnv"
+        "agentRelayRabbitCa"
+        "agentRelayRabbitCert"
+        "agentRelayRabbitKey"
+        "l4d2-rcon"
+        "openaiPersonalApiKey"
+        "qqCodexAllowlist"
+        "qqCodexGhToken"
+      ]
+      && lib.elem "deepseek-api-key:${c.age.secrets.simpleModerationKey.path}" c.systemd.services.simple-moderation.serviceConfig.LoadCredential
+      && c.systemd.services ? napcat
+      && c.systemd.services ? qq-napcat-relay
+      && c.age.secrets ? qqRelayEnv
+      && c.systemd.services ? mihomo
+      && c.systemd.services ? rabbitmq;
+  }
+  {
     name = "simple-moderation";
     module = { };
     check =
