@@ -343,6 +343,34 @@
       ) c.environment.systemPackages);
   }
   {
+    name = "waydroid-on";
+    module = { };
+    check =
+      c:
+      c.systemd.services ? waydroid-container
+      && c.security.wrappers.pkexec.enable
+      && lib.elem "192.168.240.0/24" c.antares.mihomo.settings.tun.route-exclude-address
+      && lib.all (name: lib.elem name (map lib.getName c.environment.systemPackages)) [
+        "waydroid-helper"
+        "jadx"
+      ];
+  }
+  {
+    name = "waydroid-off";
+    module.virtualisation.waydroid.enable = lib.mkForce false;
+    check =
+      c:
+      !(c.systemd.services ? waydroid-container)
+      && !(lib.elem "192.168.240.0/24" c.antares.mihomo.settings.tun.route-exclude-address)
+      && !(lib.any (
+        p:
+        lib.elem (lib.getName p) [
+          "waydroid-helper"
+          "jadx"
+        ]
+      ) c.environment.systemPackages);
+  }
+  {
     name = "ydotool-off";
     module = { lib, ... }: { programs.ydotool.enable = lib.mkForce false; };
     check =
@@ -466,6 +494,7 @@
       i18n.inputMethod.enable = lib.mkForce false;
       services.samba.enable = lib.mkForce false;
       programs.steam.enable = lib.mkForce false;
+      virtualisation.waydroid.enable = lib.mkForce false;
       programs.ydotool.enable = lib.mkForce false;
       services.mcp-nixos.enable = lib.mkForce false;
       services.openlist.enable = lib.mkForce false;

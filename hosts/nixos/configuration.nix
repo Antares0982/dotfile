@@ -35,6 +35,7 @@ in
   i18n.inputMethod.enable = true;
   services.samba.enable = true;
   programs.steam.enable = true;
+  virtualisation.waydroid.enable = true;
   programs.ydotool.enable = true;
   programs.direnv.enable = false;
   antares.rust.enable = true;

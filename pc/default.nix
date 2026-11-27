@@ -17,6 +17,7 @@
     ./configuration.nix
     ./display.nix
     ./wallpaper.nix
+    ./waydroid.nix
     ./fcitx5.nix
     ./git-sign-unlock.nix
     ./gpu-unlock.nix

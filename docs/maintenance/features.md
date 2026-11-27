@@ -80,6 +80,7 @@ integration as well as the upstream service.
 | hk | `antares.blog.enable`, `antares.blog.metrics.enable`, `antares.messaging.enable`, `mailserver.enable`, `services.mysql.enable`, `services.nginx.enable`, `services.forgejo.enable`, `services.openai-gateway.enable`, `antares.acme.enable` |
 | nixos | `antares.desktop.enable`, `antares.wallpaper.enable`, `antares.rust.enable`, `antares.autostart.enable`, `antares.waitOnline.enable`, `services.mcp-nixos.enable` |
 | nixos | `services.pipewire.enable`, `hardware.bluetooth.enable`, `i18n.inputMethod.enable`, `services.samba.enable`, `programs.steam.enable`, `programs.ydotool.enable` |
+| nixos | `virtualisation.waydroid.enable` ([ARM64 games and debugging](#waydroid-on-pc)) |
 | nixos | `antares.gpuUnlock.enable` (RTX 3090 at `0000:01:00.0`, enabled by the host) |
 | nixos, wsl | `antares.gitSignUnlock.enable` (desktop startup on PC, user sessions on WSL) |
 | wsl | `antares.windowsShell.enable` ([Windows shell](zsh.md#wsl-as-a-windows-shell), selected per session with `AS_WINDOWS_SHELL=1`) |
@@ -97,6 +98,55 @@ enabling or disabling it, rebuild and power off before booting the new generatio
 Disabling removes its boot parameter, module, firmware and initrd service.
 Suspend/resume persistence has not been validated; check the unlock again after
 resume. Kernel/driver updates also require a new hardware check.
+
+### Waydroid on PC
+
+The PC uses Waydroid's nftables backend for its container bridge. After
+activating the configuration, initialize the official x86_64 VANILLA image
+once. Run the UI and Helper as the desktop user in niri.
+
+```sh
+sudo waydroid init -s VANILLA
+sudo systemctl start waydroid-container
+waydroid show-full-ui
+```
+
+Open `waydroid-helper`. Under Extensions → Arm Translation → ndk_translation,
+install the `ndk_translation-chromeos_zork` build marked Android 13. Approve
+the installation, let Helper apply its properties and restart the session,
+then reopen the UI. Android shares the x86_64 host kernel and uses this native
+bridge to load ARM64 game libraries. Rebuilds retain the images and installed
+games. [Helper extension catalog](https://github.com/waydroid-helper/extensions/tree/master/arm_translation)
+
+Enable USB debugging in Android's Developer options (tap the build number
+seven times to reveal them). Once `waydroid status` shows an IP address,
+connect from the host and accept the Android debugging prompt.
+
+```sh
+export ANDROID_SERIAL="$(waydroid status | awk '/^IP address:/ {print $NF}'):5555"
+adb connect "$ANDROID_SERIAL"
+adb shell getprop ro.product.cpu.abilist
+adb shell getprop ro.dalvik.vm.native.bridge
+adb shell dumpsys SurfaceFlinger | grep -i GLES
+```
+
+Expect `arm64-v8a`, `libndk_translation.so`, and an Intel/Mesa GLES renderer.
+To exercise all three, install Luanti's **ARM 64-bit** APK and tap **Join Game**.
+A populated server list also checks DNS and HTTPS through the PC's Mihomo
+proxy. Use the package name to read logs from the running game.
+[Luanti Android downloads](https://www.luanti.org/en/downloads/#android)
+
+```sh
+adb install -r ./luanti-5.18.0-arm64-v8a.apk
+waydroid app launch net.minetest.minetest
+adb logcat --pid="$(adb shell pidof -s net.minetest.minetest)"
+```
+
+For a split release, install the base APK and its matching splits together,
+for example `adb install-multiple -r base.apk split_config.arm64_v8a.apk split_config.xxhdpi.apk`.
+Open the base APK in `jadx-gui` for DEX inspection. Extract the desired
+`lib/arm64-v8a/*.so` from the APK or ABI split and open it in Ghidra with
+`nix shell nixpkgs#ghidra -c ghidra`. Use `waydroid session stop` to finish.
 
 ### OpenAI services
 

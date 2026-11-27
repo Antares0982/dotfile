@@ -8,6 +8,7 @@ let
   cfg = config.antares.mihomo;
   base = builtins.fromJSON (builtins.readFile ../resource/mihomo-base.json);
   proxy = config.antares.proxy;
+  tun = (builtins.fromJSON (builtins.readFile ../resource/mihomo-tun.json)).tun;
   address = if proxy.lan then "0.0.0.0" else proxy.clientAddress;
   domains = [
     "cn"
@@ -192,18 +193,17 @@ let
       };
       tun =
         if proxy.insideGFW then
-          (builtins.fromJSON (builtins.readFile ../resource/mihomo-tun.json)).tun
-          // lib.optionalAttrs (!proxy.lan) {
-            route-exclude-address = [
-              "169.254.0.0/16"
-              "224.0.0.0/4"
-              "255.255.255.255/32"
-              "fe80::/10"
-              "ff00::/8"
-            ];
-          }
+          tun
           // {
             auto-redirect = cfg.autoRedirect;
+            route-exclude-address =
+              (
+                if proxy.lan then
+                  tun.route-exclude-address
+                else
+                  lib.remove "192.168.0.0/24" tun.route-exclude-address
+              )
+              ++ lib.optional (config.virtualisation.waydroid.enable or false) "192.168.240.0/24";
           }
           // lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
             device = "utun";

@@ -16,6 +16,13 @@ let
       flush set inet mihomo_guard public_tcp
       flush set inet mihomo_guard public_udp
     ''
+    + lib.optionalString config.virtualisation.waydroid.enable ''
+      insert rule inet mihomo_guard ingress iifname "waydroid0" udp dport { 53, 67 } accept
+      insert rule inet mihomo_guard ingress iifname "waydroid0" tcp dport 53 accept
+      insert rule inet mihomo_guard ingress iifname "waydroid0" meta l4proto tcp ct status dnat accept
+      insert rule inet mihomo_guard egress oifname "waydroid0" meta iif 0 accept
+      insert rule inet mihomo_guard egress oifname "waydroid0" ct state { established, related } accept
+    ''
     + lib.optionalString server ''
       add element inet mihomo_guard public_if { "${interface}" }
       add element inet mihomo_guard public_tcp { ${
