@@ -23,6 +23,7 @@ let
     "netflix"
     "youtube"
     "dlsite"
+    "steam"
   ];
   provider = kind: name: {
     type = "http";
@@ -88,6 +89,8 @@ let
       "RULE-SET,youtube,YouTube"
       "RULE-SET,dlsite,DLsite"
       "RULE-SET,private,DIRECT"
+      "DOMAIN-SUFFIX,steamcommunity.com,其他"
+      "RULE-SET,steam,DIRECT"
     ]
     ++ map (name: "RULE-SET,${name},国内") [
       "cn"
