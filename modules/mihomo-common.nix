@@ -89,7 +89,7 @@ let
       "RULE-SET,youtube,YouTube"
       "RULE-SET,dlsite,DLsite"
       "RULE-SET,private,DIRECT"
-      "DOMAIN-SUFFIX,steamcommunity.com,其他"
+      "DOMAIN-SUFFIX,steamcommunity.com,Steam"
       "RULE-SET,steam,DIRECT"
     ]
     ++ map (name: "RULE-SET,${name},国内") [
@@ -126,24 +126,20 @@ let
     "SG"
   ];
   choices = regions ++ [ "全部节点" ];
+  allChoices = [ "其他" ] ++ choices;
   selectGroup = name: proxies: {
     inherit name proxies;
     type = "select";
   };
+  moveFirst = x: y: ([ x ] ++ lib.remove x y);
   groups = [
     (selectGroup "其他" choices)
-    (selectGroup "Telegram" (
-      [ "SG" ]
-      ++ lib.remove "SG" regions
-      ++ [
-        "其他"
-        "全部节点"
-      ]
-    ))
-    (selectGroup "AI" ([ "其他" ] ++ choices))
-    (selectGroup "Netflix" ([ "其他" ] ++ choices))
-    (selectGroup "YouTube" ([ "其他" ] ++ choices))
-    (selectGroup "DLsite" ([ "其他" ] ++ choices))
+    (selectGroup "Telegram" (moveFirst "SG" allChoices))
+    (selectGroup "AI" allChoices)
+    (selectGroup "Netflix" allChoices)
+    (selectGroup "YouTube" allChoices)
+    (selectGroup "DLsite" allChoices)
+    (selectGroup "Steam" (moveFirst "HK" allChoices))
     (selectGroup "国内" ([ "DIRECT" ] ++ choices))
     (regionGroup "JP" "(?i)Japan|日本|🇯🇵|\\bJP\\b")
     (regionGroup "HK" "(?i)HongKong|香港|🇭🇰|\\bHK\\b")
