@@ -6,7 +6,8 @@
 }:
 {
   antares.proxy = {
-    enable = true;
+    # Use Windows' mirrored routes and DNS. These settings also support opting back in.
+    enable = false;
     insideGFW = true;
     lan = true;
     # Mirrored networking redirects 127.0.0.1 through Windows' loopback0.

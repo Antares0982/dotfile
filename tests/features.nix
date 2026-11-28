@@ -18,7 +18,7 @@ let
     }
     {
       name = "proxy-host";
-      module = { };
+      module = lib.optionalAttrs (host == "wsl") { antares.proxy.enable = lib.mkForce true; };
       check =
         c:
         let

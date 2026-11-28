@@ -19,7 +19,8 @@ identity between hosts. Reauthorize the subscription before replacing the Mac
 SSH host key.
 
 `xraysub.age` keeps its historical filename and supplies Mihomo on PC, RPi,
-MacBook, WSL, HK and SZ. WSL uses the same authorized identity as its signing passphrase.
+MacBook, HK and SZ. WSL deploys it only when its optional local proxy is enabled,
+using the same authorized identity as its signing passphrase.
 `xray-template-json.age` and `xray-template-gz.age` are encrypted recovery
 archives with PC-only access; no host configuration consumes them. Disabling
 or retiring a proxy does not delete encrypted sources or persistent data.

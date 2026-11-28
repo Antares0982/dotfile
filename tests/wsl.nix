@@ -2,7 +2,7 @@
 [
   {
     name = "mihomo-wsl-loopback";
-    module = { };
+    module.antares.proxy.enable = lib.mkForce true;
     check =
       c:
       let
@@ -26,18 +26,35 @@
   }
   {
     name = "mihomo-wsl-off";
-    module.antares.proxy.enable = lib.mkForce false;
+    module = { };
     check =
       c:
-      !(c.systemd.services ? mihomo)
+      !c.antares.proxy.enable
+      && c.wsl.wslConf.network.generateResolvConf
+      && !(c.systemd.services ? mihomo)
+      && !(c.systemd.services ? mihomo-guard)
+      && !(c.systemd.services ? mihomo-home)
       && !(c.systemd.services ? mihomo-loopback)
       && !(c.systemd.services ? mihomo-config)
-      && !(c.systemd.services.nix-daemon.environment ? http_proxy)
+      &&
+        lib.all
+          (
+            key:
+            !(builtins.hasAttr key c.environment.variables)
+            && !(builtins.hasAttr key c.systemd.services.nix-daemon.environment)
+          )
+          [
+            "http_proxy"
+            "https_proxy"
+          ]
       && !(c.age.secrets ? mihomoSubscription);
   }
   {
     name = "mihomo-wsl-without-lan";
-    module.antares.proxy.lan = lib.mkForce false;
+    module.antares.proxy = {
+      enable = lib.mkForce true;
+      lan = lib.mkForce false;
+    };
     check =
       c:
       c.antares.mihomo.settings.bind-address == "127.0.0.2"
@@ -99,10 +116,7 @@
         service = c.systemd.services.git-sign-unlock;
         trigger = c.systemd.user.services.git-sign-unlock;
       in
-      builtins.attrNames c.age.secrets == [
-        "gitSignPassphrase"
-        "mihomoSubscription"
-      ]
+      builtins.attrNames c.age.secrets == [ "gitSignPassphrase" ]
       && secret.owner == "root"
       && secret.group == "root"
       && secret.mode == "0400"
@@ -128,7 +142,7 @@
       c:
       !(c.systemd.services ? git-sign-unlock)
       && !(c.systemd.user.services ? git-sign-unlock)
-      && builtins.attrNames c.age.secrets == [ "mihomoSubscription" ]
+      && builtins.attrNames c.age.secrets == [ ]
       && c.programs.ssh.startAgent
       && c.users.users ? antares;
   }

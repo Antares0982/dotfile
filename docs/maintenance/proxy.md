@@ -6,7 +6,8 @@ Set the three host options under `antares.proxy`. All default to false.
 
 | Host | enable | insideGFW | lan |
 |---|---|---|---|
-| PC, RPi, MacBook, WSL | yes | yes | yes |
+| PC, RPi, MacBook | yes | yes | yes |
+| WSL | no | yes | yes |
 | SZ | yes | yes | no |
 | HK | yes | no | no |
 
@@ -94,7 +95,26 @@ Use a local console for the first switch. Check the WebRTC and DoH entries
 in `chrome://policy`. Test sleep, wake and moving to
 another network, including one with the same IPv4 subnet.
 
-WSL uses the distro's systemd, TUN device and resolver. In the Windows user's
+### WSL through the Windows gateway
+
+WSL defaults to mirrored networking with Windows-provided DNS. The local
+Mihomo service, TUN guard and proxy environment are disabled. In the Windows
+user's `.wslconfig`, use `networkingMode=mirrored`, `dnsTunneling=true` and
+`autoProxy=false` under `[wsl2]`.
+
+Before changing the Windows routes, run `nixos-rebuild build --flake ./hosts/wsl#wsl`
+from the repository root and keep its `result` symlink. After Windows can reach
+the internet through the [RPi gateway](#windows-through-the-rpi-gateway), run
+`sudo nixos-rebuild switch --store-path "$(readlink -f ./result)"` from the
+same directory. This uses the already built closure offline. Save WSL work and
+run `wsl.exe --terminate NixOS` then `wsl.exe -d NixOS` from PowerShell so WSL
+regenerates its resolver configuration. In the new shell, check IPv4 and IPv6
+route selection with `ip -4 route get 1.1.1.1` and
+`ip -6 route get 2606:4700:4700::1111`, then fetch a hostname over both families.
+
+### Optional local Mihomo on WSL
+
+With `antares.proxy.enable = true`, WSL uses the distro's systemd, TUN device and resolver. In the Windows user's
 `.wslconfig`, set `networkingMode=mirrored` under `[wsl2]`. Apply host changes
 at a convenient `wsl --shutdown`. Check for existing Windows listeners on
 1081–1083 and 17900. In elevated PowerShell, configure narrow Hyper-V rules:
@@ -202,16 +222,24 @@ Get-DnsClientServerAddress -InterfaceIndex $i
 Get-NetRoute -InterfaceIndex $i -DestinationPrefix '0.0.0.0/0','::/0'
 ```
 
-Install both next hops, then suppress default routes learned from DHCP and
-IPv6 router advertisements on this adapter. Keep IPv6 router discovery enabled
-for on-link addresses and prefixes. Both DNS addresses belong to the Pi's TUN.
+Keep automatic default routes and IPv6 router discovery enabled. Install two
+more-specific routes per address family to prefer the Pi for internet traffic.
+The on-link LAN routes still take precedence. Both DNS addresses belong to the
+Pi's TUN. Set them after checking that Windows selects the Pi for both families.
 
 ```powershell
 $pi6 = Read-Host 'IPv6 link-local address from the Pi'
-New-NetRoute -InterfaceIndex $i -DestinationPrefix '0.0.0.0/0' -NextHop '192.168.0.3' -RouteMetric 1
-New-NetRoute -InterfaceIndex $i -DestinationPrefix '::/0' -NextHop $pi6 -RouteMetric 1
-Set-NetIPInterface -InterfaceIndex $i -AddressFamily IPv4 -IgnoreDefaultRoutes Enabled
-Set-NetIPInterface -InterfaceIndex $i -AddressFamily IPv6 -IgnoreDefaultRoutes Enabled
+foreach ($prefix in '0.0.0.0/1','128.0.0.0/1','::/1','8000::/1') {
+    $hop = if ($prefix.Contains(':')) { $pi6 } else { '192.168.0.3' }
+    New-NetRoute -InterfaceIndex $i -DestinationPrefix $prefix -NextHop $hop -RouteMetric 1 -ErrorAction Stop
+}
+Find-NetRoute -RemoteIPAddress 1.1.1.1
+Find-NetRoute -RemoteIPAddress 2606:4700:4700::1111
+```
+
+When both lookups select the Pi, set the adapter's DNS servers.
+
+```powershell
 Set-DnsClientServerAddress -InterfaceIndex $i -ServerAddresses '198.18.0.2','fdfe:dcba:9876::2'
 Clear-DnsClientCache
 ```
@@ -239,11 +267,13 @@ the recorded addresses to `Set-DnsClientServerAddress` instead of resetting.
 ```powershell
 $i = (Get-NetAdapter -Name 'Ethernet').ifIndex
 $pi6 = Read-Host 'IPv6 next hop recorded during setup'
-Set-NetIPInterface -InterfaceIndex $i -AddressFamily IPv4 -IgnoreDefaultRoutes Disabled
-Set-NetIPInterface -InterfaceIndex $i -AddressFamily IPv6 -IgnoreDefaultRoutes Disabled
-Remove-NetRoute -InterfaceIndex $i -DestinationPrefix '0.0.0.0/0' -NextHop '192.168.0.3' -Confirm:$false
-Remove-NetRoute -InterfaceIndex $i -DestinationPrefix '::/0' -NextHop $pi6 -Confirm:$false
 Set-DnsClientServerAddress -InterfaceIndex $i -ResetServerAddresses
+foreach ($prefix in '0.0.0.0/1','128.0.0.0/1','::/1','8000::/1') {
+    $hop = if ($prefix.Contains(':')) { $pi6 } else { '192.168.0.3' }
+    foreach ($store in 'PersistentStore','ActiveStore') {
+        Remove-NetRoute -InterfaceIndex $i -DestinationPrefix $prefix -NextHop $hop -PolicyStore $store -Confirm:$false -ErrorAction SilentlyContinue
+    }
+}
 Clear-DnsClientCache
 ```
 
