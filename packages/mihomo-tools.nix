@@ -4,15 +4,18 @@
   clashtui ? pkgs.clashtui,
 }:
 let
-  terminal =
-    if pkgs.stdenv.hostPlatform.isDarwin then
-      clashtui.overrideAttrs (old: {
-        meta = old.meta // {
-          platforms = old.meta.platforms ++ pkgs.lib.platforms.darwin;
-        };
-      })
-    else
-      clashtui;
+  terminal = clashtui.overrideAttrs (
+    old:
+    {
+      patches =
+        (old.patches or [ ]) ++ pkgs.lib.optional (old.version == "0.3.1") ./clashtui-keyboard.patch;
+    }
+    // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
+      meta = old.meta // {
+        platforms = old.meta.platforms ++ pkgs.lib.platforms.darwin;
+      };
+    }
+  );
 in
 pkgs.runCommand "mihomo-tools"
   {

@@ -16,6 +16,9 @@ let
       flush set inet mihomo_guard public_tcp
       flush set inet mihomo_guard public_udp
     ''
+    + lib.optionalString (wsl && proxy.lan) ''
+      insert rule inet mihomo_guard ingress iifname "loopback0" ip saddr 127.0.0.1 ip daddr 127.0.0.1 meta l4proto { tcp, udp } th dport ${toString config.antares.mihomo.port} accept
+    ''
     + lib.optionalString config.virtualisation.waydroid.enable ''
       insert rule inet mihomo_guard ingress iifname "waydroid0" udp dport { 53, 67 } accept
       insert rule inet mihomo_guard ingress iifname "waydroid0" tcp dport 53 accept

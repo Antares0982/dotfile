@@ -124,13 +124,15 @@ After changing these settings, test a fresh login shell, `mihomoctl status`,
 ordinary curl and `curl --noproxy '*'`, then restart Mihomo and repeat without
 temporary port 1081/17900 routing rules before switching permanently.
 
-This keeps WSL's mirrored networking enabled. Linux clients use `.2`; Windows
-clients should test `127.0.0.1:1081` independently before enabling a system proxy.
-The Linux `.2` address is not a Windows endpoint guarantee. A working Linux
-proxy does not validate Windows localhost forwarding or the Windows/Hyper-V
-and Linux ingress firewalls. On the 2026-11-23 repair, Linux acceptance passed
-but a Windows-native curl to `127.0.0.1:1081` timed out at connection setup;
-Windows ingress needs separate diagnosis before using it as a system proxy.
+Windows clients use the mixed HTTP/SOCKS5 listener at `127.0.0.1:1081`.
+In mirrored mode the host's connections arrive on `loopback0` with IPv4 source
+and destination `127.0.0.1`. The WSL home and guard ingress chains accept TCP
+and UDP on the configured mixed port for that path. This also carries the
+SOCKS5 UDP relay. To test from Windows PowerShell:
+
+```powershell
+curl.exe --noproxy no-match.invalid --proxy http://127.0.0.1:1081 -I https://example.com
+```
 
 When WSL provides the Windows proxy, prefer `[wsl2] autoProxy=false` in the
 Windows user's `.wslconfig`: Nix already configures Linux's proxy, and importing

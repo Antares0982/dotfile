@@ -21,6 +21,9 @@ let
       add element inet mihomo_home tcp_ports { ${toString cfg.port}, ${toString (cfg.port + 1)}, ${toString (cfg.port + 2)}, 17900${lib.optionalString mobile.enable ", ${toString mobile.port}"} }
       add element inet mihomo_home udp_ports { ${toString cfg.port}, ${toString (cfg.port + 1)}, ${toString (cfg.port + 2)} }
     ''
+    + lib.optionalString (config.wsl.enable or false) ''
+      insert rule inet mihomo_home ingress iifname "loopback0" ip saddr 127.0.0.1 ip daddr 127.0.0.1 meta l4proto { tcp, udp } th dport ${toString cfg.port} accept
+    ''
   );
   template = pkgs.writeText "mihomo-base.json" (builtins.toJSON settings);
   mobile = cfg.mobileRules;
@@ -76,7 +79,7 @@ in
     };
     environment.systemPackages = [
       tools
-      apps.clashtui
+      tools.clashtui
     ];
     age.secrets.mihomoSubscription = {
       file = ../secrets/xraysub.age;
