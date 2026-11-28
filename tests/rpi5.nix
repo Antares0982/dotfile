@@ -296,6 +296,8 @@
       c:
       c.antares.proxy.enable
       && c.antares.proxy.lan
+      && c.antares.mihomo.lanGateway
+      && c.systemd.services ? mihomo-gateway
       && c.antares.mihomo.port == 1081
       &&
         map (entry: entry.port) c.antares.mihomo.settings.listeners == [
@@ -320,6 +322,11 @@
       && lib.elem "mihomo.service" c.systemd.services.antares-agent.after;
   }
   {
+    name = "gateway-off";
+    module = { lib, ... }: { antares.mihomo.lanGateway = lib.mkForce false; };
+    check = c: !(c.systemd.services ? mihomo-gateway) && c.systemd.services ? mihomo;
+  }
+  {
     name = "mihomo-off";
     module = { lib, ... }: {
       antares.proxy.enable = lib.mkForce false;
@@ -331,6 +338,7 @@
       && !(lib.elem "mihomo.service" c.systemd.services.antares-agent.after)
       && !(c.systemd.services ? mihomo)
       && !(c.systemd.services ? mihomo-config)
+      && !(c.systemd.services ? mihomo-gateway)
       && !(c.systemd.services ? mihomo-worker)
       && !(c.systemd.paths ? mihomo-worker)
       && !(c.systemd.services ? mihomo-agent-guide)

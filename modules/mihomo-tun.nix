@@ -9,6 +9,7 @@ let
   interface = config.antares.mihomo.publicInterface;
   server = interface != null;
   wsl = config.wsl.enable or false;
+  gateway = proxy.lan && config.antares.mihomo.lanGateway;
   rules = pkgs.writeText "mihomo-guard.nft" (
     builtins.readFile ../resource/mihomo-guard.nft
     + ''
@@ -16,6 +17,7 @@ let
       flush set inet mihomo_guard public_tcp
       flush set inet mihomo_guard public_udp
     ''
+    + lib.optionalString gateway (builtins.readFile ../resource/mihomo-gateway-guard.nft)
     + lib.optionalString (wsl && proxy.lan) ''
       insert rule inet mihomo_guard ingress iifname "loopback0" ip saddr 127.0.0.1 ip daddr 127.0.0.1 meta l4proto { tcp, udp } th dport ${toString config.antares.mihomo.port} accept
     ''
@@ -63,6 +65,7 @@ let
   '';
   nft = "${pkgs.nftables}/bin/nft";
   load = "${nft} -f ${rules}";
+  sysctl = "${pkgs.procps}/bin/sysctl";
 in
 {
   config = lib.mkIf (proxy.enable && proxy.insideGFW) {
@@ -85,6 +88,43 @@ in
       !wsl && !config.networking.networkmanager.enable
     ) "nohook resolv.conf";
     networking.firewall.trustedInterfaces = [ "mihomo0" ];
+    # The gateway unit owns forwarding.
+    boot.kernel.sysctl."net.ipv4.conf.all.forwarding" = lib.mkIf gateway null;
+    systemd.services.mihomo-gateway = lib.mkIf gateway {
+      description = "Forward verified home clients through Mihomo";
+      requiredBy = [ "mihomo.service" ];
+      before = [ "mihomo.service" ];
+      after = [
+        "mihomo-guard.service"
+        "mihomo-home.service"
+        "systemd-sysctl.service"
+      ];
+      bindsTo = [
+        "mihomo-guard.service"
+        "mihomo-home.service"
+      ];
+      partOf = [
+        "mihomo-home.service"
+        "mihomo-guard.service"
+      ];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        ExecStart = [
+          "${nft} -f ${../resource/mihomo-gateway.nft}"
+          "${sysctl} -qw net.ipv4.conf.all.forwarding=1 net.ipv6.conf.all.forwarding=1"
+        ];
+        ExecStopPost = [
+          "${sysctl} -qw net.ipv4.conf.all.forwarding=0 net.ipv6.conf.all.forwarding=0"
+        ]
+        ++ map (chain: "-${nft} destroy chain inet mihomo_home ${chain}") [
+          "gateway_in"
+          "gateway_forward"
+          "gateway_out"
+        ]
+        ++ [ "-${nft} destroy set inet mihomo_home lan6" ];
+      };
+    };
     environment.etc."opt/chrome/policies/managed/mihomo.json" =
       lib.mkIf (config.networking.hostName == "nixos")
         {

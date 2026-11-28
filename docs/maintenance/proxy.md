@@ -174,6 +174,82 @@ checks execute as a systemd dynamic user without a home directory; resolve
 macOS home paths only on Darwin. Configuration evaluation alone does not test
 this service environment.
 
+## Windows through the RPi gateway
+
+RPi enables `antares.mihomo.lanGateway`. Each Windows device can opt in
+independently. Applications use the RPi's normal Rule policy for TCP and UDP.
+Turn off any previous Windows manual proxy or application proxy settings
+on the participating device so its connections use the gateway.
+The home router continues to provide DHCP addresses and IPv6 prefixes.
+Forwarding requires the verified home uplink and a source in its IPv4 subnet
+or current on-link IPv6 prefixes. If the TUN disappears, the Pi drops forwarded
+internet traffic. Its DNS endpoints follow the same gateway path.
+Keep the RPi's DHCP reservation at `192.168.0.3`. Its wired IPv6 next hop
+is link-local and survives ISP prefix changes. On the Pi, run
+`ip -6 addr show dev end0 scope link` and copy the `fe80::` address
+without the trailing `/64`. Keep that value for setup and recovery.
+
+In an elevated PowerShell, choose the home adapter by its IPv4 address.
+Run this on a home adapter with automatic gateways, and record its current DNS
+settings. The routes persist across restarts and follow that adapter. Restore
+automatic settings before taking a laptop to a different network.
+
+```powershell
+Get-NetIPConfiguration
+$i = (Get-NetAdapter -Name 'Ethernet').ifIndex   # use the displayed adapter name
+Get-NetIPInterface -InterfaceIndex $i | Select-Object AddressFamily,IgnoreDefaultRoutes
+Get-DnsClientServerAddress -InterfaceIndex $i
+Get-NetRoute -InterfaceIndex $i -DestinationPrefix '0.0.0.0/0','::/0'
+```
+
+Install both next hops, then suppress default routes learned from DHCP and
+IPv6 router advertisements on this adapter. Keep IPv6 router discovery enabled
+for on-link addresses and prefixes. Both DNS addresses belong to the Pi's TUN.
+
+```powershell
+$pi6 = Read-Host 'IPv6 link-local address from the Pi'
+New-NetRoute -InterfaceIndex $i -DestinationPrefix '0.0.0.0/0' -NextHop '192.168.0.3' -RouteMetric 1
+New-NetRoute -InterfaceIndex $i -DestinationPrefix '::/0' -NextHop $pi6 -RouteMetric 1
+Set-NetIPInterface -InterfaceIndex $i -AddressFamily IPv4 -IgnoreDefaultRoutes Enabled
+Set-NetIPInterface -InterfaceIndex $i -AddressFamily IPv6 -IgnoreDefaultRoutes Enabled
+Set-DnsClientServerAddress -InterfaceIndex $i -ServerAddresses '198.18.0.2','fdfe:dcba:9876::2'
+Clear-DnsClientCache
+```
+
+Check both next hops, then confirm the same choices after reconnecting the
+adapter. Also check with Wi-Fi or a VPN active if the device uses several
+interfaces. A and AAAA lookups for the test domain should return fake IPs.
+In the Pi dashboard, open Connections while fetching a site and check the
+Windows source address and selected rule. LAN peers remain directly reachable.
+
+```powershell
+Find-NetRoute -RemoteIPAddress 1.1.1.1
+Find-NetRoute -RemoteIPAddress 2606:4700:4700::1111
+Resolve-DnsName www.cloudflare.com -Type A -Server 198.18.0.2 -DnsOnly
+Resolve-DnsName www.cloudflare.com -Type AAAA -Server fdfe:dcba:9876::2 -DnsOnly
+curl.exe --noproxy "*" -4 https://www.cloudflare.com/cdn-cgi/trace
+curl.exe --noproxy "*" -6 https://www.cloudflare.com/cdn-cgi/trace
+Test-NetConnection 192.168.0.3 -Port 22
+```
+
+To restore automatic gateways and DNS, select the same adapter again and run
+the commands below. For an adapter with manually assigned DNS servers, supply
+the recorded addresses to `Set-DnsClientServerAddress` instead of resetting.
+
+```powershell
+$i = (Get-NetAdapter -Name 'Ethernet').ifIndex
+$pi6 = Read-Host 'IPv6 next hop recorded during setup'
+Set-NetIPInterface -InterfaceIndex $i -AddressFamily IPv4 -IgnoreDefaultRoutes Disabled
+Set-NetIPInterface -InterfaceIndex $i -AddressFamily IPv6 -IgnoreDefaultRoutes Disabled
+Remove-NetRoute -InterfaceIndex $i -DestinationPrefix '0.0.0.0/0' -NextHop '192.168.0.3' -Confirm:$false
+Remove-NetRoute -InterfaceIndex $i -DestinationPrefix '::/0' -NextHop $pi6 -Confirm:$false
+Set-DnsClientServerAddress -InterfaceIndex $i -ResetServerAddresses
+Clear-DnsClientCache
+```
+
+See Microsoft's [route configuration](https://learn.microsoft.com/en-us/powershell/module/nettcpip/new-netroute)
+and [interface settings](https://learn.microsoft.com/en-us/powershell/module/nettcpip/set-netipinterface).
+
 ## TUN and DNS
 
 Every core uses the same DNS upstream policy, including headless HK. On Linux

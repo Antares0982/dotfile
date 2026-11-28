@@ -1,0 +1,2 @@
+insert rule inet mihomo_guard ingress ct mark 0x4d47 ct status dnat meta l4proto tcp accept
+insert rule inet mihomo_guard egress ct mark 0x4d47 ct direction reply accept

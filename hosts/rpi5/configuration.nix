@@ -42,6 +42,7 @@ in
   antares.qq.enable = true;
   antares.qq.codex.enable = true;
   antares.mihomo.dashboardOrigins = [ "http://192.168.0.3:17900" ];
+  antares.mihomo.lanGateway = true;
   services.rabbitmq.enable = true;
   services.ssh-probe.enable = true;
   antares.gitServer.enable = true;

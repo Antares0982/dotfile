@@ -1,0 +1,29 @@
+# Classify transit before Mihomo redirects TCP.
+add set inet mihomo_home lan6 { type ipv6_addr; flags interval,timeout; }
+add chain inet mihomo_home gateway_in { type filter hook prerouting priority mangle - 2; policy accept; }
+add chain inet mihomo_home gateway_forward { type filter hook forward priority filter - 1; policy drop; }
+add chain inet mihomo_home gateway_out { type filter hook postrouting priority filter - 2; policy accept; }
+flush chain inet mihomo_home gateway_in
+flush chain inet mihomo_home gateway_forward
+flush chain inet mihomo_home gateway_out
+table inet mihomo_home {
+  chain gateway_in {
+    iifname { "lo", "mihomo0" } return
+    fib daddr type != unicast return
+    iifname @home ip saddr 192.168.0.0/24 ct direction original ct mark set 0x4d47 return
+    iifname @home ip6 saddr @lan6 ct direction original ct mark set 0x4d47 return
+    counter drop
+  }
+  chain gateway_forward {
+    ct mark 0x4d47 ct direction original oifname "mihomo0" accept
+    iifname "mihomo0" oifname @home ct mark 0x4d47 ct direction reply accept
+    counter drop
+  }
+  chain gateway_out {
+    icmp type redirect drop
+    icmpv6 type nd-redirect drop
+    oifname @home ip daddr 192.168.0.0/24 accept
+    oifname @home ip6 daddr @lan6 accept
+    ct mark 0x4d47 ct direction reply counter drop
+  }
+}

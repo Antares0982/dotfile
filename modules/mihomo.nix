@@ -12,6 +12,7 @@ let
   queue = "/home/agent/agent_work/.agent/mihomo";
   agent = config.antares.agent.enable or false;
   proxy = config.antares.proxy;
+  gateway = cfg.lanGateway && proxy.lan && proxy.insideGFW;
   settings = cfg.settings;
   homeRules = pkgs.writeText "mihomo-home.nft" (
     builtins.readFile ../resource/mihomo-home.nft
@@ -52,6 +53,7 @@ in
     ./mihomo-common.nix
     ./mihomo-tun.nix
   ];
+  options.antares.mihomo.lanGateway = lib.mkEnableOption "dual-stack transparent home LAN gateway";
   options.antares.mihomo.mobileRules = {
     enable = lib.mkEnableOption "serve public Clash Mi routing overrides on the home LAN";
     address = lib.mkOption {
@@ -126,14 +128,14 @@ in
     };
     systemd.services.mihomo-home-watch = lib.mkIf proxy.lan {
       wantedBy = [ "multi-user.target" ];
-      after = [ "mihomo-home.service" ];
+      after = [ "mihomo-home.service" ] ++ lib.optional gateway "mihomo-gateway.service";
       requires = [ "mihomo-home.service" ];
       path = [
         pkgs.iproute2
         pkgs.nftables
       ];
       serviceConfig = {
-        ExecStart = "${pkgs.python3}/bin/python3 ${../resource/mihomo-home.py}";
+        ExecStart = "${pkgs.python3}/bin/python3 ${../resource/mihomo-home.py}${lib.optionalString gateway " --gateway"}";
         Restart = "always";
       };
     };
@@ -206,6 +208,7 @@ in
       };
     };
     networking.firewall.extraCommands = lib.mkMerge [
+      (lib.mkIf gateway (builtins.readFile ../resource/mihomo-gateway-firewall.sh))
       (lib.mkIf proxy.lan ''
         iptables -A nixos-fw -s 192.168.0.0/24 -p tcp -m multiport --dports ${toString cfg.port},${toString (cfg.port + 1)},${toString (cfg.port + 2)},17900 -j nixos-fw-accept
         iptables -A nixos-fw -s 192.168.0.0/24 -p udp -m multiport --dports ${toString cfg.port},${toString (cfg.port + 1)},${toString (cfg.port + 2)} -j nixos-fw-accept
